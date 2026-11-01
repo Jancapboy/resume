@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="全栈工程师 - 项目详情">
+  <title>项目详情 | 全栈工程师</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- 动态背景层 -->
+  <div class="bg-grid"></div>
+  <div class="bg-glow top" data-parallax="0.4"></div>
+  <div class="bg-glow bottom" data-parallax="0.6"></div>
+
+  <!-- 导航 -->
+  <nav class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">&lt;<span>Dev</span>/&gt;</a>
+      <ul class="nav-links">
+        <li><a href="index.html#about">关于</a></li>
+        <li><a href="index.html#skills">技能</a></li>
+        <li><a href="index.html#projects">项目</a></li>
+        <li><a href="index.html#contact">联系</a></li>
+        <li><a href="admin.html" class="nav-btn">管理</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- 详情 Hero -->
+  <section class="detail-hero" id="project-hero">
+    <div class="container">
+      <a href="index.html#projects" class="back-link">← 返回项目列表</a>
+      <div class="detail-hero-content">
+        <div class="card-category" id="detail-category"></div>
+        <h1 class="detail-title" id="detail-title"></h1>
+        <p class="detail-desc" id="detail-desc"></p>
+        <div class="card-tech" id="detail-tech"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 详情内容 -->
+  <section class="section detail-section">
+    <div class="container">
+      <div class="detail-box">
+        <h2 class="detail-subtitle">项目亮点</h2>
+        <ul class="detail-highlights" id="detail-highlights"></ul>
+      </div>
+      <!-- 独立内容页（仅配置了 detail 的项目渲染，其余显示占位） -->
+      <div class="detail-box" id="detail-content"></div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2026 全栈工程师 · 简历页面</p>
+    </div>
+  </footer>
+
+  <script src="js/project.js"></script>
+</body>
+</html>

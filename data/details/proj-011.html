@@ -1,0 +1,183 @@
+<!-- AI Agent 架构演进 - 独立内容页（4 大落地场景版） -->
+<div class="detail-content-block">
+  <h2 class="detail-subtitle">🎯 四大落地场景</h2>
+  <p class="detail-lead">基于 <strong>langchain 1.3.15 + langgraph 1.2.11</strong> 真实框架，每个场景均实现 <strong>LangChain LCEL / LangGraph StateGraph / 多智能体 DAG</strong> 三级架构，可横向对比不同架构在同一业务场景下的表现差异。</p>
+
+  <!-- 四大场景卡片 -->
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">场景 1 · 基准</div>
+      <h3 class="arch-card-title">AI 研究报告生成</h3>
+      <p class="arch-card-desc">三级架构的基准场景，完整展示从线性链到多 Agent 的演进路径。</p>
+      <ul class="card-highlights">
+        <li>报告产出效率提升 5 倍</li>
+        <li>资料检索 → 分析 → 报告撰写全流程</li>
+        <li>6 Agent 协作 + 质量闭环</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">场景 2</div>
+      <h3 class="arch-card-title">智能客服对话系统</h3>
+      <p class="arch-card-desc">电商平台智能客服，处理退款、物流、换货、会员等常见咨询。</p>
+      <ul class="card-highlights">
+        <li>人工客服成本降低 60%</li>
+        <li>多轮对话 + 意图识别 + 追问澄清</li>
+        <li>首响时间 30s → 3s，7×24 服务</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">场景 3</div>
+      <h3 class="arch-card-title">代码审查助手</h3>
+      <p class="arch-card-desc">自动检测代码质量、安全漏洞、性能问题和规范一致性。</p>
+      <ul class="card-highlights">
+        <li>Bug 发现率提升 40%</li>
+        <li>安全/性能/规范/逻辑四专家并行审查</li>
+        <li>迭代式修复，人工审查时间减少 50%</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">场景 4</div>
+      <h3 class="arch-card-title">文档问答 RAG 系统</h3>
+      <p class="arch-card-desc">企业级知识库问答，基于 RAG 技术实现多源文档智能问答。</p>
+      <ul class="card-highlights">
+        <li>知识检索效率提升 5 倍</li>
+        <li>查询改写 + 多源检索 + 重排序 + 引用校验</li>
+        <li>新人培训周期缩短 40%</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 跨场景测评 -->
+  <div class="bench-wrap">
+    <h3 class="bench-title">📊 跨场景测评数据（4 场景 × 3 级架构）</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>场景</th>
+            <th>LangChain 线性链</th>
+            <th>LangGraph 有状态图</th>
+            <th>多智能体 DAG</th>
+            <th>最优架构</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>研究报告生成</td>
+            <td>4.8 分</td>
+            <td class="best">7.5 分</td>
+            <td>7.3 分</td>
+            <td>StateGraph</td>
+          </tr>
+          <tr>
+            <td>智能客服对话</td>
+            <td>5.12 分</td>
+            <td>7.6 分</td>
+            <td class="best">8.21 分</td>
+            <td>DAG</td>
+          </tr>
+          <tr>
+            <td>代码审查助手</td>
+            <td>6.28 分</td>
+            <td>8.03 分</td>
+            <td class="best">8.82 分</td>
+            <td>DAG</td>
+          </tr>
+          <tr>
+            <td>文档问答 RAG</td>
+            <td>6.06 分</td>
+            <td>7.48 分</td>
+            <td class="best">8.37 分</td>
+            <td>DAG</td>
+          </tr>
+          <tr class="bench-total">
+            <td>平均质量分</td>
+            <td>5.82</td>
+            <td>7.7</td>
+            <td class="best">8.47</td>
+            <td>—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>关键洞察：</strong>相比线性链，LangGraph 输出质量提升 <strong>+32%</strong>，多智能体 DAG 提升 <strong>+46%</strong>；代价是执行时间增加约 3 倍、Token 消耗增加 1.3~3.2 倍——架构越复杂，资源消耗越高，需按任务复杂度选型。</p>
+  </div>
+
+  <!-- 三级架构总览 -->
+  <h2 class="detail-subtitle">🏗️ 三级架构总览</h2>
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">Level 1 · 入门</div>
+      <h3 class="arch-card-title">LangChain 线性链</h3>
+      <div class="arch-card-api">
+        <span class="tech-badge">PromptTemplate</span>
+        <span class="tech-badge">| LLM</span>
+        <span class="tech-badge">| StrOutputParser</span>
+        <span class="tech-badge">RunnablePassthrough.assign()</span>
+      </div>
+      <p class="arch-card-desc">LCEL 管道语法、线性流程、上手快。代码量少，无状态共享。</p>
+      <ul class="card-highlights">
+        <li>LCEL 管道式编程，Runnable 组合</li>
+        <li>串行执行，低延迟（0.14~0.43s）</li>
+        <li>适用：简单问答、基础 RAG、单步工具调用</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">Level 2 · 进阶</div>
+      <h3 class="arch-card-title">LangGraph 有状态图</h3>
+      <div class="arch-card-api">
+        <span class="tech-badge">StateGraph</span>
+        <span class="tech-badge">add_node</span>
+        <span class="tech-badge">add_edge</span>
+        <span class="tech-badge">add_conditional_edges</span>
+        <span class="tech-badge">MemorySaver</span>
+      </div>
+      <p class="arch-card-desc">图结构 + 状态管理 + 自我反思循环（Review-Revise）+ 检查点持久化，输出质量提升 32%~60%。</p>
+      <ul class="card-highlights">
+        <li>Annotated[type, reducer] 状态合并策略</li>
+        <li>MemorySaver 支持状态回溯与断点恢复</li>
+        <li>适用：复杂决策、多轮迭代、需要状态持久化</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">Level 3 · 生产级</div>
+      <h3 class="arch-card-title">多智能体 DAG</h3>
+      <div class="arch-card-api">
+        <span class="tech-badge">LangGraph DAG 编排</span>
+        <span class="tech-badge">专业化 Agent</span>
+        <span class="tech-badge">ThreadPoolExecutor</span>
+        <span class="tech-badge">MemorySaver</span>
+      </div>
+      <p class="arch-card-desc">多角色 Agent 分工协作，DAG 拓扑排序 + 并行执行 + 质量闭环，平均质量 8.47 分。</p>
+      <ul class="card-highlights">
+        <li>4 专家并行审查 / 双源并行检索</li>
+        <li>质量闭环（审查 Agent 把关）</li>
+        <li>适用：复杂任务分解、多角色协作、生产级应用</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 选型建议 -->
+  <div class="arch-tips">
+    <h3 class="bench-title">🎯 选型建议</h3>
+    <div class="arch-tips-grid">
+      <div class="arch-tip">
+        <span class="arch-tip-tag">≤3 步</span>
+        <p><strong>线性任务</strong> → LangChain 线性链<br><span class="arch-tip-note">代码少、延迟低</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">5-20 步</span>
+        <p><strong>循环 + 状态</strong> → LangGraph 有状态图<br><span class="arch-tip-note">性价比最高</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">20+ 步</span>
+        <p><strong>多角色协作</strong> → 多智能体 DAG<br><span class="arch-tip-note">质量最优</span></p>
+      </div>
+    </div>
+  </div>
+</div>

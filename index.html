@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="全栈工程师 - 数据库架构 & 自动化 & AI 应用专家">
+  <title>全栈工程师 | 简历</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- 动态背景层 -->
+  <div class="bg-grid"></div>
+  <div class="bg-glow top" data-parallax="0.4"></div>
+  <div class="bg-glow bottom" data-parallax="0.6"></div>
+  <canvas id="particle-canvas"></canvas>
+  <div class="cursor-glow" id="cursor-glow"></div>
+
+  <!-- 导航 -->
+  <nav class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="#" class="nav-logo">&lt;<span>Dev</span>/&gt;</a>
+      <ul class="nav-links">
+        <li><a href="#about">关于</a></li>
+        <li><a href="#skills">技能</a></li>
+        <li><a href="#projects">项目</a></li>
+        <li><a href="#contact">联系</a></li>
+        <li><a href="admin.html" class="nav-btn">管理</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero" id="about">
+    <div class="container">
+      <div class="hero-content">
+        <div class="hero-badge animate-in">
+          <span class="dot"></span> 可接兼职 / 远程协作
+        </div>
+        <h1 class="animate-in" id="hero-name" style="animation-delay:0.1s">全栈工程师</h1>
+        <p class="subtitle animate-in" id="hero-title" style="animation-delay:0.2s"></p>
+        <p class="location animate-in" id="hero-location" style="animation-delay:0.3s">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          中国
+        </p>
+        <p class="summary animate-in" id="hero-summary" style="animation-delay:0.4s">多年全栈开发经验，深耕数据库高可用架构、数据自动化抓取、AI应用开发及企业级运维。</p>
+        <div class="hero-actions animate-in" style="animation-delay:0.5s">
+          <a href="#projects" class="btn btn-primary">查看项目</a>
+          <a href="#contact" class="btn btn-outline">联系我</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 技能 -->
+  <section class="section" id="skills">
+    <div class="container">
+      <div class="section-header reveal">
+        <p class="section-label">Skills</p>
+        <h2 class="section-title">技术能力</h2>
+        <p class="section-desc">涵盖数据库、后端开发、自动化采集、AI 应用及运维等多个领域</p>
+      </div>
+      <div class="skills-grid reveal reveal-delay-1" id="skills-grid">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- 项目 -->
+  <section class="section" id="projects">
+    <div class="container">
+      <div class="section-header reveal">
+        <p class="section-label">Projects</p>
+        <h2 class="section-title">项目经验</h2>
+        <p class="section-desc">精选公开项目，展示核心技术能力与实践经验</p>
+      </div>
+
+      <!-- AI 项目智能推荐 -->
+      <div class="ai-recommend reveal">
+        <div class="ai-recommend-box">
+          <input id="ai-recommend-input" placeholder="描述你的需求，AI 帮你匹配最相关的项目，例如：我需要一个电商数据采集系统" />
+          <button id="ai-recommend-btn">✨ 智能匹配项目</button>
+        </div>
+        <div class="ai-recommend-result" id="ai-recommend-result"></div>
+      </div>
+
+      <div class="projects-grid reveal reveal-delay-1" id="projects-grid">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- 联系 -->
+  <section class="section" id="contact">
+    <div class="container">
+      <div class="contact-section reveal">
+        <div class="contact-card">
+          <h3>期待合作</h3>
+          <p>如果你对我的项目经验感兴趣，欢迎通过以下方式联系我，期待与你交流合作机会。</p>
+
+          <!-- 需求提交表单 -->
+          <form class="ai-contact-form" id="ai-contact-form">
+            <input name="name" placeholder="您的称呼（选填）" />
+            <input name="contact" placeholder="联系方式 *（邮箱 / 微信 / 电话）" required />
+            <textarea name="need" placeholder="请描述您的需求，例如：我需要一个能抓取竞品价格数据的爬虫系统 *" required></textarea>
+            <button type="submit">提交需求</button>
+            <div class="ai-contact-status" id="ai-contact-status"></div>
+          </form>
+
+          <div class="contact-methods" id="contact-methods">
+            <a href="mailto:1069007377@qq.com" class="contact-method" title="邮箱: 1069007377@qq.com" id="contact-email">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            </a>
+            <a href="#" class="contact-method" title="微信" id="contact-wechat">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 10.9c2.4 0 4.3-1.7 4.3-3.9S10.4 3 8 3 3.7 4.8 3.7 7s1.9 3.9 4.3 3.9Z"/><path d="M8 21c3.8 0 7-2.7 7-6s-3.2-6-7-6-7 2.7-7 6c0 1 .3 2.1.8 3"/><path d="M15.8 13.8c1.8 0 3.3 1.2 3.3 2.7s-1.5 2.7-3.3 2.7"/><path d="M11 14.5 15.8 21"/></svg>
+            </a>
+            <a href="https://github.com/Jancapboy" target="_blank" rel="noopener noreferrer" class="contact-method" title="GitHub: Jancapboy" id="contact-github">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2026 全栈工程师 · 简历页面</p>
+    </div>
+  </footer>
+
+  <!-- AI 聊天助手 -->
+  <button class="ai-fab" id="ai-fab" aria-label="AI助手" title="和 AI 助手聊聊">🤖</button>
+  <div class="ai-chat-panel" id="ai-chat-panel">
+    <div class="ai-chat-header">
+      <div class="ai-chat-header-title">
+        <span class="ai-dot"></span> AI 智能助手
+      </div>
+      <button class="ai-chat-close" id="ai-chat-close" aria-label="关闭">✕</button>
+    </div>
+    <div class="ai-chat-messages" id="ai-chat-messages"></div>
+    <div class="ai-chat-input">
+      <textarea id="ai-chat-input" placeholder="问点什么，比如：你做过什么数据库项目？" rows="1"></textarea>
+      <button id="ai-chat-send">发送</button>
+    </div>
+  </div>
+
+  <script src="js/main.js"></script>
+  <script src="js/ai.js"></script>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>项目管理 · 后台</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="admin-body">
+
+  <!-- Background Effects -->
+  <div class="bg-grid"></div>
+  <div class="bg-glow top"></div>
+
+  <!-- Login Screen -->
+  <div class="login-screen" id="login-screen">
+    <div class="login-card">
+      <div class="lock-icon">🔐</div>
+      <h2>管理后台</h2>
+      <p class="login-desc">请输入管理密码以访问项目管理功能</p>
+      <input type="password" id="password-input" placeholder="输入密码..." autofocus>
+      <p class="login-error" id="login-error">密码错误，请重试</p>
+      <button class="btn btn-primary" id="login-btn" style="width:100%">验证进入</button>
+    </div>
+  </div>
+
+  <!-- Admin Dashboard (hidden by default) -->
+  <div class="admin-dashboard" id="admin-dashboard">
+    <div class="admin-header">
+      <h2><span class="shield">🛡️</span> 项目管理中心</h2>
+      <button class="btn-logout" id="logout-btn">退出登录</button>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="admin-toolbar">
+      <button class="btn btn-add" id="btn-add-project">+ 添加项目</button>
+      <button class="btn btn-export" id="btn-export-json">📋 导出 JSON 数据</button>
+      <button class="btn btn-outline" id="btn-copy-skill">🤖 复制 Skill 上传指令</button>
+      <a href="index.html" class="btn btn-outline" style="text-decoration:none;">👁️ 预览公开页</a>
+    </div>
+
+    <!-- Skill Upload Tip -->
+    <div class="skill-upload-tip">
+      <p>💡 <strong>通过 WorkBuddy Skill 永久保存：</strong>在此页面编辑仅保存在本地浏览器。如需永久更新网站数据，请通过 WorkBuddy 对话对我说「上传项目」，我将帮你更新数据文件并重新部��。</p>
+    </div>
+
+    <!-- Project List -->
+    <div class="admin-project-list" id="admin-project-list">
+      <!-- Populated by JS -->
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" id="empty-state" style="display:none;">
+      <div class="empty-icon">📂</div>
+      <p>暂无项目数据</p>
+    </div>
+  </div>
+
+  <!-- Add/Edit Modal -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+      <h3 id="modal-title">添加项目</h3>
+      <form id="project-form">
+        <input type="hidden" id="form-edit-id" value="">
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>项目标题 *</label>
+            <input type="text" id="form-title" placeholder="如：MySQL 集群 MGR 高可用架构" required>
+          </div>
+          <div class="form-group">
+            <label>分类</label>
+            <input type="text" id="form-category" placeholder="如：数据库架构">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>项目描述 *</label>
+          <textarea id="form-desc" placeholder="简要描述项目内容和价值..." required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>项目亮点（每行一个）</label>
+          <div class="highlights-editor" id="highlights-editor">
+            <!-- Dynamic rows -->
+          </div>
+          <button type="button" class="btn-add-highlight" id="btn-add-highlight">+ 添加亮点</button>
+        </div>
+
+        <div class="form-group">
+          <label>技术栈</label>
+          <div class="tech-input-wrapper">
+            <input type="text" id="form-tech-input" placeholder="输入技术名称后按添加">
+            <button type="button" class="btn-add-tech" id="btn-add-tech">添加</button>
+          </div>
+          <div class="tech-tags-display" id="tech-tags-display"></div>
+        </div>
+
+        <div class="form-group">
+          <label>项目链接</label>
+          <input type="url" id="form-link" placeholder="https://...">
+          <p class="help-text">GitHub 仓库或项目演示地址</p>
+        </div>
+
+        <div class="form-group">
+          <label>截图/图片</label>
+          <div class="screenshot-upload" id="screenshot-upload-area">
+            <div class="upload-icon">📸</div>
+            <p>点击上传截图，或粘贴图片URL</p>
+            <p style="font-size:0.75rem;margin-top:4px">支持粘贴图片URL或本地上传（转为base64）</p>
+          </div>
+          <input type="file" id="screenshot-file-input" accept="image/*" style="display:none">
+          <div class="screenshot-preview" id="screenshot-preview">
+            <img id="screenshot-preview-img" src="" alt="预览">
+            <button type="button" class="remove-img" id="btn-remove-screenshot">✕</button>
+          </div>
+          <input type="hidden" id="form-screenshot" value="">
+        </div>
+
+        <div class="form-check" style="margin-bottom:16px">
+          <input type="checkbox" id="form-public" checked>
+          <label for="form-public" style="font-size:0.9rem;color:var(--text-secondary);cursor:pointer">公开显示在简历页面上</label>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-cancel" id="btn-cancel">取消</button>
+          <button type="submit" class="btn-save" id="btn-save">保存项目</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script src="js/admin.js"></script>
+</body>
+</html>
