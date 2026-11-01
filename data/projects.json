@@ -280,6 +280,12 @@
       "link": ""
     }
   ],
+  "contact": {
+    "api": "https://resume-site-3240dhrv.edgeone.cool/api/contact?eo_token=4c35cda19105e4d4e559ff0ee84d5991&eo_time=1793557281",
+    "mirrorUrl": "https://resume-site-3240dhrv.edgeone.cool?eo_token=4c35cda19105e4d4e559ff0ee84d5991&eo_time=1793557281",
+    "email": "1069007377@qq.com",
+    "note": "api 指向 EdgeOne Pages 的 Edge Function（密钥在服务端环境变量，不落前端）"
+  },
   "videos": [
     {
       "id": "vid-001",

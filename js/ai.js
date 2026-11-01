@@ -16,6 +16,7 @@
       resumeContext = {
         profile: data.profile,
         projects: (data.projects || []).filter((p) => p.public !== false),
+        contact: data.contact || {},
       };
     } catch (e) {
       resumeContext = { profile: {}, projects: [] };
@@ -213,22 +214,97 @@
     const form = document.getElementById('ai-contact-form');
     const statusEl = document.getElementById('ai-contact-status');
     if (!form) return;
-    form.addEventListener('submit', (e) => {
+
+    const btn = form.querySelector('button[type="submit"]');
+    const label = btn?.textContent || '提交需求';
+
+    /**
+     * 解析提交目标：
+     * - 站点本身部署在 EdgeOne：走同源相对路径，EdgeOne 自动带 HttpOnly cookie，无需暴露任何 token
+     * - 站点在 GitHub Pages 等其他域名：走 EdgeOne 镜像 API（配置里带 token，跨域调用）
+     */
+    function resolveApi() {
+      const host = location.hostname || '';
+      if (host.endsWith('edgeone.cool') || host.endsWith('edgeone.app')) {
+        return { url: '/api/contact', sameOrigin: true };
+      }
+      const api = resumeContext?.contact?.api || '';
+      return api ? { url: api, sameOrigin: false } : null;
+    }
+
+    /**
+     * 跨域提交 EdgeOne API 时有个坑：带 token 的首次请求会 302 重定向，
+     * 而 Fetch 规范在 301/302/303 下会把 POST 改成 GET 并丢弃 body，
+     * 导致后端收不到 JSON。所以先预热一次（让 EdgeOne 下发 HttpOnly cookie），
+     * 再用不带 token 的地址正式 POST —— 此时已带上 cookie，不会再触发重定向。
+     */
+    async function postToApi(target, payload) {
+      if (target.sameOrigin) {
+        return fetch(target.url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: payload,
+        });
+      }
+      const base = target.url.split('?')[0];
+      try {
+        await fetch(target.url, { credentials: 'include', mode: 'cors' });
+      } catch (e) {
+        /* 预热失败不阻断，随后正式请求会给出明确错误 */
+      }
+      return fetch(base, {
+        method: 'POST',
+        credentials: 'include',
+        mode: 'cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload,
+      });
+    }
+
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      const name = form.querySelector('[name="name"]')?.value?.trim() || '';
       const contact = form.querySelector('[name="contact"]')?.value?.trim() || '';
       const need = form.querySelector('[name="need"]')?.value?.trim() || '';
       if (!contact) { showStatus('请留下联系方式，方便我联系您', 'error'); return; }
       if (need.length < 5) { showStatus('请简要描述您的需求（至少 5 个字）', 'error'); return; }
-      const btn = form.querySelector('button[type="submit"]');
+
+      const target = resolveApi();
+      const mail = resumeContext?.contact?.email || '1069007377@qq.com';
+      if (!target) {
+        showStatus(`在线提交暂未开通，请直接发邮件到 ${mail}`, 'error');
+        return;
+      }
+
       btn.disabled = true;
       btn.textContent = '提交中...';
-      setTimeout(() => {
-        showStatus('✅ 需求已发送，我会尽快联系您！（演示环境，未真实发送）', 'success');
-        form.reset();
+      try {
+        const res = await postToApi(
+          target,
+          JSON.stringify({
+            name,
+            contact,
+            need,
+            source: location.origin + location.pathname,
+          })
+        );
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.ok) {
+          showStatus('✅ 需求已送达，我会尽快联系您！', 'success');
+          form.reset();
+        } else if (res.status === 401) {
+          showStatus('⚠️ 访问凭证已过期，请从「国内加速版」链接重新进入后再提交', 'error');
+        } else {
+          showStatus('⚠️ ' + (data.error || '提交失败，请稍后重试'), 'error');
+        }
+      } catch (err) {
+        showStatus(`⚠️ 网络异常，请稍后重试，或直接邮件联系 ${mail}`, 'error');
+      } finally {
         btn.disabled = false;
-        btn.textContent = '提交需求';
-      }, 800);
+        btn.textContent = label;
+      }
     });
+
     function showStatus(msg, type) {
       if (!statusEl) return;
       statusEl.textContent = msg;
