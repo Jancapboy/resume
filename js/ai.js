@@ -272,7 +272,7 @@
       const target = resolveApi();
       const mail = resumeContext?.contact?.email || '1069007377@qq.com';
       if (!target) {
-        showStatus(`在线提交暂未开通，请直接发邮件到 ${mail}`, 'error');
+        showMailFallback(name, contact, need, mail, '在线提交暂未开通');
         return;
       }
 
@@ -292,13 +292,11 @@
         if (res.ok && data.ok) {
           showStatus('✅ 需求已送达，我会尽快联系您！', 'success');
           form.reset();
-        } else if (res.status === 401) {
-          showStatus('⚠️ 访问凭证已过期，请从「国内加速版」链接重新进入后再提交', 'error');
         } else {
-          showStatus('⚠️ ' + (data.error || '提交失败，请稍后重试'), 'error');
+          showMailFallback(name, contact, need, mail, '在线提交暂时不可用');
         }
       } catch (err) {
-        showStatus(`⚠️ 网络异常，请稍后重试，或直接邮件联系 ${mail}`, 'error');
+        showMailFallback(name, contact, need, mail, '网络异常，在线提交未成功');
       } finally {
         btn.disabled = false;
         btn.textContent = label;
@@ -309,6 +307,29 @@
       if (!statusEl) return;
       statusEl.textContent = msg;
       statusEl.className = 'ai-contact-status ' + type;
+      statusEl.style.display = 'block';
+    }
+
+    /**
+     * 在线提交失败时的兜底：把访客已填的内容拼成 mailto 链接，
+     * 一键唤起邮件客户端，保证线索不会因为后端不可用而丢失。
+     */
+    function showMailFallback(name, contact, need, mail, reason) {
+      if (!statusEl) return;
+      const subject = `【简历站】${name || '访客'} 的需求咨询`;
+      const body =
+        `姓名：${name || '（未填）'}\n` +
+        `联系方式：${contact}\n\n` +
+        `需求：\n${need}\n\n` +
+        `（原页面：${location.href}）`;
+      const href =
+        `mailto:${mail}?subject=${encodeURIComponent(subject)}` +
+        `&body=${encodeURIComponent(body)}`;
+      statusEl.innerHTML =
+        `⚠️ ${escapeHtml(reason)}，已把您填写的内容整理好——` +
+        `<a href="${escapeHtml(href)}" style="text-decoration:underline">点这里用邮件发送</a>` +
+        `（或直接发到 ${escapeHtml(mail)}）`;
+      statusEl.className = 'ai-contact-status error';
       statusEl.style.display = 'block';
     }
   }
