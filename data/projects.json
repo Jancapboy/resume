@@ -5,31 +5,106 @@
     "location": "中国",
     "summary": "多年全栈开发经验，深耕数据库高可用架构、数据自动化抓取、AI 应用开发及企业级运维。2026 年主攻 AI 视频与 AI 漫剧全流程生成、LangGraph 多智能体工作流，并以 Vibe Coding 方式主导从需求到上线的完整交付闭环。擅长 MySQL 集群、OceanBase、Python 爬虫、企业微信集成及 AI 视频 / 3D 内容生成。",
     "skills": [
-      { "name": "MySQL MGR", "category": "数据库" },
-      { "name": "OceanBase 部署", "category": "数据库" },
-      { "name": "Python", "category": "语言" },
-      { "name": "MediaCrew", "category": "爬虫" },
-      { "name": "企业微信开发", "category": "集成" },
-      { "name": "OpenClaw Agent", "category": "AI Agent" },
-      { "name": "LangChain", "category": "AI Agent" },
-      { "name": "LangGraph", "category": "AI Agent" },
-      { "name": "多智能体 DAG", "category": "AI Agent" },
-      { "name": "AI 直播助手", "category": "AI" },
-      { "name": "AI 视频+数字人", "category": "AI" },
-      { "name": "Hunyuan3D-2.0", "category": "AI" },
-      { "name": "Linux 运维", "category": "运维" },
-      { "name": "Docker", "category": "运维" },
-      { "name": "SSRS 报表", "category": "企业" },
-      { "name": "node-RED", "category": "集成" },
-      { "name": "全栈开发", "category": "开发" },
-      { "name": "ComfyUI", "category": "AI" },
-      { "name": "MiniMax H3", "category": "AI" },
-      { "name": "FFmpeg", "category": "AI" },
-      { "name": "DeepSeek API", "category": "AI Agent" },
-      { "name": "RAG / 知识图谱", "category": "AI Agent" },
-      { "name": "RSS 定向采集", "category": "爬虫" },
-      { "name": "Vibe Coding", "category": "AI Agent" },
-      { "name": "GPU 集群调度", "category": "运维" }
+      {
+        "name": "MySQL MGR",
+        "category": "数据库"
+      },
+      {
+        "name": "OceanBase 部署",
+        "category": "数据库"
+      },
+      {
+        "name": "Python",
+        "category": "语言"
+      },
+      {
+        "name": "MediaCrew",
+        "category": "爬虫"
+      },
+      {
+        "name": "企业微信开发",
+        "category": "集成"
+      },
+      {
+        "name": "OpenClaw Agent",
+        "category": "AI Agent"
+      },
+      {
+        "name": "LangChain",
+        "category": "AI Agent"
+      },
+      {
+        "name": "LangGraph",
+        "category": "AI Agent"
+      },
+      {
+        "name": "多智能体 DAG",
+        "category": "AI Agent"
+      },
+      {
+        "name": "AI 直播助手",
+        "category": "AI"
+      },
+      {
+        "name": "AI 视频+数字人",
+        "category": "AI"
+      },
+      {
+        "name": "Hunyuan3D-2.0",
+        "category": "AI"
+      },
+      {
+        "name": "Linux 运维",
+        "category": "运维"
+      },
+      {
+        "name": "Docker",
+        "category": "运维"
+      },
+      {
+        "name": "SSRS 报表",
+        "category": "企业"
+      },
+      {
+        "name": "node-RED",
+        "category": "集成"
+      },
+      {
+        "name": "全栈开发",
+        "category": "开发"
+      },
+      {
+        "name": "ComfyUI",
+        "category": "AI"
+      },
+      {
+        "name": "MiniMax H3",
+        "category": "AI"
+      },
+      {
+        "name": "FFmpeg",
+        "category": "AI"
+      },
+      {
+        "name": "DeepSeek API",
+        "category": "AI Agent"
+      },
+      {
+        "name": "RAG / 知识图谱",
+        "category": "AI Agent"
+      },
+      {
+        "name": "RSS 定向采集",
+        "category": "爬虫"
+      },
+      {
+        "name": "Vibe Coding",
+        "category": "AI Agent"
+      },
+      {
+        "name": "GPU 集群调度",
+        "category": "运维"
+      }
     ]
   },
   "projects": [
@@ -45,7 +120,12 @@
         "读写分离与负载均衡策略",
         "数据一致性校验与恢复方案"
       ],
-      "techStack": ["MySQL", "MGR", "ProxySQL", "Linux"],
+      "techStack": [
+        "MySQL",
+        "MGR",
+        "ProxySQL",
+        "Linux"
+      ],
       "screenshot": "",
       "link": ""
     },
@@ -61,7 +141,13 @@
         "生产环境性能调优与容量规划",
         "容灾方案设计与故障演练"
       ],
-      "techStack": ["OceanBase", "FDE", "Linux", "Shell", "Python"],
+      "techStack": [
+        "OceanBase",
+        "FDE",
+        "Linux",
+        "Shell",
+        "Python"
+      ],
       "screenshot": "",
       "link": ""
     },
@@ -77,7 +163,13 @@
         "数据清洗与结构化存储",
         "定时任务与监控告警"
       ],
-      "techStack": ["Python", "MediaCrew", "Selenium", "MySQL", "Redis"],
+      "techStack": [
+        "Python",
+        "MediaCrew",
+        "Selenium",
+        "MySQL",
+        "Redis"
+      ],
       "screenshot": "",
       "link": ""
     },
@@ -93,7 +185,12 @@
         "订单状态实时追踪",
         "数据统计与可视化报表"
       ],
-      "techStack": ["Vue.js", "Node.js", "MySQL", "Docker"],
+      "techStack": [
+        "Vue.js",
+        "Node.js",
+        "MySQL",
+        "Docker"
+      ],
       "screenshot": "",
       "link": ""
     },
@@ -109,7 +206,12 @@
         "员工学习进度追踪与考核统计",
         "智能组卷与薄弱环节分析"
       ],
-      "techStack": ["React", "Spring Boot", "MySQL", "Redis"],
+      "techStack": [
+        "React",
+        "Spring Boot",
+        "MySQL",
+        "Redis"
+      ],
       "screenshot": "",
       "link": ""
     },
@@ -125,7 +227,13 @@
         "OpenClaw Agent 集成与指令下发",
         "运维自动化与告警联动"
       ],
-      "techStack": ["企业微信 API", "OpenClaw", "Python", "Nginx", "Linux"],
+      "techStack": [
+        "企业微信 API",
+        "OpenClaw",
+        "Python",
+        "Nginx",
+        "Linux"
+      ],
       "screenshot": "",
       "link": ""
     },
@@ -141,7 +249,13 @@
         "抖音/B站双平台统一接入",
         "实时数据分析与观众画像"
       ],
-      "techStack": ["Python", "WebSocket", "LLM", "抖音 API", "B站 API"],
+      "techStack": [
+        "Python",
+        "WebSocket",
+        "LLM",
+        "抖音 API",
+        "B站 API"
+      ],
       "screenshot": "",
       "link": ""
     },
@@ -157,7 +271,13 @@
         "数字人形象生成与口型同步",
         "视频素材智能剪辑与合成输出"
       ],
-      "techStack": ["Python", "LLM", "TTS", "数字人", "FFmpeg"],
+      "techStack": [
+        "Python",
+        "LLM",
+        "TTS",
+        "数字人",
+        "FFmpeg"
+      ],
       "screenshot": "",
       "link": ""
     },
@@ -173,7 +293,12 @@
         "智能纹理贴图与材质生成",
         "多格式导出 (OBJ/GLB/FBX)"
       ],
-      "techStack": ["Python", "Hunyuan3D-2.0", "Three.js", "Blender API"],
+      "techStack": [
+        "Python",
+        "Hunyuan3D-2.0",
+        "Three.js",
+        "Blender API"
+      ],
       "screenshot": "",
       "link": ""
     },
@@ -189,7 +314,13 @@
         "MES 生产数据实时采集与看板展示",
         "异构系统间数据桥接与接口规范化"
       ],
-      "techStack": ["SSRS", "node-RED", "SQL Server", "JavaScript", "REST API"],
+      "techStack": [
+        "SSRS",
+        "node-RED",
+        "SQL Server",
+        "JavaScript",
+        "REST API"
+      ],
       "screenshot": "",
       "link": ""
     },
@@ -209,7 +340,14 @@
         "多智能体 DAG 并行执行（4 专家并行审查 / 双源并行检索）",
         "建立跨场景测评体系，形成「任务复杂度-架构选型」决策矩阵，场景基类 + 注册中心可扩展"
       ],
-      "techStack": ["LangChain", "LangGraph", "Python", "LCEL", "MemorySaver", "DAG"],
+      "techStack": [
+        "LangChain",
+        "LangGraph",
+        "Python",
+        "LCEL",
+        "MemorySaver",
+        "DAG"
+      ],
       "screenshot": "",
       "link": ""
     },
@@ -225,7 +363,14 @@
         "本地 GPU 推理：RTX 3090 上跑 MiniMax-H3 量化模型 + LoRA 定制，规避云端 API 成本",
         "统一压制管线：H.264 / CRF 30 / faststart，浏览器边下边播，单片控制在 2~14 MB"
       ],
-      "techStack": ["ComfyUI", "MiniMax-H3", "Hunyuan3D", "FFmpeg", "LoRA", "数字人"],
+      "techStack": [
+        "ComfyUI",
+        "MiniMax-H3",
+        "Hunyuan3D",
+        "FFmpeg",
+        "LoRA",
+        "数字人"
+      ],
       "screenshot": "",
       "link": ""
     },
@@ -241,7 +386,14 @@
         "知识库节点 13 → 15，配套 unrated → rated 审核流转与节点关联",
         "打通 Docker Desktop 在 WSL2 下的代理链路：mihomo allow-lan + 镜像加速器 + 构建期代理注入"
       ],
-      "techStack": ["Python", "Docker", "WSL2", "RSS", "知识图谱", "mihomo"],
+      "techStack": [
+        "Python",
+        "Docker",
+        "WSL2",
+        "RSS",
+        "知识图谱",
+        "mihomo"
+      ],
       "screenshot": "",
       "link": ""
     },
@@ -257,7 +409,13 @@
         "端到端跑通：3 轮访谈中断 → 红线确认 → 报告生成",
         "同架构复用：完成 15 份命理分析提示词文档的 DAG 化工作流改造与选型评估"
       ],
-      "techStack": ["LangGraph", "LangChain", "Python", "StateGraph", "DAG"],
+      "techStack": [
+        "LangGraph",
+        "LangChain",
+        "Python",
+        "StateGraph",
+        "DAG"
+      ],
       "screenshot": "",
       "link": ""
     },
@@ -275,16 +433,23 @@
         "全程可追溯：逐段记录 md5、渲染耗时、素材来源与拼接帧数，异常可定位到具体镜号",
         "规格强一致：1504×832 / 24fps / h264 + aac，逐段 ffprobe 自检杜绝规格漂移"
       ],
-      "techStack": ["AI 漫剧", "GPU 集群", "FFmpeg", "Python", "一致性控制", "自动化流水线"],
+      "techStack": [
+        "AI 漫剧",
+        "GPU 集群",
+        "FFmpeg",
+        "Python",
+        "一致性控制",
+        "自动化流水线"
+      ],
       "screenshot": "",
       "link": ""
     }
   ],
   "contact": {
-    "api": "https://resume-site-3240dhrv.edgeone.cool/api/contact?eo_token=4c35cda19105e4d4e559ff0ee84d5991&eo_time=1793557281",
-    "mirrorUrl": "https://resume-site-3240dhrv.edgeone.cool?eo_token=4c35cda19105e4d4e559ff0ee84d5991&eo_time=1793557281",
+    "api": "https://resume-site-3240dhrv.edgeone.cool/api/contact?eo_token=726cfddcb9f4d3ee558c312b7a981ffb&eo_time=1793570990",
+    "mirrorUrl": "https://resume-site-3240dhrv.edgeone.cool?eo_token=726cfddcb9f4d3ee558c312b7a981ffb&eo_time=1793570990",
     "email": "1069007377@qq.com",
-    "note": "api 指向 EdgeOne Pages 的 Edge Function（密钥在服务端环境变量，不落前端）"
+    "note": "api 指向 EdgeOne Pages 的 Edge Function（密钥在服务端环境变量，不落前端）；eo_token 由定时任务自动刷新"
   },
   "videos": [
     {
@@ -293,7 +458,11 @@
       "src": "assets/videos/jiangnan-ai-video.mp4",
       "poster": "assets/videos/jiangnan-ai-video.jpg",
       "duration": "60s",
-      "tags": ["文生视频", "运镜控制", "AI 配乐旁白"],
+      "tags": [
+        "文生视频",
+        "运镜控制",
+        "AI 配乐旁白"
+      ],
       "desc": "以文生视频模型生成水乡场景，再通过运镜控制与后期配乐旁白串成 60 秒完整短片。"
     },
     {
@@ -302,7 +471,11 @@
       "src": "assets/videos/ai-cg-animation.mp4",
       "poster": "assets/videos/ai-cg-animation.jpg",
       "duration": "40s",
-      "tags": ["AI CG", "角色一致性", "PV 叙事"],
+      "tags": [
+        "AI CG",
+        "角色一致性",
+        "PV 叙事"
+      ],
       "desc": "AI 生成的三维 CG 动画预告片，考验角色跨镜头一致性、材质光照与电影感运镜。"
     },
     {
@@ -311,7 +484,11 @@
       "src": "assets/videos/digital-human-drive.mp4",
       "poster": "assets/videos/digital-human-drive.jpg",
       "duration": "33s",
-      "tags": ["数字人", "1080P 竖屏", "60fps"],
+      "tags": [
+        "数字人",
+        "1080P 竖屏",
+        "60fps"
+      ],
       "desc": "以动作驱动方案生成数字人视频，肢体运动与口型逐帧对齐，适配短视频竖屏分发。"
     },
     {
@@ -320,7 +497,11 @@
       "src": "assets/videos/comic-alchemy.mp4",
       "poster": "assets/videos/comic-alchemy.jpg",
       "duration": "22s",
-      "tags": ["AI 漫剧全流程生成", "炼金工房", "分镜渲染"],
+      "tags": [
+        "AI 漫剧全流程生成",
+        "炼金工房",
+        "分镜渲染"
+      ],
       "desc": "AI 漫剧全流程生成成片：剧本 → 分镜 → 角色资产绑定 → GPU 集群渲染 → 拼接自检。本片段为炼金工房场景，洛文全身登场并举起贤者之石。"
     },
     {
@@ -329,7 +510,11 @@
       "src": "assets/videos/comic-forest-clash.mp4",
       "poster": "assets/videos/comic-forest-clash.jpg",
       "duration": "24s",
-      "tags": ["AI 漫剧全流程生成", "多人群像", "冲突调度"],
+      "tags": [
+        "AI 漫剧全流程生成",
+        "多人群像",
+        "冲突调度"
+      ],
       "desc": "AI 漫剧全流程生成成片：森林光斑空镜衔接持矛村民对峙，考察多角色群像的一致性与镜头冲突调度。"
     },
     {
@@ -338,7 +523,11 @@
       "src": "assets/videos/comic-chapel-trial.mp4",
       "poster": "assets/videos/comic-chapel-trial.jpg",
       "duration": "26s",
-      "tags": ["AI 漫剧全流程生成", "服装状态转场", "戏剧张力"],
+      "tags": [
+        "AI 漫剧全流程生成",
+        "服装状态转场",
+        "戏剧张力"
+      ],
       "desc": "AI 漫剧全流程生成成片：祭坛仪式 → 伏案审问 → 红色特写，服装状态转场由脚本自动衔接，全段无人工剪辑。"
     },
     {
@@ -347,7 +536,11 @@
       "src": "assets/videos/comic-covenant.mp4",
       "poster": "assets/videos/comic-covenant.jpg",
       "duration": "26s",
-      "tags": ["AI 漫剧全流程生成", "道具一致性", "光影氛围"],
+      "tags": [
+        "AI 漫剧全流程生成",
+        "道具一致性",
+        "光影氛围"
+      ],
       "desc": "AI 漫剧全流程生成成片：圣堂光柱空镜 → 羊皮纸密约 → 魔法道具特写，验证跨场景道具与光影风格的统一性。"
     },
     {
@@ -356,7 +549,12 @@
       "src": "assets/videos/vibe-coding-process.mp4",
       "poster": "assets/videos/vibe-coding-process.jpg",
       "duration": "99s",
-      "tags": ["Vibe Coding", "AI 主导开发", "自测闭环", "自动化交付"],
+      "tags": [
+        "Vibe Coding",
+        "AI 主导开发",
+        "自测闭环",
+        "自动化交付"
+      ],
       "desc": "一次完整的 Vibe Coding 实战记录：需求对齐 → 方案选型 → 仓库与部署 → 功能实现 → 自测闭环 → 交付与自动化。全程 AI 主导执行，人只做决策与验收，末段交付每 2 天自动更新简历的定时任务。"
     }
   ]
