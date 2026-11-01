@@ -14,9 +14,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     const response = await fetch('data/projects.json');
     const data = await response.json();
-    renderProfile(data.profile);
-    renderSkills(data.profile.skills);
-    renderProjects(data.projects);
+    // 各渲染单元独立容错：单个区块失败不影响其余区块渲染
+    const safe = (fn, label) => {
+      try {
+        fn();
+      } catch (err) {
+        console.error(`Render failed [${label}]:`, err);
+      }
+    };
+    safe(() => renderProfile(data.profile), 'profile');
+    safe(() => renderSkills(data.profile.skills), 'skills');
+    safe(() => renderProjects(data.projects), 'projects');
+    safe(() => renderVideos(data.videos), 'videos');
     initEffects();
   } catch (err) {
     console.error('Failed to load project data:', err);
@@ -83,6 +92,36 @@ function renderProjects(projects) {
 
   // 绑定 3D 倾斜
   document.querySelectorAll('[data-tilt]').forEach(bindTilt);
+}
+
+/* 视频作品 */
+function renderVideos(videos) {
+  const grid = document.getElementById('videos-grid');
+  if (!grid) return;
+
+  if (!videos || videos.length === 0) {
+    grid.innerHTML = '<div class="empty-state"><div class="empty-icon">🎬</div><p>暂无视频作品，敬请期待</p></div>';
+    return;
+  }
+
+  grid.innerHTML = videos.map((v, index) => `
+    <figure class="video-card animate-in" style="animation-delay: ${index * 0.08}s">
+      <div class="video-wrap">
+        <video controls preload="none" poster="${v.poster}" playsinline>
+          <source src="${v.src}" type="video/mp4">
+          你的浏览器不支持 video 标签。
+        </video>
+        <span class="video-duration">${v.duration || ''}</span>
+      </div>
+      <figcaption class="video-info">
+        <h3 class="video-title">${v.title}</h3>
+        <p class="video-desc">${v.desc || ''}</p>
+        <div class="video-tags">
+          ${(v.tags || []).map((t) => `<span class="tech-badge">${t}</span>`).join('')}
+        </div>
+      </figcaption>
+    </figure>
+  `).join('');
 }
 
 /* ================================================

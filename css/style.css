@@ -1842,3 +1842,92 @@ body {
   border-radius: var(--radius-lg);
   padding: 28px;
 }
+
+/* ========================================
+   视频作品板块
+   ======================================== */
+.video-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+.video-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+  margin: 0;
+}
+
+.video-card:hover {
+  transform: translateY(-6px);
+  border-color: var(--border-hover);
+  background: var(--bg-card-hover);
+  box-shadow: var(--shadow-md), var(--shadow-glow);
+}
+
+.video-wrap {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  overflow: hidden;
+}
+
+.video-wrap video {
+  width: 100%;
+  height: 100%;
+  /* contain 保证竖屏作品完整可见，不被裁切 */
+  object-fit: contain;
+  display: block;
+  background: #000;
+}
+
+.video-duration {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  padding: 3px 9px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  background: rgba(7, 11, 20, 0.78);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+  pointer-events: none;
+}
+
+.video-info {
+  padding: 18px 20px 20px;
+}
+
+.video-title {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.video-desc {
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--text-secondary);
+  margin-bottom: 14px;
+}
+
+.video-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+@media (max-width: 640px) {
+  .video-grid {
+    grid-template-columns: 1fr;
+  }
+}

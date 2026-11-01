@@ -1,0 +1,125 @@
+<!-- LangGraph 业务分析工作流 - 独立内容页 -->
+<div class="detail-content-block">
+  <h2 class="detail-subtitle">🧭 工作流结构</h2>
+  <p class="detail-lead">用 LangGraph <strong>StateGraph</strong> 编排「访谈 → 信息考古 → 边界界定 → 报告生成」四段业务分析流程，核心工程难点不在节点实现，而在<strong>中断后的正确恢复</strong>。</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">节点 1</div>
+      <h3 class="arch-card-title">访谈采集</h3>
+      <p class="arch-card-desc">多轮对话收集客户原始表述，把访谈内容作为结构化数据进入图状态。</p>
+      <ul class="card-highlights">
+        <li>多轮累积，支持中途软中断</li>
+        <li>状态持久化，可断点续跑</li>
+        <li>与业务方真实语料对齐</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">节点 2</div>
+      <h3 class="arch-card-title">信息考古</h3>
+      <p class="arch-card-desc">对既有资料做证据挖掘与结构化提炼，反哺访谈结论。</p>
+      <ul class="card-highlights">
+        <li>抽取 if-then 规则</li>
+        <li>边界案例与红线识别</li>
+        <li>痛点清单结构化</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">节点 3</div>
+      <h3 class="arch-card-title">边界界定</h3>
+      <p class="arch-card-desc">明确方案适用范围与不适用范围，生成可执行的边界约束。</p>
+      <ul class="card-highlights">
+        <li>边界条件显式建模</li>
+        <li>红线确认环节（人工确认节点）</li>
+        <li>失败路径回退到访谈补充</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">节点 4</div>
+      <h3 class="arch-card-title">报告生成</h3>
+      <p class="arch-card-desc">基于全量图状态产出结构化业务分析报告。</p>
+      <ul class="card-highlights">
+        <li>报告结构固定、可交付</li>
+        <li>结论可追溯到访谈原话</li>
+        <li>CLI / 程序化双入口</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 核心工程点 -->
+  <h2 class="detail-subtitle">🛠️ 核心工程点：软中断的正确恢复</h2>
+  <p class="detail-lead">LangGraph 的软中断（外部循环 + 条件入口）如果配错，会出现<strong>每次 invoke 都从 entry 节点重新开始</strong>的死循环——流程看似在跑，实际上访谈数据被反复覆盖。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">🔧 修复前后对比</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>环节</th>
+            <th>错误做法</th>
+            <th>修复做法</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>入口定义</td>
+            <td>set_entry_point("interview")</td>
+            <td class="best">set_conditional_entry_point(route_entry, ...)</td>
+          </tr>
+          <tr>
+            <td>路由依据</td>
+            <td>固定节点，忽略图状态</td>
+            <td class="best">按进度 / 待注入回复类型路由</td>
+          </tr>
+          <tr>
+            <td>数据解析</td>
+            <td>空转的模拟 extraction</td>
+            <td class="best">自研 extraction.py 轻量解析</td>
+          </tr>
+          <tr class="bench-total">
+            <td>恢复行为</td>
+            <td>从 entry 重启，死循环</td>
+            <td class="best">从中断点续跑</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>经验沉淀：</strong>LangGraph 采用「条件路由 + 外部循环」软中断模式时，入口<strong>必须是条件入口</strong>。另外，LLM 节点缺失时应先落一个可用的确定性解析实现，而不是留空转 mock——这让流程能端到端跑通，LLM 接入点只需替换一个函数。</p>
+  </div>
+
+  <!-- 端到端验证 -->
+  <div class="arch-tips">
+    <h3 class="bench-title">✅ 端到端验证</h3>
+    <div class="arch-tips-grid">
+      <div class="arch-tip">
+        <span class="arch-tip-tag">场景 A</span>
+        <p><strong>程序化 3 轮</strong><br><span class="arch-tip-note">访谈中断 → 红线确认 → 报告</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">场景 B</span>
+        <p><strong>CLI full 模式</strong><br><span class="arch-tip-note">完整流程端到端跑通</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">场景 C</span>
+        <p><strong>CLI single 模式</strong><br><span class="arch-tip-note">单节点调用可用</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">架构复用</span>
+        <p><strong>15 份提示词文档</strong><br><span class="arch-tip-note">完成 DAG 化改造评估</span></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 架构复用 -->
+  <h2 class="detail-subtitle">♻️ 同一架构的第二次复用</h2>
+  <p class="detail-lead">将该工作流模式迁移到 <strong>15 份命理分析提示词文档</strong>的工程化改造上，完成从提示词工程到 <strong>LangGraph DAG</strong> 的可行性评估与选型结论。</p>
+  <ul class="card-highlights">
+    <li>固定推理链 + 条件分支 + 校验回退循环 → LangGraph 原生表达力</li>
+    <li>确定性计算（四柱 / 藏干 / 十神）用代码节点，推理判断用 LLM 节点</li>
+    <li>产出「命盘事实与命理结论严格分离」的可执行工程原则</li>
+  </ul>
+</div>

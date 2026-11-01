@@ -1,0 +1,121 @@
+<!-- AI 视频内容矩阵与漫剧工业化生产 - 独立内容页 -->
+<div class="detail-content-block">
+  <h2 class="detail-subtitle">🎬 四条内容生产线</h2>
+  <p class="detail-lead">以 <strong>ComfyUI + MiniMax-H3 + FFmpeg</strong> 为技术底座，跑通从 <strong>脚本 → 分镜 → 角色一致性 → 成片合成 → 多版本导出</strong> 的完整链路，覆盖 AI 短片、AI CG 动画、数字人驱动与本地量化推理四类形态。</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">生产线 1</div>
+      <h3 class="arch-card-title">AI 文生 / 图生视频</h3>
+      <p class="arch-card-desc">以文生视频模型生成场景片段，通过运镜指令控制镜头运动，后期叠加 AI 配乐与旁白形成完整短片。</p>
+      <ul class="card-highlights">
+        <li>江南水乡 60 秒运镜短片（1280×720 / 24fps）</li>
+        <li>AI 配乐 + AI 旁白文案版多版本</li>
+        <li>模型与参数可复现，配置即产线</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">生产线 2</div>
+      <h3 class="arch-card-title">AI CG 动画</h3>
+      <p class="arch-card-desc">三维 CG 动画预告片（PV）制作，核心难点是角色跨镜头一致性与电影感材质光照。</p>
+      <ul class="card-highlights">
+        <li>维多利亚舞会 CG PV（1344×768 / 40s）</li>
+        <li>角色跨镜头一致性控制</li>
+        <li>材质、光照与景别调度</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">生产线 3</div>
+      <h3 class="arch-card-title">数字人动作驱动</h3>
+      <p class="arch-card-desc">以动作驱动方案生成数字人视频，肢体运动与口型逐帧对齐，直接适配短视频竖屏分发。</p>
+      <ul class="card-highlights">
+        <li>1080×1920 竖屏 / 60fps，压制后转 720×1280 / 30fps</li>
+        <li>肢体与口型帧级同步</li>
+        <li>自有数字人资产库（h3dh）沉淀</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">生产线 4</div>
+      <h3 class="arch-card-title">本地量化推理</h3>
+      <p class="arch-card-desc">在本地 RTX 3090 24GB 上跑 MiniMax-H3 量化模型并挂 LoRA 定制，规避云端 API 成本与外网依赖。</p>
+      <ul class="card-highlights">
+        <li>MiniMax-H3 量化推理 + LoRA 权重定制</li>
+        <li>4K 生成（3840×1536 / 24fps）本地完成</li>
+        <li>把一次性成本转为可复用算力资产</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 漫剧工业化 -->
+  <h2 class="detail-subtitle">📦 漫剧工业化批量生产</h2>
+  <p class="detail-lead">《诸神黄昏》漫剧系列跑通 <strong>13 集批量生产</strong>，同一集内容可一次导出多种交付规格，直接对接短视频平台投放。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">📊 单集多版本交付矩阵</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>输出版本</th>
+            <th>规格</th>
+            <th>用途</th>
+            <th>状态</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>正片版</td>
+            <td>1344×768 / 24fps</td>
+            <td>横屏长视频投放</td>
+            <td class="best">已交付 13 集</td>
+          </tr>
+          <tr>
+            <td>九宫格版</td>
+            <td>3×3 宫格分屏</td>
+            <td>多镜头叙事压缩</td>
+            <td class="best">批量产出</td>
+          </tr>
+          <tr>
+            <td>封面首帧版</td>
+            <td>3:4 竖版</td>
+            <td>信息流封面图</td>
+            <td class="best">批量产出</td>
+          </tr>
+          <tr>
+            <td>Ref2VA 原生配音版</td>
+            <td>含生成音轨</td>
+            <td>免配音直出</td>
+            <td class="best">批量产出</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>工程要点：</strong>内容生产与交付规格解耦——一次生成，多套压制参数输出，使「单集成本」随集数增加而递减，这是漫剧能规模化的前提。</p>
+  </div>
+
+  <!-- 技术链路 -->
+  <div class="arch-tips">
+    <h3 class="bench-title">🛠️ 产线技术链路</h3>
+    <div class="arch-tips-grid">
+      <div class="arch-tip">
+        <span class="arch-tip-tag">生成层</span>
+        <p><strong>ComfyUI + 量化模型</strong><br><span class="arch-tip-note">本地 GPU 推理，参数可复现</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">一致性层</span>
+        <p><strong>LoRA + 角色资产</strong><br><span class="arch-tip-note">跨镜头角色统一</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">后期层</span>
+        <p><strong>FFmpeg 批量压制</strong><br><span class="arch-tip-note">H.264 / CRF 28 / faststart</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">分发层</span>
+        <p><strong>多版本矩阵输出</strong><br><span class="arch-tip-note">横屏 / 竖屏 / 宫格 / 封面</span></p>
+      </div>
+    </div>
+  </div>
+</div>

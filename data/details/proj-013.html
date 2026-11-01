@@ -1,0 +1,110 @@
+<!-- 运维知识库自动化流水线 - 独立内容页 -->
+<div class="detail-content-block">
+  <h2 class="detail-subtitle">🔁 流水线四段式</h2>
+  <p class="detail-lead">以自研 RSS 生成器 <strong>ForgeRSS</strong> 为采集端，把「信息源 → 结构化知识节点」做成一条<strong>可增量、可审核、可持续</strong>的自动化流水线，为运维知识库 TO B 商业化提供数据底座。</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">段 1 · 采集</div>
+      <h3 class="arch-card-title">ForgeRSS 定向采集</h3>
+      <p class="arch-card-desc">自建 RSS 生成器，按目标站点结构定制抓取规则，避开通用阅读器的字段缺失问题。</p>
+      <ul class="card-highlights">
+        <li>已接入 anthropic_news / anthropic_engineering / openai_research / ai_coding</li>
+        <li>单源 8~10 篇稳定抽取</li>
+        <li>免登录源全自动，扫码类源人工兜底</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">段 2 · 清洗</div>
+      <h3 class="arch-card-title">结构化归一</h3>
+      <p class="arch-card-desc">统一正文抽取、Markdown 归一与元信息补全，保证入库内容格式一致、可被检索。</p>
+      <ul class="card-highlights">
+        <li>正文抽取 + Markdown 规范化</li>
+        <li>标题 / 时间 / 来源元信息补全</li>
+        <li>工具链：rss_to_kb.py、feed_to_kb_entry.py</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">段 3 · 入库</div>
+      <h3 class="arch-card-title">知识节点注册</h3>
+      <p class="arch-card-desc">经 kb_add 注册为知识节点，并与既有主题节点建立关联，形成可扩展的图谱。</p>
+      <ul class="card-highlights">
+        <li>节点规模 13 → 15</li>
+        <li>与 model-thinker-framework 等主题节点关联</li>
+        <li>节点 ID 命名规范（源名连字符化）</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">段 4 · 审核</div>
+      <h3 class="arch-card-title">Curator 质量流转</h3>
+      <p class="arch-card-desc">新节点默认 unrated / unseen，由 Curator 审核评级后才进入正式知识消费链路。</p>
+      <ul class="card-highlights">
+        <li>unrated → rated 状态机</li>
+        <li>待审队列可视化</li>
+        <li>审核后才计入可用知识</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 工程环境 -->
+  <h2 class="detail-subtitle">🧱 环境工程：让 Docker 在国内网络跑通</h2>
+  <p class="detail-lead">Windows + WSL2 + Docker Desktop + 本机代理的组合是典型的四层网络坑，<strong>逐层定位后三件套同时生效</strong>才稳定跑通大镜像与容器构建。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">🔍 故障演进与根因</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>现象</th>
+            <th>根因</th>
+            <th>处置</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>EOF / failed to resolve metadata</td>
+            <td>daemon 内置代理指向不可达地址</td>
+            <td>改手动代理配置</td>
+          </tr>
+          <tr>
+            <td>dial tcp 202.53.x.x:443: connectex</td>
+            <td>直连被墙，代理未生效</td>
+            <td>ProxyHTTPMode = manual</td>
+          </tr>
+          <tr class="bench-total">
+            <td>172.30.0.1:7890 actively refused</td>
+            <td>代理只监听 127.0.0.1，WSL 侧不可达</td>
+            <td>mihomo allow-lan: true</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>关键认知：</strong>Docker 引擎跑在 WSL2 虚拟机内，<code>127.0.0.1</code> 指向的是 WSL 自己而非 Windows 宿主，必须用 <code>172.30.0.1</code> 网关地址；<code>allow-lan: false</code> 是最隐蔽的一环。</p>
+  </div>
+
+  <div class="arch-tips">
+    <h3 class="bench-title">🧩 稳定运行三件套</h3>
+    <div class="arch-tips-grid">
+      <div class="arch-tip">
+        <span class="arch-tip-tag">① 代理放行</span>
+        <p><strong>mihomo allow-lan: true</strong><br><span class="arch-tip-note">允许 WSL 侧接入 7890 端口</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">② 地址纠正</span>
+        <p><strong>172.30.0.1:7890</strong><br><span class="arch-tip-note">用宿主网关地址，不用 127.0.0.1</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">③ 镜像加速</span>
+        <p><strong>registry-mirrors</strong><br><span class="arch-tip-note">国内 CDN 直连，绕过代理不稳定</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">④ 构建注入</span>
+        <p><strong>build-arg 代理</strong><br><span class="arch-tip-note">容器内 apt/wget 不走镜像源，需显式注入</span></p>
+      </div>
+    </div>
+  </div>
+</div>

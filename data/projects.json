@@ -3,7 +3,7 @@
     "name": "全栈工程师",
     "title": "高级后端开发 / 数据库 & 自动化专家",
     "location": "中国",
-    "summary": "多年全栈开发经验，深耕数据库高可用架构、数据自动化抓取、AI应用开发及企业级运维。擅长 MySQL 集群、OceanBase、Python 爬虫、企业微信集成及 AI 视频/3D 内容生成。",
+    "summary": "多年全栈开发经验，深耕数据库高可用架构、数据自动化抓取、AI 应用开发及企业级运维。2026 年主攻 AI 视频 / 漫剧工业化生产与 LangGraph 多智能体工作流，并把一线运维经验沉淀为可交付的知识工程产品。擅长 MySQL 集群、OceanBase、Python 爬虫、企业微信集成及 AI 视频 / 3D 内容生成。",
     "skills": [
       { "name": "MySQL MGR", "category": "数据库" },
       { "name": "OceanBase 部署", "category": "数据库" },
@@ -21,7 +21,13 @@
       { "name": "Docker", "category": "运维" },
       { "name": "SSRS 报表", "category": "企业" },
       { "name": "node-RED", "category": "集成" },
-      { "name": "全栈开发", "category": "开发" }
+      { "name": "全栈开发", "category": "开发" },
+      { "name": "ComfyUI", "category": "AI" },
+      { "name": "MiniMax H3", "category": "AI" },
+      { "name": "FFmpeg", "category": "AI" },
+      { "name": "DeepSeek API", "category": "AI Agent" },
+      { "name": "RAG / 知识图谱", "category": "AI Agent" },
+      { "name": "RSS 定向采集", "category": "爬虫" }
     ]
   },
   "projects": [
@@ -204,6 +210,92 @@
       "techStack": ["LangChain", "LangGraph", "Python", "LCEL", "MemorySaver", "DAG"],
       "screenshot": "",
       "link": ""
+    },
+    {
+      "id": "proj-012",
+      "title": "AI 视频内容矩阵与漫剧工业化生产",
+      "category": "AI 内容",
+      "public": true,
+      "description": "搭建 AI 视频 / 漫剧的工业化生产流水线，覆盖 AI 文生视频、AI CG 动画、数字人动作驱动、本地量化模型推理与多集漫剧批量出片。从脚本、分镜、角色一致性控制到成片合成与多版本导出，形成可复用的内容生产链路。",
+      "highlights": [
+        "AI 文生 / 图生视频成片：江南水乡 60 秒运镜短片、维多利亚舞会 CG PV",
+        "数字人动作驱动：1080P 竖屏 60fps，肢体与口型帧级同步",
+        "漫剧工业化：13 集批量生产，Ref2VA 原生配音 + 九宫格版 / 封面首帧多版本输出",
+        "本地 GPU 推理：RTX 3090 上跑 MiniMax-H3 量化模型 + LoRA 定制，规避云端 API 成本"
+      ],
+      "techStack": ["ComfyUI", "MiniMax-H3", "Hunyuan3D", "FFmpeg", "LoRA", "数字人"],
+      "screenshot": "",
+      "link": ""
+    },
+    {
+      "id": "proj-013",
+      "title": "运维知识库自动化流水线（RSS → 知识图谱）",
+      "category": "自动化 / 知识工程",
+      "public": true,
+      "description": "搭建「信息源 → 结构化知识节点」的可持续更新机制：用自研 RSS 生成器定向采集 AI 技术源，经清洗与归一化后自动入库到本地知识库，配套 Curator 审核流转，为运维知识库 TO B 商业化提供可复用的数据底座。",
+      "highlights": [
+        "自建 RSS 生成器 ForgeRSS，定向采集 anthropic / openai / ai_coding 等技术源",
+        "清洗入库脚本一键增量更新（rss_to_kb.py / feed_to_kb_entry.py）",
+        "知识库节点 13 → 15，配套 unrated → rated 审核流转与节点关联",
+        "打通 Docker Desktop 在 WSL2 下的代理链路：mihomo allow-lan + 镜像加速器 + 构建期代理注入"
+      ],
+      "techStack": ["Python", "Docker", "WSL2", "RSS", "知识图谱", "mihomo"],
+      "screenshot": "",
+      "link": ""
+    },
+    {
+      "id": "proj-014",
+      "title": "LangGraph 业务分析工作流（软中断可恢复架构）",
+      "category": "AI Agent",
+      "public": true,
+      "description": "用 LangGraph 构建「访谈 → 信息考古 → 边界界定 → 报告生成」的多角色业务分析工作流，核心解决 LLM 工作流「中断后无法正确恢复」的工程难题：入口改为条件路由而非固定节点，配合软中断与状态持久化实现多轮访谈稳定续跑。",
+      "highlights": [
+        "StateGraph 条件入口 + 外部循环软中断，修复每次 invoke 从 entry 重启的死循环",
+        "自研 extraction 节点解析 if-then 规则 / 边界案例 / 红线 / 痛点，预留 LLM 注入点",
+        "端到端跑通：3 轮访谈中断 → 红线确认 → 报告生成",
+        "同架构复用：完成 15 份命理分析提示词文档的 DAG 化工作流改造与选型评估"
+      ],
+      "techStack": ["LangGraph", "LangChain", "Python", "StateGraph", "DAG"],
+      "screenshot": "",
+      "link": ""
+    }
+  ],
+  "videos": [
+    {
+      "id": "vid-001",
+      "title": "江南水乡 · AI 运镜短片",
+      "src": "assets/videos/jiangnan-ai-video.mp4",
+      "poster": "assets/videos/jiangnan-ai-video.jpg",
+      "duration": "60s",
+      "tags": ["文生视频", "运镜控制", "AI 配乐旁白"],
+      "desc": "以文生视频模型生成水乡场景，再通过运镜控制与后期配乐旁白串成 60 秒完整短片。"
+    },
+    {
+      "id": "vid-002",
+      "title": "维多利亚舞会 · CG 动画 PV",
+      "src": "assets/videos/ai-cg-animation.mp4",
+      "poster": "assets/videos/ai-cg-animation.jpg",
+      "duration": "40s",
+      "tags": ["AI CG", "角色一致性", "PV 叙事"],
+      "desc": "AI 生成的三维 CG 动画预告片，考验角色跨镜头一致性、材质光照与电影感运镜。"
+    },
+    {
+      "id": "vid-003",
+      "title": "数字人动作驱动",
+      "src": "assets/videos/digital-human-drive.mp4",
+      "poster": "assets/videos/digital-human-drive.jpg",
+      "duration": "33s",
+      "tags": ["数字人", "1080P 竖屏", "60fps"],
+      "desc": "以动作驱动方案生成数字人视频，肢体运动与口型逐帧对齐，适配短视频竖屏分发。"
+    },
+    {
+      "id": "vid-004",
+      "title": "诸神黄昏漫剧 · 第 3 集正片",
+      "src": "assets/videos/comic-series-ep03.mp4",
+      "poster": "assets/videos/comic-series-ep03.jpg",
+      "duration": "81s",
+      "tags": ["漫剧", "Ref2VA 原生配音", "多版本输出"],
+      "desc": "漫剧工业化流水线的代表成片：Ref2VA 生成原生配音，同一集批量输出九宫格版与封面首帧版。"
     }
   ]
 }
