@@ -1,0 +1,187 @@
+<!-- AI 漫剧全流程生成流水线 - 独立内容页 -->
+<div class="detail-content-block">
+  <h2 class="detail-subtitle">🎬 全流程六阶段</h2>
+  <p class="detail-lead">AI 漫剧不是「生成几个片段再手工拼」，而是把 <strong>剧本 → 分镜 → 资产绑定 → 渲染 → 拼接 → 自检</strong> 整条链路做成脚本驱动的流水线。人工只参与剧本撰写与成片验收，中间环节零手工干预。</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">阶段 1</div>
+      <h3 class="arch-card-title">剧本与分镜拆解</h3>
+      <p class="arch-card-desc">把剧本拆成场景级分镜，每集拆出 17~22 个可独立渲染的镜头段落，段落即为最小生产单元。</p>
+      <ul class="card-highlights">
+        <li>场景编号体系（S01~S26 跨集连续）</li>
+        <li>每段落独立时长、帧数、资产槽位</li>
+        <li>段落即最小可重跑单元</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">阶段 2</div>
+      <h3 class="arch-card-title">角色与场景资产绑定</h3>
+      <p class="arch-card-desc">每个段落绑定所需的角色与道具资产槽位，保证跨镜头角色形象与场景风格统一。</p>
+      <ul class="card-highlights">
+        <li>assetSlots 显式声明角色 / 道具 / 场景</li>
+        <li>服装状态按段落锚定</li>
+        <li>资产缺失直接阻断，不静默降级</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">阶段 3</div>
+      <h3 class="arch-card-title">GPU 集群批量渲染</h3>
+      <p class="arch-card-desc">段落级并行渲染，GPU 盒子远程执行队列，逐段产出带完整元数据的中间产物。</p>
+      <ul class="card-highlights">
+        <li>远程渲染队列 + 段落级并行</li>
+        <li>逐段记录渲染耗时（queue.elapsed）</li>
+        <li>产物带 md5 校验，损坏可定位重跑</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">阶段 4</div>
+      <h3 class="arch-card-title">自动拼接</h3>
+      <p class="arch-card-desc">按 clip_sequence 顺序无损拼接（concat copy，不重编码），保证画质零损失与规格零漂移。</p>
+      <ul class="card-highlights">
+        <li>concat_method = copy，零重编码损失</li>
+        <li>严格按 clip_sequence 顺序</li>
+        <li>输出整集镜像并归档</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">阶段 5</div>
+      <h3 class="arch-card-title">ffprobe 自检</h3>
+      <p class="arch-card-desc">拼接后自动跑 ffprobe 校验分辨率、帧率、编码、时长与音轨，任一项不符即拦截。</p>
+      <ul class="card-highlights">
+        <li>分辨率 / 帧率 / 编码 / 时长四校验</li>
+        <li>音轨存在性检查</li>
+        <li>凑不齐的集被门禁拦下（exit 2）</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">阶段 6</div>
+      <h3 class="arch-card-title">归档与发布</h3>
+      <p class="arch-card-desc">整集镜像同步到本地工作台并刷新清单，支持按需抽取片段做二次分发。</p>
+      <ul class="card-highlights">
+        <li>整集镜像 + manifest 同步</li>
+        <li>工作台清单自动刷新</li>
+        <li>片段级再分发（网页展示 / 短视频投放）</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 真实产出数据 -->
+  <h2 class="detail-subtitle">📊 真实产出统计</h2>
+  <p class="detail-lead">以上不是设想，以下是 <strong>11 集成片的 manifest 实测统计</strong>，每一集都由同一条流水线产出。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">📈 11 集产出明细</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>集数</th>
+            <th>分镜段落</th>
+            <th>成片时长</th>
+            <th>场景数</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>EP01</td><td>20 段</td><td>183.4s</td><td>S01 / S07 / S02</td></tr>
+          <tr><td>EP02</td><td>17 段</td><td>185.6s</td><td>S01 / S08 / S02</td></tr>
+          <tr><td>EP03</td><td>22 段</td><td>188.8s</td><td>S08 / S02 / S07</td></tr>
+          <tr><td>EP04</td><td>21 段</td><td>194.9s</td><td>S03 / S04</td></tr>
+          <tr><td>EP05</td><td>19 段</td><td>198.0s</td><td>S05 / S06</td></tr>
+          <tr><td>EP06</td><td>17 段</td><td>178.5s</td><td>S06 / S02</td></tr>
+          <tr><td>EP07</td><td>20 段</td><td>196.8s</td><td>S07 / S08 / S09 / S10</td></tr>
+          <tr><td>EP08</td><td>18 段</td><td>182.3s</td><td>S11 ~ S14</td></tr>
+          <tr><td>EP09</td><td>18 段</td><td>182.3s</td><td>S15 ~ S18</td></tr>
+          <tr><td>EP10</td><td>18 段</td><td>182.3s</td><td>S19 ~ S22</td></tr>
+          <tr><td>EP11</td><td>18 段</td><td>182.3s</td><td>S23 ~ S26</td></tr>
+          <tr class="bench-total">
+            <td>合计 11 集</td>
+            <td class="best">208 段</td>
+            <td class="best">2055 秒（34 分钟）</td>
+            <td>26 个连续场景</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>规模含义：</strong>平均每集 18.9 个分镜段落、平均每段 9.9 秒，成片规格统一为 <strong>1504×832 / 24fps / H.264 + AAC</strong>，场景编号跨集连续（S01→S26），说明这是一套可无限续写的连载产线，不是零散作品合集。</p>
+  </div>
+
+  <!-- 一致性工程 -->
+  <h2 class="detail-subtitle">🧬 一致性工程</h2>
+  <p class="detail-lead">AI 漫剧最容易崩的就是<strong>角色一致性</strong>——同一个角色在不同镜头里脸会变、衣服会跳。这套流水线用状态机把它变成可校验的数据。</p>
+
+  <div class="arch-tips">
+    <h3 class="bench-title">🔗 三层一致性保障</h3>
+    <div class="arch-tips-grid">
+      <div class="arch-tip">
+        <span class="arch-tip-tag">服装状态</span>
+        <p><strong>costume_state + costume_anchor</strong><br><span class="arch-tip-note">每段落锚定服装状态</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">转场检测</span>
+        <p><strong>costume_transitions</strong><br><span class="arch-tip-note">逐边界记录服装前后变化</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">特效衔接</span>
+        <p><strong>transition_fx_dir</strong><br><span class="arch-tip-note">需要转场时自动挂特效目录</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">在场校验</span>
+        <p><strong>liz_expected_in_scene</strong><br><span class="arch-tip-note">角色是否该出现在本场景</span></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 可追溯 -->
+  <h2 class="detail-subtitle">🔍 全程可追溯</h2>
+  <p class="detail-lead">每个段落都留下完整取证链，出问题时能定位到<strong>具体镜号</strong>而不是重跑整集。</p>
+  <ul class="card-highlights">
+    <li>段落级 <strong>md5</strong> 校验：内容损坏可精确识别</li>
+    <li><strong>渲染耗时</strong>（queue.elapsed）：性能瓶颈定位到单段</li>
+    <li><strong>素材来源路径</strong>（artifact）：问题段落可直接回溯到 GPU 盒子上的源文件</li>
+    <li><strong>拼接帧数与字节数</strong>：核对最终产物是否完整</li>
+    <li><strong>时间戳</strong>：每段落 mtime 精确到秒，全流程耗时可还原</li>
+  </ul>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">⏱️ 调度与门禁</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>机制</th>
+            <th>实现</th>
+            <th>作用</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>轮询出片</td>
+            <td>assemble_watch.py --every 300</td>
+            <td>每 5 分钟自动发现凑齐的集并拼装，不用守着</td>
+          </tr>
+          <tr>
+            <td>完整性门禁</td>
+            <td class="best">exit 2 拦截</td>
+            <td>段落没凑齐的集直接被拒，不会产出半成品</td>
+          </tr>
+          <tr>
+            <td>规格自检</td>
+            <td>ffprobe 逐段校验</td>
+            <td>杜绝规格漂移导致的下游返工</td>
+          </tr>
+          <tr class="bench-total">
+            <td>镜像同步</td>
+            <td>sync_workbench.py</td>
+            <td>本地工作台清单自动刷新</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

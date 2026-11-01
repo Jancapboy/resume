@@ -49,51 +49,51 @@
     </div>
   </div>
 
-  <!-- 漫剧工业化 -->
-  <h2 class="detail-subtitle">📦 漫剧工业化批量生产</h2>
-  <p class="detail-lead">《诸神黄昏》漫剧系列跑通 <strong>13 集批量生产</strong>，同一集内容可一次导出多种交付规格，直接对接短视频平台投放。</p>
+  <!-- 统一压制管线 -->
+  <h2 class="detail-subtitle">📦 统一压制管线</h2>
+  <p class="detail-lead">所有成片走同一条 <strong>FFmpeg 压制管线</strong>，用一套参数把高码率母版转成网页可直接播放的规格，解决「母版好看但网页加载慢」的问题。</p>
 
   <div class="bench-wrap">
-    <h3 class="bench-title">📊 单集多版本交付矩阵</h3>
+    <h3 class="bench-title">📊 压制参数与产出</h3>
     <div class="bench-table-scroll">
       <table class="bench-table">
         <thead>
           <tr>
-            <th>输出版本</th>
-            <th>规格</th>
-            <th>用途</th>
-            <th>状态</th>
+            <th>参数</th>
+            <th>取值</th>
+            <th>作用</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td>正片版</td>
-            <td>1344×768 / 24fps</td>
-            <td>横屏长视频投放</td>
-            <td class="best">已交付 13 集</td>
+            <td>视频编码</td>
+            <td>H.264 High / yuv420p</td>
+            <td>浏览器全平台兼容，无需转码兜底</td>
           </tr>
           <tr>
-            <td>九宫格版</td>
-            <td>3×3 宫格分屏</td>
-            <td>多镜头叙事压缩</td>
-            <td class="best">批量产出</td>
+            <td>质量</td>
+            <td>CRF 28~30</td>
+            <td>同画质下体积砍到原片的 1/15</td>
           </tr>
           <tr>
-            <td>封面首帧版</td>
-            <td>3:4 竖版</td>
-            <td>信息流封面图</td>
-            <td class="best">批量产出</td>
+            <td>封装</td>
+            <td class="best">+faststart</td>
+            <td>moov 前置，浏览器边下边播</td>
           </tr>
           <tr>
-            <td>Ref2VA 原生配音版</td>
-            <td>含生成音轨</td>
-            <td>免配音直出</td>
-            <td class="best">批量产出</td>
+            <td>分辨率</td>
+            <td>1280 宽（竖屏转 720×1280）</td>
+            <td>统一 16:9 画布，竖屏 contain 不裁切</td>
+          </tr>
+          <tr class="bench-total">
+            <td>产出体积</td>
+            <td class="best">单片 2~14 MB</td>
+            <td>整站视频总量控制在 40 MB 内</td>
           </tr>
         </tbody>
       </table>
     </div>
-    <p class="bench-note">💡 <strong>工程要点：</strong>内容生产与交付规格解耦——一次生成，多套压制参数输出，使「单集成本」随集数增加而递减，这是漫剧能规模化的前提。</p>
+    <p class="bench-note">💡 <strong>工程要点：</strong><code>faststart</code> 是网页播放体验的分水岭——未开启时浏览器必须等整个文件下载完才起播，14 MB 的片子会让 HR 直接放弃。</p>
   </div>
 
   <!-- 技术链路 -->

@@ -3,7 +3,7 @@
     "name": "全栈工程师",
     "title": "高级后端开发 / 数据库 & 自动化专家",
     "location": "中国",
-    "summary": "多年全栈开发经验，深耕数据库高可用架构、数据自动化抓取、AI 应用开发及企业级运维。2026 年主攻 AI 视频 / 漫剧工业化生产与 LangGraph 多智能体工作流，并把一线运维经验沉淀为可交付的知识工程产品。擅长 MySQL 集群、OceanBase、Python 爬虫、企业微信集成及 AI 视频 / 3D 内容生成。",
+    "summary": "多年全栈开发经验，深耕数据库高可用架构、数据自动化抓取、AI 应用开发及企业级运维。2026 年主攻 AI 视频与 AI 漫剧全流程生成、LangGraph 多智能体工作流，并以 Vibe Coding 方式主导从需求到上线的完整交付闭环。擅长 MySQL 集群、OceanBase、Python 爬虫、企业微信集成及 AI 视频 / 3D 内容生成。",
     "skills": [
       { "name": "MySQL MGR", "category": "数据库" },
       { "name": "OceanBase 部署", "category": "数据库" },
@@ -27,7 +27,9 @@
       { "name": "FFmpeg", "category": "AI" },
       { "name": "DeepSeek API", "category": "AI Agent" },
       { "name": "RAG / 知识图谱", "category": "AI Agent" },
-      { "name": "RSS 定向采集", "category": "爬虫" }
+      { "name": "RSS 定向采集", "category": "爬虫" },
+      { "name": "Vibe Coding", "category": "AI Agent" },
+      { "name": "GPU 集群调度", "category": "运维" }
     ]
   },
   "projects": [
@@ -213,15 +215,15 @@
     },
     {
       "id": "proj-012",
-      "title": "AI 视频内容矩阵与漫剧工业化生产",
+      "title": "AI 视频内容矩阵与数字人生产",
       "category": "AI 内容",
       "public": true,
-      "description": "搭建 AI 视频 / 漫剧的工业化生产流水线，覆盖 AI 文生视频、AI CG 动画、数字人动作驱动、本地量化模型推理与多集漫剧批量出片。从脚本、分镜、角色一致性控制到成片合成与多版本导出，形成可复用的内容生产链路。",
+      "description": "搭建多形态 AI 视频的工业化生产流水线，覆盖 AI 文生视频、AI CG 动画、数字人动作驱动与本地量化模型推理。从提示词与参数配置、角色一致性控制到成片合成与多版本导出，形成可复用的内容生产链路。",
       "highlights": [
         "AI 文生 / 图生视频成片：江南水乡 60 秒运镜短片、维多利亚舞会 CG PV",
         "数字人动作驱动：1080P 竖屏 60fps，肢体与口型帧级同步",
-        "漫剧工业化：13 集批量生产，Ref2VA 原生配音 + 九宫格版 / 封面首帧多版本输出",
-        "本地 GPU 推理：RTX 3090 上跑 MiniMax-H3 量化模型 + LoRA 定制，规避云端 API 成本"
+        "本地 GPU 推理：RTX 3090 上跑 MiniMax-H3 量化模型 + LoRA 定制，规避云端 API 成本",
+        "统一压制管线：H.264 / CRF 30 / faststart，浏览器边下边播，单片控制在 2~14 MB"
       ],
       "techStack": ["ComfyUI", "MiniMax-H3", "Hunyuan3D", "FFmpeg", "LoRA", "数字人"],
       "screenshot": "",
@@ -258,6 +260,24 @@
       "techStack": ["LangGraph", "LangChain", "Python", "StateGraph", "DAG"],
       "screenshot": "",
       "link": ""
+    },
+    {
+      "id": "proj-015",
+      "title": "AI 漫剧全流程生成流水线",
+      "category": "AI 内容",
+      "public": true,
+      "description": "实现 AI 漫剧的端到端全流程生成：剧本 → 分镜拆解 → 角色与场景资产绑定 → GPU 集群批量渲染 → 自动拼接 → ffprobe 自检 → 成片归档。11 集完整剧集、每集 17~22 个分镜段落全部由脚本驱动产出，人工只参与剧本撰写与成片验收。",
+      "highlights": [
+        "全流程脚本化：剧本 → 分镜 → 角色资产绑定 → 渲染 → 拼接 → 自检，成片无需人工剪辑",
+        "产出规模可复现：11 集完整剧集，每集 17~22 个分镜段落，单集时长 178~202 秒",
+        "角色一致性工程：costume_state 记录服装状态，transition_fx 自动衔接跨场景转场特效",
+        "GPU 集群调度：远程渲染队列 + assemble_v3.py 拼接，轮询器每 300 秒自动发现凑齐的集并出片",
+        "全程可追溯：逐段记录 md5、渲染耗时、素材来源与拼接帧数，异常可定位到具体镜号",
+        "规格强一致：1504×832 / 24fps / h264 + aac，逐段 ffprobe 自检杜绝规格漂移"
+      ],
+      "techStack": ["AI 漫剧", "GPU 集群", "FFmpeg", "Python", "一致性控制", "自动化流水线"],
+      "screenshot": "",
+      "link": ""
     }
   ],
   "videos": [
@@ -290,12 +310,48 @@
     },
     {
       "id": "vid-004",
-      "title": "诸神黄昏漫剧 · 第 3 集正片",
-      "src": "assets/videos/comic-series-ep03.mp4",
-      "poster": "assets/videos/comic-series-ep03.jpg",
-      "duration": "81s",
-      "tags": ["漫剧", "Ref2VA 原生配音", "多版本输出"],
-      "desc": "漫剧工业化流水线的代表成片：Ref2VA 生成原生配音，同一集批量输出九宫格版与封面首帧版。"
+      "title": "AI 漫剧 · 秘银之石",
+      "src": "assets/videos/comic-alchemy.mp4",
+      "poster": "assets/videos/comic-alchemy.jpg",
+      "duration": "22s",
+      "tags": ["AI 漫剧全流程生成", "炼金工房", "分镜渲染"],
+      "desc": "AI 漫剧全流程生成成片：剧本 → 分镜 → 角色资产绑定 → GPU 集群渲染 → 拼接自检。本片段为炼金工房场景，洛文全身登场并举起贤者之石。"
+    },
+    {
+      "id": "vid-005",
+      "title": "AI 漫剧 · 雾林遭遇",
+      "src": "assets/videos/comic-forest-clash.mp4",
+      "poster": "assets/videos/comic-forest-clash.jpg",
+      "duration": "24s",
+      "tags": ["AI 漫剧全流程生成", "多人群像", "冲突调度"],
+      "desc": "AI 漫剧全流程生成成片：森林光斑空镜衔接持矛村民对峙，考察多角色群像的一致性与镜头冲突调度。"
+    },
+    {
+      "id": "vid-006",
+      "title": "AI 漫剧 · 教堂审判",
+      "src": "assets/videos/comic-chapel-trial.mp4",
+      "poster": "assets/videos/comic-chapel-trial.jpg",
+      "duration": "26s",
+      "tags": ["AI 漫剧全流程生成", "服装状态转场", "戏剧张力"],
+      "desc": "AI 漫剧全流程生成成片：祭坛仪式 → 伏案审问 → 红色特写，服装状态转场由脚本自动衔接，全段无人工剪辑。"
+    },
+    {
+      "id": "vid-007",
+      "title": "AI 漫剧 · 密约立誓",
+      "src": "assets/videos/comic-covenant.mp4",
+      "poster": "assets/videos/comic-covenant.jpg",
+      "duration": "26s",
+      "tags": ["AI 漫剧全流程生成", "道具一致性", "光影氛围"],
+      "desc": "AI 漫剧全流程生成成片：圣堂光柱空镜 → 羊皮纸密约 → 魔法道具特写，验证跨场景道具与光影风格的统一性。"
+    },
+    {
+      "id": "vid-008",
+      "title": "Vibe Coding 制作流程演示",
+      "src": "assets/videos/vibe-coding-process.mp4",
+      "poster": "assets/videos/vibe-coding-process.jpg",
+      "duration": "99s",
+      "tags": ["Vibe Coding", "AI 主导开发", "自测闭环", "自动化交付"],
+      "desc": "一次完整的 Vibe Coding 实战记录：需求对齐 → 方案选型 → 仓库与部署 → 功能实现 → 自测闭环 → 交付与自动化。全程 AI 主导执行，人只做决策与验收，末段交付每 2 天自动更新简历的定时任务。"
     }
   ]
 }
