@@ -3,6 +3,59 @@
  * 渲染逻辑（hero/skills/projects）+ 动效（打字机/粒子/视差/3D卡片/光晕/reveal）
  */
 
+const DATA_CACHE_KEY = 'resume-data-v1';
+
+/* 读取 index.html 内联的兜底数据（由 tools/inject_inline_data.py 注入） */
+function readInlineData() {
+  const el = document.getElementById('resume-data');
+  if (!el) return null;
+  try {
+    const d = JSON.parse(el.textContent);
+    return d && (d.projects || d.videos) ? d : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+/* 上一次成功拉取的数据，localStorage 二次兜底 */
+function readCachedData() {
+  try {
+    const raw = localStorage.getItem(DATA_CACHE_KEY);
+    if (!raw) return null;
+    const d = JSON.parse(raw);
+    return d && (d.projects || d.videos) ? d : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function cacheData(d) {
+  try {
+    localStorage.setItem(DATA_CACHE_KEY, JSON.stringify(d));
+  } catch (e) {
+    /* 隐私模式可能禁写，忽略即可 */
+  }
+}
+
+function dataSignature(d) {
+  return JSON.stringify([d.profile, d.projects, d.videos]);
+}
+
+function applyData(data) {
+  // 各渲染单元独立容错：单个区块失败不影响其余区块渲染
+  const safe = (fn, label) => {
+    try {
+      fn();
+    } catch (err) {
+      console.error(`Render failed [${label}]:`, err);
+    }
+  };
+  safe(() => renderProfile(data.profile), 'profile');
+  safe(() => renderSkills(data.profile.skills), 'skills');
+  safe(() => renderProjects(data.projects), 'projects');
+  safe(() => renderVideos(data.videos), 'videos');
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   // --- 导航滚动效果 ---
   const nav = document.getElementById('nav');
@@ -10,27 +63,37 @@ document.addEventListener('DOMContentLoaded', async () => {
     nav.classList.toggle('scrolled', window.scrollY > 50);
   });
 
-  // --- 加载数据 ---
-  try {
-    const response = await fetch('data/projects.json');
-    const data = await response.json();
-    // 各渲染单元独立容错：单个区块失败不影响其余区块渲染
-    const safe = (fn, label) => {
-      try {
-        fn();
-      } catch (err) {
-        console.error(`Render failed [${label}]:`, err);
-      }
-    };
-    safe(() => renderProfile(data.profile), 'profile');
-    safe(() => renderSkills(data.profile.skills), 'skills');
-    safe(() => renderProjects(data.projects), 'projects');
-    safe(() => renderVideos(data.videos), 'videos');
+  // --- 第一步：用内联兜底数据立即渲染 ---
+  // 项目与视频板块完全由数据驱动，GitHub Pages 在国内访问不稳时 fetch 会失败，
+  // 两个板块会同时空白。内联数据保证零网络依赖也能立刻显示内容。
+  const inlineData = readInlineData();
+  if (inlineData) {
+    applyData(inlineData);
     initEffects();
+  }
+
+  // --- 第二步：拉取最新数据，仅在内容确实变化时重绘，避免闪烁 ---
+  try {
+    const response = await fetch('data/projects.json', { cache: 'no-cache' });
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    const data = await response.json();
+    cacheData(data);
+    if (!inlineData || dataSignature(data) !== dataSignature(inlineData)) {
+      applyData(data);
+      initEffects();
+    }
   } catch (err) {
-    console.error('Failed to load project data:', err);
-    document.getElementById('projects-grid').innerHTML =
-      '<div class="empty-state"><div class="empty-icon">📭</div><p>数据加载失败，请稍后刷新</p></div>';
+    console.warn('projects.json 拉取失败，改用兜底数据:', err);
+    if (!inlineData) {
+      const cached = readCachedData();
+      if (cached) {
+        applyData(cached);
+        initEffects();
+      } else {
+        document.getElementById('projects-grid').innerHTML =
+          '<div class="empty-state"><div class="empty-icon">📭</div><p>数据加载失败，请检查网络后刷新重试</p></div>';
+      }
+    }
   }
 });
 
@@ -38,6 +101,7 @@ document.addEventListener('DOMContentLoaded', async () => {
    渲染函数
    ================================================ */
 
+let _profileRendered = false;
 function renderProfile(profile) {
   document.getElementById('hero-name').textContent = profile.name;
   document.getElementById('hero-location').innerHTML = `
@@ -47,8 +111,11 @@ function renderProfile(profile) {
   document.getElementById('hero-summary').textContent = profile.summary;
   document.title = `${profile.name} | 简历`;
 
-  // 打字机效果
-  typeWriter(document.getElementById('hero-title'), profile.title || '');
+  // 打字机效果（只在首次渲染时跑，避免数据刷新后重复播放）
+  if (!_profileRendered) {
+    _profileRendered = true;
+    typeWriter(document.getElementById('hero-title'), profile.title || '');
+  }
 }
 
 function renderSkills(skills) {
@@ -128,11 +195,16 @@ function renderVideos(videos) {
    动效函数
    ================================================ */
 
+let _effectsInited = false;
 function initEffects() {
-  initParticles();
+  // 粒子/光晕/视差只初始化一次；reveal 每次重绘后都要重新绑定新插入的元素
+  if (!_effectsInited) {
+    _effectsInited = true;
+    initParticles();
+    initCursorGlow();
+    initParallax();
+  }
   initReveal();
-  initCursorGlow();
-  initParallax();
 }
 
 // 打字机

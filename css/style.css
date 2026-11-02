@@ -904,6 +904,35 @@ body {
   .ai-fab { right: 16px; bottom: 16px; }
   .ai-recommend-box { flex-direction: column; }
   .ai-recommend button { width: 100%; }
+
+  /* 导航在窄屏必须保持单行：
+     1) flex 子项默认 min-width:auto，不加 min-width:0 就无法收缩，会把文字挤成竖排
+     2) 链接禁止换行 + 列表可横向滑动，保证放不下也能滑到
+     3) logo 不参与收缩 */
+  .nav-inner { padding: 0 14px; gap: 10px; }
+  .nav-logo { font-size: 17px; flex: 0 0 auto; white-space: nowrap; }
+  .nav-links {
+    gap: 2px;
+    min-width: 0;
+    flex: 1 1 auto;
+    justify-content: flex-end;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .nav-links::-webkit-scrollbar { display: none; }
+  .nav-links > li { flex: 0 0 auto; }
+  .nav-links a { white-space: nowrap; padding: 8px 9px; font-size: 13px; }
+}
+
+/* 超窄屏（iPhone SE 等 375px 以下）进一步压缩导航 */
+@media (max-width: 420px) {
+  .nav-inner { padding: 0 10px; gap: 6px; }
+  .nav-logo { font-size: 15px; }
+  .nav-links a { padding: 8px 7px; font-size: 12.5px; }
+  .nav-btn { padding: 8px 10px; font-size: 12.5px; }
 }
 
 /* ---- 减少动效偏好 ---- */
