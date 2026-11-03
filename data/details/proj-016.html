@@ -1,0 +1,130 @@
+<!-- EdgeOne Pages 边缘函数表单网关与微信推送 - 独立内容页 -->
+<div class="detail-content-block">
+  <h2 class="detail-subtitle">⚡ 全链路四段</h2>
+  <p class="detail-lead">把「访客填表 → 收到微信」这条链路从纯前端 mock 改成<strong>真实可用的服务端投递</strong>：表单 POST 到 <strong>EdgeOne Pages 边缘函数</strong>，函数在边缘节点读取服务端环境变量里的推送密钥，命中任意一条推送通道即视为成功。</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">段 1</div>
+      <h3 class="arch-card-title">前端表单提交</h3>
+      <p class="arch-card-desc">访客填写需求表单，前端先做一次预热 GET 再正式 POST，绕开 EdgeOne 首次访问的鉴权重定向。</p>
+      <ul class="card-highlights">
+        <li>POST /api/contact，body 上限 1MB</li>
+        <li>先预热种 HttpOnly cookie，再不带 token 正式提交</li>
+        <li>失败时降级为 mailto: 唤起邮件客户端，线索不丢</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">段 2</div>
+      <h3 class="arch-card-title">边缘函数网关</h3>
+      <p class="arch-card-desc">函数跑在腾讯边缘节点，冷启动毫秒级；平台约束直接倒逼架构选型。</p>
+      <div class="arch-card-api">
+        <span class="tech-badge">onRequest(context)</span>
+        <span class="tech-badge">context.env</span>
+        <span class="tech-badge">context.request</span>
+        <span class="tech-badge">context.params</span>
+      </div>
+      <ul class="card-highlights">
+        <li>函数包 5MB / 请求体 1MB / CPU 200ms（I/O 不计时）</li>
+        <li>仅 JS ES2023+，加 package.json 后 CLI 自动识别 fullstack</li>
+        <li>密钥只从服务端环境变量读，绝不下发前端</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">段 3</div>
+      <h3 class="arch-card-title">三通道推送</h3>
+      <p class="arch-card-desc">企业微信机器人 / Server酱 / PushPlus 三条通道并行尝试，任一成功即算成功，全部失败才返回 502。</p>
+      <ul class="card-highlights">
+        <li>三通道任一成功即返回成功，全部失败才 502</li>
+        <li>Server酱实测返回 code:0 error:SUCCESS</li>
+        <li>企业微信 Webhook 返回 errcode:93000 即为地址无效，链路本身通</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">段 4</div>
+      <h3 class="arch-card-title">安全与限流</h3>
+      <p class="arch-card-desc">公网可访问的表单接口必须自带来源白名单与频率限制，否则会被当成免费群发通道。</p>
+      <ul class="card-highlights">
+        <li>ALLOWED_ORIGINS 同时校验 Origin 与 Referer</li>
+        <li>同 IP 60 秒内最多 5 次，超限直接拒绝</li>
+        <li>线上 /.env 与 /.edgeone/project.json 均 404，未泄露</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 实测结果 -->
+  <h2 class="detail-subtitle">✅ 端到端实测结果</h2>
+  <p class="detail-lead">不是设想，以下是<strong>镜像站同源提交与主站跨域提交的真实返回</strong>。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">📊 各场景实测</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>场景</th>
+            <th>结果</th>
+            <th>说明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Server酱 API 直调</td>
+            <td class="best">code:0 error:SUCCESS</td>
+            <td>推送通道本身验证通过</td>
+          </tr>
+          <tr>
+            <td>镜像站同源表单提交</td>
+            <td class="best">200 {"ok":true,"channels":[{"channel":"serverchan","ok":true,"code":0}]}</td>
+            <td>单次请求即触发微信推送</td>
+          </tr>
+          <tr>
+            <td>GitHub Pages 主站跨域提交</td>
+            <td class="best">200 同上</td>
+            <td>CORS 正确回显具体 Origin</td>
+          </tr>
+          <tr>
+            <td>伪造 Origin 提交</td>
+            <td>403 来源不被允许</td>
+            <td>白名单按预期拦截</td>
+          </tr>
+          <tr class="bench-total">
+            <td>访问 /.env 与 /.edgeone/project.json</td>
+            <td class="best">404 未泄露</td>
+            <td>密钥与项目配置未暴露</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>环境变量有坑：</strong><code>env set</code> 只改平台配置，函数实例里的 <code>context.env</code> 仍是旧值，<strong>必须重新部署才注入</strong>——不改这一步，接口会一直返回 503。</p>
+  </div>
+
+  <!-- 踩坑 -->
+  <h2 class="detail-subtitle">🧨 两个真正踩过的坑</h2>
+  <p class="detail-lead">第一个坑是<strong>协议级的</strong>，第二个坑是<strong>配置级的</strong>，都不看文档基本踩不出来。</p>
+
+  <div class="arch-tips">
+    <h3 class="bench-title">🔧 故障与解法</h3>
+    <div class="arch-tips-grid">
+      <div class="arch-tip">
+        <span class="arch-tip-tag">坑 1 · 302 丢 body</span>
+        <p><strong>Fetch 规范下 301/302/303 把 POST 改写成 GET</strong><br><span class="arch-tip-note">重定向后 URL 被剥掉 token，后端收到空 body 报 400</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">解法 1</span>
+        <p><strong>先 GET 预热，再不带 token POST</strong><br><span class="arch-tip-note">同源 fetch 自动带 HttpOnly cookie，不再触发重定向</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">坑 2 · CORS 拦截</span>
+        <p><strong>Access-Control-Allow-Origin 写 * 会挂</strong><br><span class="arch-tip-note">credentials:'include' 的跨域请求被浏览器直接拦下</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">解法 2</span>
+        <p><strong>回显具体 Origin + Allow-Credentials</strong><br><span class="arch-tip-note">配合 ALLOWED_ORIGINS 白名单双保险</span></p>
+      </div>
+    </div>
+  </div>
+</div>

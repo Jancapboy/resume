@@ -1,0 +1,158 @@
+<!-- 静态站多通道全球交付与访问令牌自动化 - 独立内容页 -->
+<div class="detail-content-block">
+  <h2 class="detail-subtitle">🌐 三通道并行的交付架构</h2>
+  <p class="detail-lead">单一托管通道同时存在<strong>会过期</strong>与<strong>国内访问慢</strong>两个风险。做法是并行维护三条通道：<strong>GitHub Pages 主站</strong>（永久、免鉴权）、<strong>EdgeOne 中国站镜像</strong>（腾讯边缘加速）、<strong>CloudStudio 保底</strong>（主备皆失时的最后兜底）。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">📊 三条通道实测对比</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>通道</th>
+            <th>永久性</th>
+            <th>鉴权</th>
+            <th>Range / 206</th>
+            <th>响应标识</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>GitHub Pages 主站</td>
+            <td class="best">永久</td>
+            <td>免 token</td>
+            <td class="best">支持</td>
+            <td>Pages 自动重建</td>
+          </tr>
+          <tr>
+            <td>EdgeOne 中国站</td>
+            <td class="best">永久</td>
+            <td>需带 token 首访</td>
+            <td class="best">支持</td>
+            <td>Server: edgeone makers</td>
+          </tr>
+          <tr>
+            <td>CloudStudio 保底</td>
+            <td>会过期</td>
+            <td>免 token</td>
+            <td>不支持</td>
+            <td>CloudStudio Gateway</td>
+          </tr>
+          <tr class="bench-total">
+            <td>视频目录 37MB</td>
+            <td colspan="2">三通道同一份产物</td>
+            <td class="best">两通道支持边下边播</td>
+            <td>保底通道仅适合纯文本兜底</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>关键发现：</strong>CloudStudio Gateway 的响应头<strong>没有 Accept-Ranges</strong>，浏览器必须整包下载完才起播；GitHub Pages 与 EdgeOne 都返回 <code>206 Partial Content</code>，配合 <code>+faststart</code> 才能真正边下边播。视频场景下，通道选型的硬指标不是速度而是<strong>是否支持 Range</strong>。</p>
+  </div>
+
+  <!-- 令牌生命周期 -->
+  <h2 class="detail-subtitle">🔑 访问令牌的生命周期工程</h2>
+  <p class="detail-lead">EdgeOne 平台域名没有关闭鉴权的开关，预览令牌<strong>约 3 小时过期</strong>，且<strong>每次部署都会作废旧令牌</strong>。这不是一次性的手工活，必须做成自动闭环。</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">环节 1</div>
+      <h3 class="arch-card-title">同步静态文件</h3>
+      <p class="arch-card-desc">把源站目录的 index.html / project.html / css / js / data / assets 复制到镜像目录，不复制 .git、不做批量删除。</p>
+      <ul class="card-highlights">
+        <li>只复制，不在同步环节部署</li>
+        <li>保留 edge-functions / package.json / .env</li>
+        <li>部署与令牌刷新拆成两个独立任务</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">环节 2</div>
+      <h3 class="arch-card-title">部署并抽取新令牌</h3>
+      <p class="arch-card-desc">执行 CLI 部署，部署完成后从产物中抓取新的 eo_token 与 eo_time。</p>
+      <ul class="card-highlights">
+        <li>edgeone makers deploy --env production</li>
+        <li>ZIP 部署限制：≤50MB，单文件 ≤25MB</li>
+        <li>CLI 全局安装需绕开 Program Files 的 EPERM</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">环节 3</div>
+      <h3 class="arch-card-title">正则改写配置</h3>
+      <p class="arch-card-desc">用正则替换而非 json.dumps 重写，保持文件原排版，让 git diff 最小、review 时只看令牌两行变化。</p>
+      <ul class="card-highlights">
+        <li>只替换 contact.api / contact.mirrorUrl 里的令牌</li>
+        <li>不重排 JSON，diff 最小化</li>
+        <li>改完立即做只读验证</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">环节 4</div>
+      <h3 class="arch-card-title">验证与推送</h3>
+      <p class="arch-card-desc">自建 CookieJar 发起验证请求（默认跟随 302 会丢掉 query 里的令牌造成假性 401），通过后再 git push。</p>
+      <ul class="card-highlights">
+        <li>urllib 必须自建 CookieJar 才能验准</li>
+        <li>推送后主站与镜像双通道复测</li>
+        <li>每 2 小时自动跑一轮</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 踩坑 -->
+  <h2 class="detail-subtitle">🧨 交付链路的坑</h2>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">🔧 故障与解法</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>现象</th>
+            <th>根因</th>
+            <th>处置</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>npm install -g edgeone 报 EPERM</td>
+            <td>全局目录在 Program Files 需管理员</td>
+            <td>改装到 PATH 内可写目录</td>
+          </tr>
+          <tr>
+            <td>git push 间歇性失败</td>
+            <td>沙箱内 github.com 主站 CONNECT 502</td>
+            <td>api/codeload/objects 可达，重试即成功</td>
+          </tr>
+          <tr>
+            <td>验证镜像报假性 401</td>
+            <td>默认跟随 302 丢掉 query 令牌</td>
+            <td>自建 CookieJar 手动承接</td>
+          </tr>
+          <tr>
+            <td>子进程找不到 edgeone / git</td>
+            <td>内置 Python 的 PATH 被截断</td>
+            <td>脚本内显式拼绝对路径</td>
+          </tr>
+          <tr class="bench-total">
+            <td>API 探测全部 InvalidAction</td>
+            <td>公开 Action 里没有 Pages 相关接口</td>
+            <td>改走 CLI 私有 Action 完成部署</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>架构上的教训：</strong>部署动作与令牌刷新动作<strong>不能放在同一个任务里</strong>——每次部署都会作废当前有效令牌，若两者耦合，刚写入配置文件的令牌会立刻失效，必须等下一次刷新才恢复。</p>
+  </div>
+
+  <!-- 授权链路 -->
+  <h2 class="detail-subtitle">🔑 账号归属与授权链路</h2>
+  <p class="detail-lead">站点最初部署在另一个账号下，HR 点 GitHub 图标会跳到另一个号——这是最初部署时未确认归属导致的。最终把仓库<strong>整体迁移到本人主账号</strong>，并自建授权链路。</p>
+  <ul class="card-highlights">
+    <li>GitHub MCP 连接器身份正确但<strong>只有读权限</strong>，<code>create_repository</code> 返回 403，写操作走不了</li>
+    <li>正解：手写 device flow（public client_id + 轮询 <code>/login/oauth/access_token</code>）拿到令牌，再 <code>gh auth login --with-token</code> 注册</li>
+    <li>gh CLI 支持多账号共存，迁移后主站域名固定为 <strong>jancapboy.github.io/resume/</strong>，链接永久不变</li>
+    <li>附带发现：站点上的 GitHub 图标链接与实际部署域名长期不一致，现已对齐</li>
+  </ul>
+</div>

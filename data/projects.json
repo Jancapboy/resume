@@ -3,7 +3,7 @@
     "name": "全栈工程师",
     "title": "高级后端开发 / 数据库 & 自动化专家",
     "location": "中国",
-    "summary": "多年全栈开发经验，深耕数据库高可用架构、数据自动化抓取、AI 应用开发及企业级运维。2026 年主攻 AI 视频与 AI 漫剧全流程生成、LangGraph 多智能体工作流，并以 Vibe Coding 方式主导从需求到上线的完整交付闭环。擅长 MySQL 集群、OceanBase、Python 爬虫、企业微信集成及 AI 视频 / 3D 内容生成。",
+    "summary": "多年全栈开发经验，深耕数据库高可用架构、数据自动化抓取、AI 应用开发及企业级运维。2026 年主攻 AI 视频与 AI 漫剧全流程生成、LangGraph 多智能体工作流，并以 Vibe Coding 方式主导从需求到上线的完整交付闭环。擅长 MySQL 集群、OceanBase、Python 爬虫、企业微信集成及 AI 视频 / 3D 内容生成。近期主攻 EdgeOne 边缘函数与 Serverless 表单网关、GitHub Pages + EdgeOne 双通道全球交付与访问令牌自动化，以及移动端自适应与离线兜底渲染工程。",
     "skills": [
       {
         "name": "MySQL MGR",
@@ -104,6 +104,30 @@
       {
         "name": "GPU 集群调度",
         "category": "运维"
+      },
+      {
+        "name": "EdgeOne Pages",
+        "category": "运维"
+      },
+      {
+        "name": "Serverless 边缘函数",
+        "category": "开发"
+      },
+      {
+        "name": "Server酱推送",
+        "category": "集成"
+      },
+      {
+        "name": "GitHub Pages",
+        "category": "运维"
+      },
+      {
+        "name": "CDP 自动化验收",
+        "category": "开发"
+      },
+      {
+        "name": "移动端适配",
+        "category": "开发"
       }
     ]
   },
@@ -440,6 +464,81 @@
         "Python",
         "一致性控制",
         "自动化流水线"
+      ],
+      "screenshot": "",
+      "link": ""
+    },
+    {
+      "id": "proj-016",
+      "title": "EdgeOne Pages 边缘函数表单网关与微信推送",
+      "category": "云原生 / Serverless",
+      "public": true,
+      "description": "基于 EdgeOne Pages 边缘函数实现联系表单的服务端网关，把访客需求实时推送到微信，密钥与推送通道全部收敛在服务端，前端不接触任何凭据。",
+      "highlights": [
+        "边缘函数 190 行实现表单网关：POST /api/contact，推送密钥只从服务端环境变量读取，绝不下发前端",
+        "三通道推送容灾：企业微信机器人 / Server酱 / PushPlus 任一成功即返回成功，全部失败才回 502",
+        "安全设计：ALLOWED_ORIGINS 白名单同时校验 Origin 与 Referer，同 IP 60 秒内限流 5 次",
+        "端到端实测：Server酱 API 直调返回 code:0 error:SUCCESS，镜像站同源与 GitHub Pages 主站跨域提交均返回 200 且微信收到通知",
+        "零泄露验证：线上 /.env 与 /.edgeone/project.json 均返回 404，密钥与项目配置未暴露",
+        "协议坑修复：302 重定向在 Fetch 规范下把 POST 改写成 GET 并丢弃 body，改为先 GET 预热种 HttpOnly cookie 再正式提交"
+      ],
+      "techStack": [
+        "EdgeOne Pages",
+        "Edge Functions",
+        "Server酱",
+        "JavaScript ES2023",
+        "CORS",
+        "企业微信 Webhook"
+      ],
+      "screenshot": "",
+      "link": ""
+    },
+    {
+      "id": "proj-017",
+      "title": "静态站多通道全球交付与访问令牌自动化",
+      "category": "交付工程 / DevOps",
+      "public": true,
+      "description": "为静态站搭建 GitHub Pages 主站 + EdgeOne 中国站镜像 + CloudStudio 保底的三通道交付体系，并围绕边缘平台约 3 小时时效的访问令牌，构建同步、部署、改写、推送、验证的自动闭环。",
+      "highlights": [
+        "三通道并行交付：GitHub Pages 主站（永久免 token）+ EdgeOne 中国站镜像（腾讯边缘加速）+ CloudStudio 保底，主站域名永久不变",
+        "选型硬指标：CloudStudio Gateway 无 Accept-Ranges 头、视频必须整包下载，GitHub Pages 与 EdgeOne 均支持 206 Partial Content 边下边播",
+        "令牌生命周期自动化：eo_token 约 3 小时过期且每次部署即作废，自研 refresh_contact_token.py 完成同步→部署→正则改写 projects.json→git push→只读验证",
+        "CLI 部署链路打通：edgeone makers deploy 部署至 Production 环境，绕开 npm 全局目录 Program Files 的 EPERM 权限问题",
+        "授权链路自建：GitHub MCP 连接器仅只读（create_repository 返回 403），改走手写 device flow 授权 + gh auth 多账号共存，完成仓库归属迁移",
+        "接口探测留档：10 个公开 Action 候选名全部返回 InvalidAction，确认 CLI 私有 Action 是唯一可用部署通道"
+      ],
+      "techStack": [
+        "GitHub Pages",
+        "EdgeOne Pages",
+        "CloudStudio",
+        "Python",
+        "GitHub CLI",
+        "CDN / Range"
+      ],
+      "screenshot": "",
+      "link": ""
+    },
+    {
+      "id": "proj-018",
+      "title": "移动端自适应与离线兜底渲染体系",
+      "category": "前端工程 / 质量保障",
+      "public": true,
+      "description": "定位并修复移动端竖屏下的布局塌陷与数据加载空白两个独立病因，配套自建 CDP 移动端验收工具链与三级离线兜底渲染架构，让静态站在弱网下依然完整可用。",
+      "highlights": [
+        "定位两个独立病因：导航栏竖排源于 flex 子项默认 min-width:auto 未重置，板块空白源于 fetch 失败零容错",
+        "布局修复：.nav-links 设 min-width:0 + flex:1 1 auto + overflow-x:auto，导航栏高度 90px → 62px，链接尺寸 39×32 单行",
+        "三级兜底渲染：内联 JSON 数据 → fetch 最新 → localStorage 缓存，页面零网络依赖也能完整渲染出全部板块",
+        "自建 CDP 移动端验收工具：headless Edge + websocket 直连，Emulation.setDeviceMetricsOverride 模拟 390×844 / DPR 3，绕开 Selenium 协议层不兼容",
+        "量化验收：本地 390×844 视口下项目 15 / 视频 8 / 技能 25 全部渲染，横向溢出 overflowX = 0",
+        "降级链路复测：用 Network.setBlockedURLs 精准阻断 projects.json（而非整体断网），确认控制台正确告警降级、卡片仍全部渲染，本地与线上双通过"
+      ],
+      "techStack": [
+        "CSS Flex",
+        "Chrome DevTools Protocol",
+        "JavaScript",
+        "localStorage",
+        "Edge Headless",
+        "移动端适配"
       ],
       "screenshot": "",
       "link": ""

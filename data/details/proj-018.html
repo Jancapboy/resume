@@ -1,0 +1,178 @@
+<!-- 移动端自适应与离线兜底渲染 - 独立内容页 -->
+<div class="detail-content-block">
+  <h2 class="detail-subtitle">📱 手机竖屏下的两个真实病因</h2>
+  <p class="detail-lead">用户反馈网页端在手机竖屏下项目与视频显示异常。诊断后发现这不是一个问题，而是<strong>两个独立病因叠加</strong>：一个是 CSS 布局收缩失效，一个是数据加载没有兜底。</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">病因 1</div>
+      <h3 class="arch-card-title">导航栏被压成竖排</h3>
+      <p class="arch-card-desc"><code>.nav-links</code> 是 flex 容器但没设 <code>min-width: 0</code>，而 flex 子项默认 <code>min-width: auto</code>，宽度压不下去，链接文字被挤成一列竖排。</p>
+      <ul class="card-highlights">
+        <li>关于 / 技能 / 项目 / 视频 / 联系 各占两行</li>
+        <li>768px 断点原本只改 padding 与 font-size，没处理收缩</li>
+        <li>修复：min-width:0 + flex:1 1 auto + overflow-x:auto</li>
+        <li>子项 flex:0 0 auto、链接 white-space:nowrap、logo flex:0 0 auto</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">病因 2</div>
+      <h3 class="arch-card-title">板块双双空白</h3>
+      <p class="arch-card-desc">项目与视频全靠 <code>fetch('data/projects.json')</code> 驱动渲染，国内访问 GitHub Pages 不稳时请求失败，两个板块同时空白。</p>
+      <ul class="card-highlights">
+        <li>症状：整页只剩导航与个人介绍</li>
+        <li>根因：数据渲染对网络请求零容错</li>
+        <li>解法：内联数据 + 三级兜底</li>
+        <li>额外补 420px 超窄屏断点</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">修复</div>
+      <h3 class="arch-card-title">三级兜底渲染链</h3>
+      <p class="arch-card-desc">把「一次 fetch 决定成败」改成三级降级，任何一级可用都有内容渲染。</p>
+      <ul class="card-highlights">
+        <li>① 内联数据（立即渲染，零网络依赖）</li>
+        <li>② fetch 最新（仅内容变化时重绘，避免闪烁）</li>
+        <li>③ localStorage 缓存 → 才报错</li>
+        <li>副作用治理：initEffects 拆一次性与可重复，renderProfile 加守卫</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">验收</div>
+      <h3 class="arch-card-title">CDP 直连做移动端仿真</h3>
+      <p class="arch-card-desc">Selenium 与当前 Edge 版本协议不兼容，直接降一层用 Chrome DevTools Protocol 直连，拿到了比截图更硬的量化指标。</p>
+      <ul class="card-highlights">
+        <li>headless Edge + remote-debugging-port + websocket</li>
+        <li>Emulation.setDeviceMetricsOverride 模拟 390×844 / DPR 3</li>
+        <li>Runtime.evaluate 注入探针取 DOM 度量</li>
+        <li>Page.captureScreenshot 留存截图</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 修复前后 -->
+  <h2 class="detail-subtitle">📐 修复前后量化对比</h2>
+  <p class="detail-lead">以下数字全部由探针在 <strong>390×844 / DPR 3</strong> 视口下实测采集，不是估算。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">📊 移动端量化指标</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>指标</th>
+            <th>修复前</th>
+            <th>修复后</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>导航栏高度</td>
+            <td>90px（链接竖排）</td>
+            <td class="best">62px</td>
+          </tr>
+          <tr>
+            <td>导航链接尺寸</td>
+            <td>文字挤成两行竖排</td>
+            <td class="best">39×32 单行</td>
+          </tr>
+          <tr>
+            <td>项目卡片渲染数</td>
+            <td>0（fetch 失败即空白）</td>
+            <td class="best">15</td>
+          </tr>
+          <tr>
+            <td>视频板块渲染数</td>
+            <td>0</td>
+            <td class="best">8</td>
+          </tr>
+          <tr>
+            <td>技能标签渲染数</td>
+            <td>0</td>
+            <td class="best">25</td>
+          </tr>
+          <tr class="bench-total">
+            <td>横向溢出 overflowX</td>
+            <td>存在溢出</td>
+            <td class="best">0</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>验证方式很关键：</strong>不能整体断网——那样连 HTML 都加载不到，测不出数据层的降级能力。正确做法是用 <code>Network.setBlockedURLs</code> <strong>精准只阻断 projects.json</strong>，再确认控制台正确告警降级、卡片仍全部渲染。</p>
+  </div>
+
+  <!-- 工具链 -->
+  <h2 class="detail-subtitle">🛠️ 自建移动端验收工具链</h2>
+  <p class="detail-lead">Selenium 4.49 + msedgedriver 与 Edge 156 组合下 <code>set_page_load_timeout</code> / <code>get</code> 一律报 <code>WebDriverException: unhandled request</code>——协议层不兼容，不是配置问题。<strong>往下退一层</strong>比死磕更快。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">🔧 关键实现要点</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>环节</th>
+            <th>做法</th>
+            <th>踩坑</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>启动浏览器</td>
+            <td>msedge --headless=new --remote-debugging-port=9333</td>
+            <td>--user-data-dir 目录必须先建</td>
+          </tr>
+          <tr>
+            <td>取调试地址</td>
+            <td>urllib 读 /json/list 拿 webSocketDebuggerUrl</td>
+            <td>无需额外依赖</td>
+          </tr>
+          <tr>
+            <td>建立连接</td>
+            <td>websocket.create_connection(url)</td>
+            <td class="best">必须 suppress_origin=True</td>
+          </tr>
+          <tr>
+            <td>模拟手机</td>
+            <td>Emulation.setDeviceMetricsOverride</td>
+            <td>width 390 / height 844 / dsf 3 / mobile true</td>
+          </tr>
+          <tr>
+            <td>注入探针</td>
+            <td>Runtime.evaluate 取 DOM 度量</td>
+            <td class="best">探针内不能用顶层 return</td>
+          </tr>
+          <tr class="bench-total">
+            <td>Python 环境</td>
+            <td>Python310 + websocket-client</td>
+            <td>内置 Python 未装 selenium</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>可复用经验：</strong>探针代码必须包成 <code>(() =&gt; { ... return out; })()</code>，否则在 <code>Runtime.evaluate</code> 里用顶层 <code>return</code> 会被当作语法错误。这一条在写自动化探针时几乎必踩。</p>
+  </div>
+
+  <!-- 沉淀 -->
+  <div class="arch-tips">
+    <h3 class="bench-title">📌 三条可迁移的结论</h3>
+    <div class="arch-tips-grid">
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 1</span>
+        <p><strong>静态站上任何依赖 fetch 的板块都要有兜底</strong><br><span class="arch-tip-note">否则网络一抖就是白屏</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 2</span>
+        <p><strong>CSS flex 移动端问题八成是漏了 min-width: 0</strong><br><span class="arch-tip-note">flex 子项默认 min-width:auto 压不下去</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 3</span>
+        <p><strong>工具不兼容时往下退一层</strong><br><span class="arch-tip-note">Selenium → CDP 直连，比死磕更快</span></p>
+      </div>
+    </div>
+  </div>
+</div>
