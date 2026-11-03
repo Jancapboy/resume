@@ -13,6 +13,18 @@ const LOCAL_DATA_KEY = 'resume_local_projects';
 let projects = [];
 let editingId = null;
 let currentHighlights = [];
+
+/* 读取页面内联的兜底数据（projects.json 拉不到时用） */
+function readInlineData() {
+  const el = document.getElementById('resume-data');
+  if (!el) return null;
+  try {
+    const d = JSON.parse(el.textContent);
+    return d && Array.isArray(d.projects) ? d : null;
+  } catch (e) {
+    return null;
+  }
+}
 let currentTechStack = [];
 
 // --- Init ---
@@ -101,19 +113,27 @@ function showDashboard() {
 // --- Data Loading ---
 async function loadData() {
   try {
-    // Try loading local data first, fall back to server data
+    // 优先级：本地编辑缓存 > 页面内联兜底 > 服务器数据
     const localData = localStorage.getItem(LOCAL_DATA_KEY);
     if (localData) {
       const parsed = JSON.parse(localData);
       projects = parsed.projects || [];
     } else {
-      const response = await fetch(DATA_URL);
-      const data = await response.json();
-      projects = data.projects || [];
+      const inline = readInlineData();
+      if (inline && inline.projects && inline.projects.length) {
+        projects = inline.projects;
+      } else {
+        const response = await fetch(DATA_URL);
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        const data = await response.json();
+        projects = data.projects || [];
+      }
     }
   } catch (err) {
     console.error('Failed to load data:', err);
-    projects = [];
+    // 最后一层：内联兜底
+    const inline = readInlineData();
+    projects = inline && inline.projects ? inline.projects : [];
   }
   renderProjectList();
 }
@@ -368,29 +388,21 @@ function exportJSON() {
   };
 
   // Load profile from original data and merge
+  const buildAndDownload = (original) => {
+    data.profile = (original && original.profile) || null;
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'projects.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('JSON 数据已导出，可发送给 WorkBuddy 上传', 'success');
+  };
   fetch(DATA_URL)
     .then(r => r.json())
-    .then(original => {
-      data.profile = original.profile;
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'projects.json';
-      a.click();
-      URL.revokeObjectURL(url);
-      showToast('JSON 数据已导出，可发送给 WorkBuddy 上传', 'success');
-    })
-    .catch(() => {
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'projects.json';
-      a.click();
-      URL.revokeObjectURL(url);
-      showToast('JSON 数据已导出', 'success');
-    });
+    .then(buildAndDownload)
+    .catch(() => buildAndDownload(readInlineData()));
 }
 
 // --- Copy skill instruction ---

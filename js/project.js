@@ -2,7 +2,23 @@
  * 简历网站 - 项目详情页
  * 通过 URL 参数 ?id=proj-XXX 加载 data/projects.json 渲染对应项目
  * 若存在 data/details/{id}.html 则作为完整内容页渲染，否则显示占位
+ *
+ * 容错：projects.json 拉取失败时（国内访问 GitHub Pages 不稳），
+ * 回退到 HTML 内联的兜底数据，保证详情页不会出现空白。
  */
+
+/* 读取页面内联的兜底数据 */
+function readInlineData() {
+  const el = document.getElementById('resume-data');
+  if (!el) return null;
+  try {
+    const d = JSON.parse(el.textContent);
+    return d && Array.isArray(d.projects) ? d : null;
+  } catch (e) {
+    return null;
+  }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   const params = new URLSearchParams(window.location.search);
   const id = params.get('id');
@@ -12,22 +28,42 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
+  const showMissing = () => {
+    document.getElementById('detail-content').innerHTML = '<div class="empty-state"><div class="empty-icon">🤔</div><p>未找到该项目</p></div>';
+  };
+  const showFailed = () => {
+    document.getElementById('detail-content').innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><p>数据加载失败，请检查网络后刷新重试</p></div>';
+  };
+
+  // --- 第一步：用内联兜底数据立即渲染 ---
+  let current = null;
+  const inline = readInlineData();
+  if (inline) {
+    current = inline.projects.find((p) => p.id === id) || null;
+    if (current) {
+      renderProject(current);
+      document.title = `${current.title} | 全栈工程师`;
+    }
+  }
+
+  // --- 第二步：拉取最新数据，有变化才重绘 ---
   try {
-    const response = await fetch('data/projects.json');
+    const response = await fetch('data/projects.json', { cache: 'no-cache' });
+    if (!response.ok) throw new Error('HTTP ' + response.status);
     const data = await response.json();
     const proj = data.projects.find((p) => p.id === id);
-
     if (!proj) {
-      document.getElementById('detail-content').innerHTML = '<div class="empty-state"><div class="empty-icon">🤔</div><p>未找到该项目</p></div>';
+      if (!current) showMissing();
       return;
     }
-
-    renderProject(proj);
-    document.title = `${proj.title} | 全栈工程师`;
+    if (!current || JSON.stringify(proj) !== JSON.stringify(current)) {
+      current = proj;
+      renderProject(proj);
+      document.title = `${proj.title} | 全栈工程师`;
+    }
   } catch (err) {
-    console.error('Failed to load project:', err);
-    document.getElementById('detail-content').innerHTML =
-      '<div class="empty-state"><div class="empty-icon">📭</div><p>数据加载失败，请稍后刷新</p></div>';
+    console.warn('projects.json 拉取失败，使用兜底数据:', err);
+    if (!current) showFailed();
   }
 });
 
