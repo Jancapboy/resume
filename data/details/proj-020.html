@@ -1,0 +1,299 @@
+<!-- 回合制策略战棋 Web 应用 - 独立内容页 -->
+<div class="detail-content-block">
+  <h2 class="detail-subtitle">🎲 纯前端架构：引擎层与渲染层彻底解耦</h2>
+  <p class="detail-lead">整个应用是<strong>纯前端 SPA</strong>（React 18 + Vite + Zustand，不引入后端）。关键设计是<strong>全局种子化 PRNG + 纯数据 GameState</strong>，让「存档 / 复现 / 未来接后端权威结算」成为同一问题的不同读法，而不是三套逻辑。</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">架构</div>
+      <h3 class="arch-card-title">三层结构</h3>
+      <div class="arch-card-api">
+        <span class="tech-badge">src/engine/</span>
+        <span class="tech-badge">src/state/</span>
+        <span class="tech-badge">src/components/</span>
+      </div>
+      <ul class="card-highlights">
+        <li>领域层 engine：types / rng / data / generals / battle / campaign，纯 TS 零 DOM 依赖</li>
+        <li>状态层 state：Zustand store + StorageAdapter</li>
+        <li>UI 层 components：WorldMap(SVG) / SidePanel / BattleView / MainMenu / Modals</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">确定性</div>
+      <h3 class="arch-card-title">种子化 PRNG</h3>
+      <p class="arch-card-desc">用 mulberry32 全局种子化随机源，配合纯数据 GameState，保证同一种子必得同一局。</p>
+      <ul class="card-highlights">
+        <li>随机源集中在 rng.ts，不散落各处</li>
+        <li>存档导出导入后状态完全一致</li>
+        <li>损坏的存档字符串返回 null 而非抛错</li>
+        <li>StorageAdapter 是预留的后端接缝</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">数据</div>
+      <h3 class="arch-card-title">数值表驱动</h3>
+      <p class="arch-card-desc">所有内容都是结构化数值表，改平衡性只改表、不改逻辑代码。</p>
+      <ul class="card-highlights">
+        <li>22 座城池 / 6 大势力 / 56 名武将</li>
+        <li>8 种兵种（相克关系）/ 10 种地形 / 19 项特技</li>
+        <li>伤害公式：武力 × 兵种系数 × 适性 × 士气 − 守方防御 × 地形加成，含命中率与暴击</li>
+        <li>20 项特技分被动（无双/铁壁/神速/反间）与主动（火计/伏兵/疗怨/收军）</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">AI</div>
+      <h3 class="arch-card-title">战役级决策</h3>
+      <p class="arch-card-desc">势力 AI 不逐城贪心，而是选定一个目标城、集中旗下部队围攻。</p>
+      <ul class="card-highlights">
+        <li>攻守用同一套真实战棋规则结算</li>
+        <li>锁定目标 + 10 回合僵局解除</li>
+        <li>连续推进 40 回合状态自洽</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 自测 -->
+  <h2 class="detail-subtitle">🧪 30 项引擎自测全部通过</h2>
+  <p class="detail-lead">自测脚本 <code>npm test</code> 实测输出：<strong>通过 30 项，失败 0 项</strong>。覆盖确定性、战斗结算、内政、招降、状态自洽与存档序列化。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">📊 自测覆盖与实测结果</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>测试组</th>
+            <th>覆盖内容</th>
+            <th>实测结果</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>确定性</td>
+            <td>同种子生成结果一致</td>
+            <td class="best">PASS</td>
+          </tr>
+          <tr>
+            <td>战斗结算</td>
+            <td>伤害公式、命中率、暴击、特技触发</td>
+            <td class="best">PASS</td>
+          </tr>
+          <tr>
+            <td>回合推进</td>
+            <td>连续推进 40 回合不崩溃且状态自洽</td>
+            <td class="best">PASS</td>
+          </tr>
+          <tr>
+            <td>AI 行为</td>
+            <td>AI 会主动进攻，城池易主后状态自洽</td>
+            <td class="best">PASS</td>
+          </tr>
+          <tr>
+            <td>事件结算</td>
+            <td>大地图事件正常结算</td>
+            <td class="best">PASS</td>
+          </tr>
+          <tr>
+            <td>存档序列化</td>
+            <td>导出导入后状态一致</td>
+            <td class="best">PASS</td>
+          </tr>
+          <tr>
+            <td>存档容错</td>
+            <td>损坏的存档字符串返回 null 而非抛错</td>
+            <td class="best">PASS</td>
+          </tr>
+          <tr>
+            <td>招降机制</td>
+            <td>被俘武将可用金钱赎买归降</td>
+            <td class="best">PASS</td>
+          </tr>
+          <tr>
+            <td>招降边界</td>
+            <td>金钱不足时招降失败且不扣钱；未被俘武将不能招降</td>
+            <td class="best">PASS</td>
+          </tr>
+          <tr class="bench-total">
+            <td>状态自洽性</td>
+            <td>60 回合后每座城只有一支驻军且归属一致</td>
+            <td class="best">PASS</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>总量：</strong>通过 30 项、失败 0 项。外加 2 个平衡推演脚本（<code>balance-sim.ts</code> 模拟各势力 60 回合城池变动、<code>player-sim.ts</code> 玩家策略推演）。</p>
+  </div>
+
+  <!-- 平衡性 -->
+  <h2 class="detail-subtitle">⚖️ 平衡性由脚本推演，不靠手感</h2>
+  <p class="detail-lead">先用推演脚本摸清战棋的力学特性，再据此改 AI 与玩法，而不是反复手动试玩调数值。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">📊 推演得到的力学结论</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>场景</th>
+            <th>推演结果</th>
+            <th>带来的设计改动</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>兵力相等</td>
+            <td>攻方必胜</td>
+            <td>AI 改为集中兵力（势力级战役决策）</td>
+          </tr>
+          <tr>
+            <td>兵力劣势（1v2）</td>
+            <td>攻方 0 / 20 胜</td>
+            <td>玩家侧改为「同城友军合击」</td>
+          </tr>
+          <tr>
+            <td>守城战力评估</td>
+            <td>不能把整个 garrison 算作战力</td>
+            <td class="best">守城真正参战的是主将所部</td>
+          </tr>
+          <tr class="bench-total">
+            <td>最终平衡</td>
+            <td class="best">玩家合理策略下蜀汉 / 曹魏 / 群雄胜率 60%+</td>
+            <td class="best">单局 35~90 回合</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>最有价值的一条：</strong>「守城真正参战的是主将所部」——<code>estimateCityPower</code> 若把整个 garrison 算作战力，AI 与玩家的判断基准就全错了。这条结论是靠推演脚本跑出来的，不是想出来的。</p>
+  </div>
+
+  <!-- 踩坑 -->
+  <h2 class="detail-subtitle">🐛 10 个由脚本与浏览器暴露的真实 bug</h2>
+  <p class="detail-lead">这些 bug <strong>没有一个是肉眼可见的</strong>，全部由自测脚本或真实浏览器验证捕获。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">🔧 典型 bug 与修法</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>Bug</th>
+            <th>根因</th>
+            <th>修法</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>AI 攻城后守军 faction 未易主</td>
+            <td>城池归属与部队归属两条路径不一致</td>
+            <td class="best">抽出唯一入口 <code>captureCity()</code></td>
+          </tr>
+          <tr>
+            <td>攻城后同城出现两支部队</td>
+            <td>守军残部未解散</td>
+            <td class="best">改为溃散 / 降伏 / 被俘三分支</td>
+          </tr>
+          <tr>
+            <td>战棋布阵颠倒</td>
+            <td><code>createBattle</code> 用 <code>playerIsAttacker</code> 决定上下方</td>
+            <td class="best">玩家永远在下方</td>
+          </tr>
+          <tr>
+            <td>玩家 0 胜</td>
+            <td>AI 攻城用概率判定，玩家攻城走真实战棋</td>
+            <td class="best">AI 也走战棋，攻守同一套规则</td>
+          </tr>
+          <tr>
+            <td>AI 目标反复横跳</td>
+            <td>每回合重选目标，永远在行军</td>
+            <td class="best">锁定目标 + 10 回合僵局解除</td>
+          </tr>
+          <tr>
+            <td>React Hooks 顺序违规</td>
+            <td><code>useMemo</code> 写在条件性 <code>return</code> 之后</td>
+            <td class="best">浏览器验证捕获，纯 TS 检查发现不了</td>
+          </tr>
+          <tr>
+            <td>战棋选不中第一个单位</td>
+            <td><code>handleTileClick</code> 开头 <code>if (!unit) return</code> 造成死锁</td>
+            <td class="best">调整判空时机</td>
+          </tr>
+          <tr>
+            <td>SVG 文字拦截点击</td>
+            <td>城市名点击选不中</td>
+            <td class="best">加透明点击热区 + <code>pointer-events</code> 内联</td>
+          </tr>
+          <tr>
+            <td>economy 通胀</td>
+            <td>60 回合攒 1.2 万金花不出去</td>
+            <td class="best">城池产出系数下调</td>
+          </tr>
+          <tr class="bench-total">
+            <td>两座城无守将</td>
+            <td>qingxu / yiling / nanjun 缺武将</td>
+            <td class="best">补武将，并在自测加「每城守将覆盖」检查</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>「玩家 0 胜」这一条最值得记：</strong>这不是 bug 而是<strong>结构性不公平</strong>——AI 和玩家走了两套完全不同的结算规则。修法不是调数值，是把两侧统一到同一套规则上。</p>
+  </div>
+
+  <!-- 验证 -->
+  <h2 class="detail-subtitle">🔍 验证方式本身也有坑</h2>
+  <p class="detail-lead">Playwright 对 SVG <code>viewBox</code> 缩放有兼容问题，<code>element.click()</code> 会误报 "intercepts pointer events"——这会让人误以为是应用 bug。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">🧰 验证工具链要点</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>问题</th>
+            <th>解法</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Playwright 全局安装因权限失败</td>
+            <td class="best">本地 <code>npm i -D @playwright/cli</code> 后用 <code>./node_modules/.bin/playwright-cli</code></td>
+          </tr>
+          <tr>
+            <td>SVG <code>viewBox</code> 下 <code>element.click()</code> 误报拦截</td>
+            <td class="best">改用 <code>page.mouse.click(bbox 中心)</code> 真实坐标点击</td>
+          </tr>
+          <tr>
+            <td>每次 CLI 调用后浏览器会话会关闭</td>
+            <td class="best">一次 <code>run-code</code> 内跑完整个验证流程</td>
+          </tr>
+          <tr class="bench-total">
+            <td>纯 TypeScript 检查抓不到 Hooks 顺序问题</td>
+            <td class="best">必须真实浏览器跑一遍</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>技术栈实测版本：</strong>React 18.3.1 / Vite 5.4.11 / Zustand 4.5.5 / TypeScript 5.6.3 / Playwright CLI 0.1.22，脚本层用 tsx 4.19.2 跑 TS 自测。</p>
+  </div>
+
+  <!-- 沉淀 -->
+  <div class="arch-tips">
+    <h3 class="bench-title">📌 三条可迁移的结论</h3>
+    <div class="arch-tips-grid">
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 1</span>
+        <p><strong>种子化随机源 + 纯数据状态</strong><br><span class="arch-tip-note">存档 / 复现 / 后端结算统一成同一问题</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 2</span>
+        <p><strong>平衡性用推演脚本定，不靠手感</strong><br><span class="arch-tip-note">先摸清力学，再改 AI 策略</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 3</span>
+        <p><strong>两侧规则必须同源</strong><br><span class="arch-tip-note">AI 概率 vs 玩家真实战棋 = 结构性不公平</span></p>
+      </div>
+    </div>
+  </div>
+</div>

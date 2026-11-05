@@ -3,7 +3,7 @@
     "name": "全栈工程师",
     "title": "高级后端开发 / 数据库 & 自动化专家",
     "location": "中国",
-    "summary": "多年全栈开发经验，深耕数据库高可用架构、数据自动化抓取、AI 应用开发及企业级运维。2026 年主攻 AI 视频与 AI 漫剧全流程生成、LangGraph 多智能体工作流，并以 Vibe Coding 方式主导从需求到上线的完整交付闭环。擅长 MySQL 集群、OceanBase、Python 爬虫、企业微信集成及 AI 视频 / 3D 内容生成。近期主攻 EdgeOne 边缘函数与 Serverless 表单网关、GitHub Pages + EdgeOne 双通道全球交付与访问令牌自动化，以及移动端自适应与离线兜底渲染工程。",
+    "summary": "多年全栈开发经验，深耕数据库高可用架构、数据自动化抓取、AI 应用开发及企业级运维。2026 年主攻 AI 视频与 AI 漫剧全流程生成、LangGraph 多智能体工作流，并以 Vibe Coding 方式主导从需求到上线的完整交付闭环。擅长 MySQL 集群、OceanBase、Python 爬虫、企业微信集成及 AI 视频 / 3D 内容生成。近期主攻 EdgeOne 边缘函数与 Serverless 表单网关、GitHub Pages + EdgeOne 双通道全球交付与访问令牌自动化，以及移动端自适应与离线兜底渲染工程。近期主攻约束求解与多端协同工程（CP-SAT 联合排程、CRDT 冲突分层、事件溯源运行时）、可复现的回合制战棋 Web 应用（React 18 + 种子化 PRNG + 30 项引擎自测），以及基于全球探针的站点可达性实测与网络延迟基线体系。",
     "skills": [
       {
         "name": "MySQL MGR",
@@ -128,6 +128,30 @@
       {
         "name": "移动端适配",
         "category": "开发"
+      },
+      {
+        "name": "CP-SAT 约束求解",
+        "category": "开发"
+      },
+      {
+        "name": "CRDT 协同",
+        "category": "开发"
+      },
+      {
+        "name": "Design Token 管线",
+        "category": "开发"
+      },
+      {
+        "name": "Caddy 反向代理",
+        "category": "运维"
+      },
+      {
+        "name": "Playwright 验收",
+        "category": "开发"
+      },
+      {
+        "name": "SRE 可观测性",
+        "category": "运维"
       }
     ]
   },
@@ -539,6 +563,82 @@
         "localStorage",
         "Edge Headless",
         "移动端适配"
+      ],
+      "screenshot": "",
+      "link": ""
+    },
+    {
+      "id": "proj-019",
+      "title": "Meridian 工程辅助系统（约束求解 + CRDT 协同 + 设计令牌）",
+      "category": "工程效能 / 约束求解",
+      "public": true,
+      "description": "面向设计域与工程域的工程辅助系统原型，用统一图模型打通「设计契约 ↔ 资源排程」，内核为 Cassowary 约束求解与 OR-Tools CP-SAT 排程求解器，并实现基于事件溯源的多端协同运行时与三端共用的设计令牌管线。",
+      "highlights": [
+        "CP-SAT 联合求解器实测：40 任务 / 10 资源的三阶段字典序求解全部 OPTIMAL，单次求解 0.15s；规模探针复测 80 任务仍 OPTIMAL，160 任务在 20s 上限退化为 FEASIBLE",
+        "排程工期评估：并行段 5 周 + 串行决策链 9.5 周 = 12 周，投入无限子智能体也只能压到 10 周，串行段（架构决策 / 契约冻结 / 集成 / 实测）加智能体无效",
+        "分层冲突语义按数据类型定制：几何用 LWW、文案用 3-way、层级用 RGA、任务状态用 FSM、资源用 Lease，禁止全库一套 CRDT",
+        "事件溯源运行时：所有写入经 store.commit() 生成不可变事件，materialize(seed, oplog) 重放得一致状态；原型经 11 项 Playwright 验收全部通过（33 节点 / 55 边）",
+        "设计令牌管线：DTCG 2025.10 + style-dictionary 5.7.1，css / wxss / agent 三端共用同一份 token 源；踩坑 usesDtcg 后取值在 $value 而非 value，且必须开 outputReferences 保住 alias 链",
+        "真实服务器部署：Ubuntu 24.04 + Caddy 2.11.4 反代，aiohttp 单端口 8778 同源承载 HTTP / WebSocket / API，systemd MemoryMax=256M；在内存仅 1.9GB 的低配机上跑通三端同步实测（服务端 oplog=6）"
+      ],
+      "techStack": [
+        "OR-Tools CP-SAT",
+        "Cassowary",
+        "CRDT",
+        "OpLog 事件溯源",
+        "DTCG / style-dictionary",
+        "aiohttp",
+        "Caddy",
+        "systemd"
+      ],
+      "screenshot": "",
+      "link": ""
+    },
+    {
+      "id": "proj-020",
+      "title": "回合制策略战棋 Web 应用（确定性引擎 + 数值表驱动）",
+      "category": "全栈开发 / 交互式应用",
+      "public": true,
+      "description": "纯前端架构的回合制策略战棋 Web 应用：领域层与渲染层彻底解耦，以全局种子化 PRNG 与纯数据 GameState 保证存档可复现，配套 30 项引擎自测与 2 个平衡推演脚本驱动数值调优。",
+      "highlights": [
+        "引擎层零 DOM 依赖：types / rng / data / generals / battle / campaign 六个纯 TS 模块，状态层用 Zustand + StorageAdapter 预留后端接缝",
+        "数据规模实测：22 座城池 / 6 大势力 / 56 名武将 / 8 种兵种 / 10 种地形 / 19 项特技，全部由结构化数值表驱动",
+        "确定性可复现：全局种子化 PRNG（mulberry32）+ 纯数据 GameState，同一种子必得同一局，存档导出导入后状态一致",
+        "30 项引擎自测全部通过（npm test 实测通过 30 项、失败 0 项），覆盖确定性、战斗结算、内政、招降、状态自洽与存档序列化",
+        "平衡性由脚本推演而非手感：推演 60 回合得出「战棋兵力相等则攻方必胜、兵力劣势则必败（1v2 时攻方 0/20 胜）」，据此把 AI 改为战役级集中兵力、玩家侧改为同城友军合击",
+        "修复 10 个由脚本与浏览器验证暴露的真实 bug，含 AI 攻城走概率判定而玩家走真实战棋导致玩家 0 胜、攻城后同城残留两支部队等"
+      ],
+      "techStack": [
+        "React 18",
+        "Vite",
+        "Zustand",
+        "TypeScript",
+        "mulberry32 PRNG",
+        "Playwright"
+      ],
+      "screenshot": "",
+      "link": ""
+    },
+    {
+      "id": "proj-021",
+      "title": "站点全球可达性实测与网络延迟基线体系",
+      "category": "SRE / 可观测性",
+      "public": true,
+      "description": "为静态站建立全球可达性与延迟基线的实测体系：用公开探针 API 在 22 个境外节点与中国大陆 5 个运营商节点做端到端探测，把「站点打不开」准确区分为网络层问题还是服务端问题，为多通道交付选型提供数据依据。",
+      "highlights": [
+        "check-host.net 三个入口共 22 个节点全部 HTTP 200（主站 7/7、详情页 8/8、后台 7/7），证实主站在国内网络层完全可达",
+        "globalping 中国大陆 5 节点全通：武汉联通 148ms / 上海联通 169ms / 北京腾讯云 216ms / 上海腾讯云 228ms / 广州腾讯云 251ms",
+        "自建 check_reachability.py 探针脚本：globalping + check-host 双通道且均无需账号，输出节点级状态码与耗时",
+        "归因结论：GitHub Pages 主站在国内属「网络可达但无 CDN 加速」，加速只能靠独立镜像，镜像令牌失效属平台限制而非站点故障",
+        "构建历史连续无中断（UTC 23:46 / 01:57 / 04:08 / 06:21 / 08:00 / 08:30 逐次成功），配合探针实现每次发布后的即时回归"
+      ],
+      "techStack": [
+        "globalping",
+        "check-host",
+        "curl",
+        "Python",
+        "CDN / 边缘节点",
+        "GitHub Pages"
       ],
       "screenshot": "",
       "link": ""

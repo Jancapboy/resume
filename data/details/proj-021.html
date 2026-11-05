@@ -1,0 +1,227 @@
+<!-- 站点全球可达性实测与网络延迟基线体系 - 独立内容页 -->
+<div class="detail-content-block">
+  <h2 class="detail-subtitle">🌍 核心命题：把「打不开」拆成网络层还是服务端</h2>
+  <p class="detail-lead">用户反馈「站点打不开」时，最容易犯的错是直接去查服务端。但如果<strong>网络层根本不通</strong>，查服务端永远查不出问题。这套体系的全部价值，就是用<strong>公开探针</strong>在真实分布式的节点上实测，把这个问题一次性定死。</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">工具</div>
+      <h3 class="arch-card-title">双通道探针</h3>
+      <p class="arch-card-desc">两个探针服务互为备份，且<strong>均无需账号</strong>，脚本可直接跑。</p>
+      <div class="arch-card-api">
+        <span class="tech-badge">check-host.net</span>
+        <span class="tech-badge">globalping.io</span>
+      </div>
+      <ul class="card-highlights">
+        <li>check-host：一次铺开多个境外节点</li>
+        <li>globalping：可指定国家 / 城市 / 网络</li>
+        <li>两者都返回节点级状态码与耗时</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">脚本</div>
+      <h3 class="arch-card-title">check_reachability.py</h3>
+      <p class="arch-card-desc">三个探测目标（主站 / 详情页 / EdgeOne 镜像）跑一遍，输出结构化结果。</p>
+      <ul class="card-highlights">
+        <li>国家维度：CN / HK / SG / US / JP</li>
+        <li>每节点打印状态码、状态名、total 耗时</li>
+        <li>失败节点直接打印 rawOutput 便于归因</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">归因</div>
+      <h3 class="arch-card-title">网络层 ≠ 服务端</h3>
+      <p class="arch-card-desc">可达性实测与构建历史两条证据交叉验证，把问题定位到具体层面。</p>
+      <ul class="card-highlights">
+        <li>22 个境外节点全 200 → 服务端健康</li>
+        <li>中国大陆 5 节点全通 → 网络层可达</li>
+        <li>结合 Pages 构建历史 → 排除服务端故障</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 实测结果 -->
+  <h2 class="detail-subtitle">📊 实测结果：22 节点全 200，中国大陆 5 节点全通</h2>
+  <p class="detail-lead">用 check-host.net 对三个页面做分布式探测，<strong>共 22 个节点全部 HTTP 200</strong>；再用 globalping 专门打中国大陆节点，<strong>全部 ping 通</strong>。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">📈 check-host.net 节点分布</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>探测目标</th>
+            <th>节点数</th>
+            <th>HTTP 200</th>
+            <th>结论</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>GitHub Pages 主站</td>
+            <td>7</td>
+            <td class="best">7 / 7</td>
+            <td class="best">全部成功</td>
+          </tr>
+          <tr>
+            <td>GitHub Pages 详情页</td>
+            <td>8</td>
+            <td class="best">8 / 8</td>
+            <td class="best">全部成功</td>
+          </tr>
+          <tr>
+            <td>管理后台</td>
+            <td>7</td>
+            <td class="best">7 / 7</td>
+            <td class="best">全部成功</td>
+          </tr>
+          <tr class="bench-total">
+            <td>合计</td>
+            <td>22</td>
+            <td class="best">22 / 22</td>
+            <td class="best">服务端与 CDN 均健康</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>节点代码前缀即国家</strong>（de1 / hk1 / jp1 / sg1 / us5…），check-host 的结果是数组 <code>[成功?, 耗时, 状态, HTTP码, IP]</code>，按位置解析即可拿到节点归属。</p>
+  </div>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">🇨🇳 globalping 中国大陆节点延迟基线</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>城市</th>
+            <th>网络</th>
+            <th>ping 延迟</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>武汉</td>
+            <td>联通</td>
+            <td class="best">148 ms</td>
+          </tr>
+          <tr>
+            <td>上海</td>
+            <td>联通</td>
+            <td class="best">169 ms</td>
+          </tr>
+          <tr>
+            <td>北京</td>
+            <td>腾讯云</td>
+            <td class="best">216 ms</td>
+          </tr>
+          <tr>
+            <td>上海</td>
+            <td>腾讯云</td>
+            <td class="best">228 ms</td>
+          </tr>
+          <tr class="bench-total">
+            <td>广州</td>
+            <td>腾讯云</td>
+            <td class="best">251 ms</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>这组数字的意义：</strong>GitHub Pages 主站在国内<strong>网络层完全可达</strong>，延迟在 148~251ms 区间——这不是「打不开」，这只是「没有 CDN 加速」。加速需求因此指向独立镜像，而不是主站故障。</p>
+  </div>
+
+  <!-- 归因 -->
+  <h2 class="detail-subtitle">🎯 归因结论与由此产生的决策</h2>
+  <p class="detail-lead">三条独立证据交叉验证，最终把结论钉死，并且直接改变了架构决策。</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">结论</div>
+      <h3 class="arch-card-title">主站在国内属「可达但无加速」</h3>
+      <ul class="card-highlights">
+        <li>22 个境外节点全 200 → 服务端健康</li>
+        <li>中国大陆 5 节点 ping 全通 → 网络可达</li>
+        <li>延迟 148~251ms → 无 CDN 加速</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">决策</div>
+      <h3 class="arch-card-title">加速只能靠独立镜像</h3>
+      <ul class="card-highlights">
+        <li>GitHub Pages 无国内 CDN</li>
+        <li>EdgeOne 中国站镜像承担加速职责</li>
+        <li>镜像令牌失效属平台限制，非站点故障</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">观测</div>
+      <h3 class="arch-card-title">构建历史连续性</h3>
+      <p class="arch-card-desc">Pages 部署历史逐次核对（UTC），连续无中断：</p>
+      <ul class="card-highlights">
+        <li>23:46 / 01:57 / 04:08 / 06:21 / 08:00 / 08:30</li>
+        <li>每一次构建状态均为 built</li>
+        <li>配合探针实现每次发布后的即时回归</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 踩坑 -->
+  <h2 class="detail-subtitle">🐛 探针本身的两个坑</h2>
+  <p class="detail-lead">工具用起来也有陷阱，踩过一次就会记住。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">🔧 globalping 使用注意</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>坑</th>
+            <th>现象</th>
+            <th>解法</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>http 类型 target 被拒</td>
+            <td>"does not match any of the allowed types"</td>
+            <td class="best">用 ping 类型即可</td>
+          </tr>
+          <tr>
+            <td>结果结构误判</td>
+            <td><code>timings</code> 是 list，<code>.get()</code> 会炸</td>
+            <td class="best">按 <code>probe.country / city / network</code> 取，用下标读 timings</td>
+          </tr>
+          <tr class="bench-total">
+            <td>账号要求</td>
+            <td>以为需要注册</td>
+            <td class="best">两者均无需账号，脚本可直接调</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>附带解决的一个真问题：</strong>本机 git 全局配置了 <code>http.proxy = http://127.0.0.1:7890</code>，但 Clash 进程退出后该端口只剩 FIN_WAIT_2、无 LISTENING，导致所有 push 直接 ECONNREFUSED。清除全局代理后直连实测 <code>git ls-remote origin main</code> <strong>1.5 秒</strong>成功。</p>
+  </div>
+
+  <!-- 沉淀 -->
+  <div class="arch-tips">
+    <h3 class="bench-title">📌 三条可迁移的结论</h3>
+    <div class="arch-tips-grid">
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 1</span>
+        <p><strong>先分清网络层还是服务端再动手</strong><br><span class="arch-tip-note">否则会一直查错的东西</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 2</span>
+        <p><strong>用公开探针取数据，不要靠推测</strong><br><span class="arch-tip-note">22 节点实测比一句「应该是正常的」有说服力</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 3</span>
+        <p><strong>可达 ≠ 快</strong><br><span class="arch-tip-note">148~251ms 说明问题在加速而非连通</span></p>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,369 @@
+<!-- Meridian 工程辅助系统 - 独立内容页 -->
+<div class="detail-content-block">
+  <h2 class="detail-subtitle">🧭 一张图同时承载设计域与工程域</h2>
+  <p class="detail-lead">核心思路是<strong>统一图模型</strong>：节点可同时是 Frame / Text / Token（设计域）与 Task / Milestone / GPU / 人（工程域），边可同时是 contains / renders / binds（设计）与 depends_on / blocks / occupies / owns（工程）。同一份图 = 唯一事实源，三个视图（统一图谱 / 资源排程 / 设计契约）都是它的投影，而不是三份各自维护的数据。</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">求解内核</div>
+      <h3 class="arch-card-title">双内核分工</h3>
+      <p class="arch-card-desc">布局与排程用两套完全不同的约束求解器，各自解决自己擅长的问题。</p>
+      <div class="arch-card-api">
+        <span class="tech-badge">Cassowary</span>
+        <span class="tech-badge">OR-Tools CP-SAT</span>
+      </div>
+      <ul class="card-highlights">
+        <li>Cassowary：驱动约束布局</li>
+        <li>CP-SAT：驱动排程与资源占用</li>
+        <li>三个领域共用同一求解内核</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">冲突语义</div>
+      <h3 class="arch-card-title">按数据类型分层，禁止全库一套 CRDT</h3>
+      <p class="arch-card-desc">不同数据类型的并发冲突语义完全不同，强行统一只会把「可自动合并」变成「一律要人工裁决」。</p>
+      <ul class="card-highlights">
+        <li>几何 → LWW（后写覆盖）</li>
+        <li>文案 → 检测到不同 actor 并发修改则标 manual</li>
+        <li>层级 → RGA（预留）</li>
+        <li>任务状态 → FSM 状态机</li>
+        <li>资源 → Lease 服务端仲裁</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">运行时</div>
+      <h3 class="arch-card-title">事件溯源 + 日志重放</h3>
+      <p class="arch-card-desc">所有写入经 <code>store.commit()</code> 产生不可变事件，状态唯一来源是 <code>materialize(seed, oplog)</code> = 基线 + 日志重放。各端重放同一序列得同一状态，这是 CRDT 的正确形态。</p>
+      <ul class="card-highlights">
+        <li>OpLog 事件不可变：{id, actor, lam, ts, t, target}</li>
+        <li>FSM 状态机：todo → doing → review → done</li>
+        <li>非法跃迁 commit 直接拒绝并 emit conflict</li>
+        <li>关键路径每次写入后重算依赖深度与下游影响量</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">多端同步</div>
+      <h3 class="arch-card-title">主通道 + 兜底 + 离线队列</h3>
+      <p class="arch-card-desc">端标识放在 sessionStorage（每标签页 = 不同端），主通道走 BroadcastChannel，storage 事件做兜底。</p>
+      <ul class="card-highlights">
+        <li>BroadcastChannel 主通道</li>
+        <li>localStorage storage 事件兜底</li>
+        <li>离线时 commit 进 pending 不进 oplog</li>
+        <li>online 事件触发 flush 重放并广播</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 求解器实测 -->
+  <h2 class="detail-subtitle">⏱️ CP-SAT 求解器实测：分水岭在哪</h2>
+  <p class="detail-lead">用 5 个基准数据集（8 / 20 / 40 任务，含抢占场景）跑联合求解器，硬约束全部 PASS，并自写 <code>scale_probe.py</code> 探针压测规模上限——<strong>下表全部为实测输出，非估算</strong>。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">📊 基准数据集求解结果</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>数据集</th>
+            <th>规模</th>
+            <th>状态</th>
+            <th>求解耗时</th>
+            <th>校验</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>A_small_8tasks</td>
+            <td>8 任务 / 3 资源 / 40h</td>
+            <td class="best">OPTIMAL</td>
+            <td>0.055s</td>
+            <td>硬约束 A1~A6 全 PASS</td>
+          </tr>
+          <tr>
+            <td>B_conflict_20tasks</td>
+            <td>20 任务 / 6 资源 / 60h</td>
+            <td class="best">OPTIMAL</td>
+            <td>0.086s</td>
+            <td>25 条依赖边全 PASS</td>
+          </tr>
+          <tr>
+            <td>C_quarter_40tasks</td>
+            <td>40 任务 / 10 资源 / 200h</td>
+            <td class="best">OPTIMAL</td>
+            <td>0.151s</td>
+            <td>2000 资源时隙全 PASS</td>
+          </tr>
+          <tr>
+            <td>D_preemption</td>
+            <td>4 任务 / 2 资源 / 40h</td>
+            <td class="best">OPTIMAL</td>
+            <td>0.055s</td>
+            <td>抢占场景 makespan=21</td>
+          </tr>
+          <tr class="bench-total">
+            <td>三阶段字典序</td>
+            <td>P1 / P2 / P3</td>
+            <td class="best">每阶段独立 OPTIMAL</td>
+            <td>≈ 单次求解耗时</td>
+            <td>上一阶段最优值转为硬等式</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>关键结论：</strong>字典序三阶段优化几乎免费——每阶段耗时 ≈ 单独求解耗时，<strong>不要用加权求和近似优先级</strong>，那会丢掉字典序语义。P1 加权完成时间已内含关键路径优化，无需再加 makespan 目标。</p>
+  </div>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">📈 规模探针：80 任务是 OPTIMAL 分水岭</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>任务数</th>
+            <th>资源数</th>
+            <th>P1 状态</th>
+            <th>P1 耗时</th>
+            <th>P2 / P3</th>
+            <th>总耗时</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>40</td>
+            <td>10</td>
+            <td class="best">OPTIMAL</td>
+            <td>0.129s</td>
+            <td class="best">OPTIMAL</td>
+            <td>0.727s</td>
+          </tr>
+          <tr>
+            <td>80</td>
+            <td>16</td>
+            <td class="best">OPTIMAL</td>
+            <td>0.655s</td>
+            <td class="best">OPTIMAL</td>
+            <td>5.642s</td>
+          </tr>
+          <tr>
+            <td>160</td>
+            <td>24</td>
+            <td>FEASIBLE</td>
+            <td>20.049s</td>
+            <td>UNKNOWN</td>
+            <td>40.121s</td>
+          </tr>
+          <tr class="bench-total">
+            <td>300</td>
+            <td>32</td>
+            <td>FEASIBLE</td>
+            <td>20.301s</td>
+            <td>UNKNOWN</td>
+            <td>40.430s</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>这条分水岭是能直接写进设计文档的：</strong>80 任务 / 16 资源是 OPTIMAL 的上限，160 任务起在 20s 限时内只能拿到 FEASIBLE，第二三阶段直接 UNKNOWN。<strong>AddCumulative 处理资源约束是决定性的</strong>——没有它，求解器会把同一资源上的任务排到同一时刻。</p>
+  </div>
+
+  <!-- 工期结论 -->
+  <h2 class="detail-subtitle">📅 工期估算：加智能体压不动串行段</h2>
+  <p class="detail-lead">这是整个项目最反直觉、也最可复用的结论：<strong>并行段可以用并发换时间，串行决策链不行</strong>。</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">结论</div>
+      <h3 class="arch-card-title">12 周 = 并行 5 周 + 串行 9.5 周</h3>
+      <ul class="card-highlights">
+        <li>可并行段：5 周</li>
+        <li>串行决策链：9.5 周</li>
+        <li>即便投入无限子智能体，总工期也只能压到 10 周</li>
+        <li>加智能体无效的环节：架构决策 / 契约冻结 / 同步内核 / 集成 / 实测</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">并发上限</div>
+      <h3 class="arch-card-title">4~6 是合理并发数</h3>
+      <p class="arch-card-desc">受本机 10 核 20 线程 + 22GB 内存约束，同时还要跑渲染与依赖安装。</p>
+      <ul class="card-highlights">
+        <li>建议可并行并发上限：4~6</li>
+        <li>再高会因内存争抢反而变慢</li>
+        <li>依赖安装必须走镜像源 + 去代理</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 设计令牌 -->
+  <h2 class="detail-subtitle">🎨 设计令牌管线：三端共用一份源</h2>
+  <p class="detail-lead">用 DTCG 2025.10 + style-dictionary 5.7.1 把设计 Token 编译到 css / wxss / agent 三端，保证同一个色值在三端不会漂移。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">🔧 三个真实踩坑</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>坑</th>
+            <th>现象</th>
+            <th>解法</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>usesDtcg 后取值路径变了</td>
+            <td>值不在 <code>value</code> 而在 <code>$value</code></td>
+            <td class="best">自定义 format 必须按 DTCG 规范取 <code>$value</code></td>
+          </tr>
+          <tr>
+            <td>alias 链被拍扁</td>
+            <td>引用全部变成硬编码</td>
+            <td class="best">必须开 <code>options: { outputReferences: true }</code></td>
+          </tr>
+          <tr>
+            <td>wxss 无 <code>:root</code></td>
+            <td>小程序根节点是 <code>page</code>，不能复用 css/variables</td>
+            <td class="best"><code>transformGroup: 'css'</code> 可完全复用</td>
+          </tr>
+          <tr class="bench-total">
+            <td>CLI 直接跑会崩</td>
+            <td><code>npx style-dictionary build</code> 要求 default-export config 对象</td>
+            <td class="best">改用 <code>node config.mjs</code>（1.1s）</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>还有一条容易踩的：</strong>对比度校验必须用显式配对表（<code>$extensions.contrastPairs</code>），笛卡尔积会产生语义荒谬的假阳性，最后导致 CI 校验被直接关掉——比不做校验更糟。</p>
+  </div>
+
+  <!-- 部署 -->
+  <h2 class="detail-subtitle">🖥️ 真实服务器部署：1.9GB 内存下的单端口方案</h2>
+  <p class="detail-lead">目标机是腾讯云 ap-shanghai（Ubuntu 24.04.4，内核 6.8，sudo 免密）。真正卡住部署的不是代码，是<strong>环境约束</strong>。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">🧱 部署约束与解法</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>约束</th>
+            <th>实际情况</th>
+            <th>解法</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>内存仅 1.9GB</td>
+            <td>可用 894MB</td>
+            <td class="best">禁 Docker、禁重框架</td>
+          </tr>
+          <tr>
+            <td>Web 服务器是 Caddy 不是 nginx</td>
+            <td>v2.11.4，配置在 /etc/caddy/Caddyfile</td>
+            <td class="best">routes/ 片段 = route 级指令</td>
+          </tr>
+          <tr>
+            <td>双端口会导致跨源</td>
+            <td>WebSocket 与页面不同源</td>
+            <td class="best">aiohttp 单端口 8778</td>
+          </tr>
+          <tr>
+            <td>安全组精确白名单</td>
+            <td>仅 22 / 80 / 13439 / 13440 放行</td>
+            <td class="best">443 需控制台加白名单</td>
+          </tr>
+          <tr>
+            <td>密码认证被禁用</td>
+            <td>allowed types: ['publickey']</td>
+            <td class="best">用指定 ed25519 密钥 + paramiko</td>
+          </tr>
+          <tr class="bench-total">
+            <td>访问公网 IP 失败</td>
+            <td>NAT hairpin 不支持，非故障</td>
+            <td class="best">走 SSH 隧道内网访问</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>还有两条易错点：</strong><code>routes/</code> 片段不能写 site 块（会报 unrecognized directive），<code>sites/</code> 片段不能写 route 指令（会报 parsed 'handle' as a site address）；Caddyfile 有 <code>admin off</code>，<strong>不能 systemctl reload，只能 restart</strong>。</p>
+  </div>
+
+  <!-- 验收 -->
+  <h2 class="detail-subtitle">✅ 实测验收：11 项断言全通过</h2>
+  <p class="detail-lead">用 Playwright 跑 11 项断言，覆盖编辑、FSM、拖拽、租约、冲突裁决、持久化与跨端同步，全部实测通过，控制台零错误。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">📊 验收实测值</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>能力</th>
+            <th>实测结果</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>图规模</td>
+            <td>33 节点 / 55 边</td>
+          </tr>
+          <tr>
+            <td>编辑面板</td>
+            <td>2 输入框 + 1 滑块 + 5 个 FSM 按钮（仅合法项可点）</td>
+          </tr>
+          <tr>
+            <td>FSM 合法跃迁</td>
+            <td class="best">done → doing，OpLog +1</td>
+          </tr>
+          <tr>
+            <td>FSM 非法跃迁</td>
+            <td>toast 弹出、状态未变、冲突入列</td>
+          </tr>
+          <tr>
+            <td>双端并发改名</td>
+            <td>A 端检出冲突「文案冲突需人工裁决：A版 vs B版」</td>
+          </tr>
+          <tr>
+            <td>人工裁决</td>
+            <td>选 B 版 → label 生效，冲突列表减少</td>
+          </tr>
+          <tr>
+            <td>刷新持久化</td>
+            <td>OpLog 7 条全部恢复，关键路径重算 8 节点</td>
+          </tr>
+          <tr class="bench-total">
+            <td>跨端同步 / 离线队列</td>
+            <td class="best">A 改状态 B 立即可见；离线时 oplog 不增长（进 pending），恢复后 B 收到</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>审计先于辩解：</strong>用户问「这个 UI 是否可以交互」时，用 <code>document.querySelectorAll('input').length</code>、localStorage key 数量、<code>typeof OPLOG</code> 这类客观指标一测，就看出原型是只读还是可写——<strong>0 个输入框、0 个可拖拽元素、9 个事件监听点全只改局部变量</strong>，这是审计出来的，不是猜的。</p>
+  </div>
+
+  <!-- 沉淀 -->
+  <div class="arch-tips">
+    <h3 class="bench-title">📌 四条可迁移的结论</h3>
+    <div class="arch-tips-grid">
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 1</span>
+        <p><strong>并发上限由机器决定，不由 agent 数量决定</strong><br><span class="arch-tip-note">10 核 20 线程 + 22GB → 并发 4~6 是甜点</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 2</span>
+        <p><strong>串行决策链是工期硬下限</strong><br><span class="arch-tip-note">加无限智能体也只能把 12 周压到 10 周</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 3</span>
+        <p><strong>字典序分阶段求解 ≈ 免费</strong><br><span class="arch-tip-note">别用加权求和近似优先级</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 4</span>
+        <p><strong>「能不能交互」用审计数据回答</strong><br><span class="arch-tip-note">别辩解，量出输入框与 OpLog 数量</span></p>
+      </div>
+    </div>
+  </div>
+</div>
