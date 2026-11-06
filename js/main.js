@@ -184,6 +184,7 @@ function renderProjects(projects) {
         ` : ''}
         <div class="card-tech">
           ${(proj.techStack || []).map((tech) => `<span class="tech-badge">${tech}</span>`).join('')}
+          ${(proj.techStack || []).length > 3 ? `<span class="tech-badge tech-more">+${proj.techStack.length - 3}</span>` : ''}
         </div>
         <div class="card-more">查看详情 →</div>
       </div>
@@ -249,18 +250,48 @@ function initReveal() {
     els.forEach((el) => el.classList.add('visible'));
     return;
   }
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-          observer.unobserve(entry.target);
-        }
-      });
-    },
+
+  // 关键：IntersectionObserver 的 threshold 是「相交面积 ÷ 元素自身面积」。
+  // 项目网格在竖屏下高 12000px 以上，而手机视口只有约 844px，
+  // 即便元素完全盖住视口，相交比例也只有 844/12646 ≈ 6.7%，
+  // 永远达不到 12% 阈值 —— 整块项目区永久停在 opacity:0，
+  // 表现为「项目和视频之间空出好几屏」。
+  //
+  // 因此分两套策略：
+  //  · 超高元素（高度 > 1.5 屏）：用 threshold 0 + 负 rootMargin，
+  //    元素顶端进入视口即触发，不受自身高度影响
+  //  · 普通元素：保留 12% 比例阈值，避免过早出现
+  const show = (entry) => {
+    entry.target.classList.add('visible');
+    tallObs.unobserve(entry.target);
+    normObs.unobserve(entry.target);
+  };
+
+  const tallObs = new IntersectionObserver(
+    (entries) => entries.forEach((e) => { if (e.isIntersecting) show(e); }),
+    { threshold: 0, rootMargin: '0px 0px -15% 0px' }
+  );
+
+  const normObs = new IntersectionObserver(
+    (entries) => entries.forEach((e) => { if (e.isIntersecting) show(e); }),
     { threshold: 0.12 }
   );
-  els.forEach((el) => observer.observe(el));
+
+  els.forEach((el) => {
+    const tall = el.getBoundingClientRect().height > window.innerHeight * 1.5;
+    (tall ? tallObs : normObs).observe(el);
+  });
+
+  // 兜底：首屏渲染后 2.5 秒仍未可见的 .reveal，若已滚到可见区域则强制显示，
+  // 杜绝任何因阈值或布局异常导致的空白区块。
+  setTimeout(() => {
+    document.querySelectorAll('.reveal:not(.visible)').forEach((el) => {
+      const r = el.getBoundingClientRect();
+      if (r.top < window.innerHeight * 1.2) {
+        el.classList.add('visible');
+      }
+    });
+  }, 2500);
 }
 
 // 鼠标光晕
