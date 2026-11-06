@@ -1,0 +1,387 @@
+/* ============================================================
+   琉璃主题层 · LIULI THEME
+   ------------------------------------------------------------
+   设计关键词：水滴滴落流动感 / 琉璃背景流动质感 / 电影级运镜 / CG画风
+   加载顺序：在 style.css 之后，覆盖基础令牌与组件材质
+   材质参考：釉色水晶玻璃（liuli）的半透明、内部折射与边缘色散
+   ============================================================ */
+
+:root {
+  /* —— 琉璃光谱：模拟白光经琉璃折射后的色散次序 —— */
+  --liuli-cyan:    #22d3ee;
+  --liuli-teal:    #2dd4bf;
+  --liuli-indigo:  #6366f1;
+  --liuli-violet:  #a78bfa;
+  --liuli-magenta: #e879f9;
+  --liuli-amber:   #fbbf24;
+  --liuli-rose:    #fb7185;
+
+  /* —— 主光谱渐变：青碧 → 靛蓝 → 藕紫 → 品红 → 琥珀 —— */
+  --grad-liuli: linear-gradient(112deg,
+      var(--liuli-cyan) 0%,
+      var(--liuli-indigo) 24%,
+      var(--liuli-violet) 44%,
+      var(--liuli-magenta) 60%,
+      var(--liuli-amber) 82%,
+      var(--liuli-teal) 100%);
+
+  --grad-liuli-soft: linear-gradient(140deg,
+      rgba(34, 211, 238, 0.16),
+      rgba(99, 102, 241, 0.14) 34%,
+      rgba(167, 139, 250, 0.13) 58%,
+      rgba(251, 191, 36, 0.10));
+
+  /* —— 底色压深一档，让琉璃折射更突出 —— */
+  --bg-abyss: #04070e;
+
+  /* —— 玻璃材质 —— */
+  --glass-surface: linear-gradient(152deg,
+      rgba(255, 255, 255, 0.062) 0%,
+      rgba(255, 255, 255, 0.018) 44%,
+      rgba(255, 255, 255, 0.042) 100%);
+  --glass-blur: blur(22px) saturate(175%);
+  --glass-edge: rgba(255, 255, 255, 0.13);
+  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.18),
+                     inset 0 -1px 0 rgba(0, 0, 0, 0.28);
+}
+
+/* ============================================================
+   1. 底色与全局氛围
+   ============================================================ */
+
+body {
+  background: var(--bg-abyss);
+}
+
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(34, 211, 238, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34, 211, 238, 0.045) 1px, transparent 1px);
+}
+
+/* 琉璃光晕：改为多色折射团，比原双色更接近釉彩 */
+.bg-glow {
+  opacity: 0.2;
+  filter: blur(130px);
+  animation: glow-breathe 18s var(--ease-out) infinite alternate;
+}
+.bg-glow.top {
+  background: radial-gradient(circle, var(--liuli-cyan), transparent 68%);
+}
+.bg-glow.bottom {
+  background: radial-gradient(circle, var(--liuli-violet), transparent 68%);
+  animation-delay: -9s;
+}
+@keyframes glow-breathe {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  50%  { transform: translate3d(2%, -3%, 0) scale(1.09); }
+  100% { transform: translate3d(-3%, 2%, 0) scale(1.04); }
+}
+
+/* ============================================================
+   2. Hero 影视层（视频 + 焦散 + 水滴）
+   ============================================================ */
+
+.hero-media {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--bg-abyss);
+  /* 静态兜底：视频被隐藏或加载失败时，琉璃液面仍然呈现 */
+  background-image: url('../assets/hero/hero-poster.jpg');
+  background-size: cover;
+  background-position: 62% center;
+  background-repeat: no-repeat;
+}
+.hero-media video,
+.hero-media img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 62% center;
+}
+.hero-media video {
+  opacity: 0.62;
+  filter: saturate(125%) contrast(106%);
+}
+
+/* 左侧压暗，保证标题对比度（WCAG AA） */
+.hero-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(98deg,
+      rgba(4, 7, 14, 0.97) 0%,
+      rgba(4, 7, 14, 0.94) 30%,
+      rgba(4, 7, 14, 0.66) 52%,
+      rgba(4, 7, 14, 0.34) 78%,
+      rgba(4, 7, 14, 0.55) 100%),
+    radial-gradient(90% 70% at 12% 45%, rgba(4, 7, 14, 0.94) 0%, transparent 58%);
+}
+
+/* 摘要过长时收敛为四行，底部渐隐提示还有内容 */
+.hero .summary {
+  max-width: 620px;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  mask-image: linear-gradient(180deg, #000 62%, rgba(0, 0, 0, 0.25) 100%);
+  -webkit-mask-image: linear-gradient(180deg, #000 62%, rgba(0, 0, 0, 0.25) 100%);
+}
+
+/* 焦散光斑：琉璃液面折射出的游移彩光 */
+.hero-caustics {
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(28% 22% at 72% 32%, rgba(34, 211, 238, 0.22), transparent 70%),
+    radial-gradient(22% 18% at 84% 58%, rgba(167, 139, 250, 0.20), transparent 70%),
+    radial-gradient(18% 16% at 62% 72%, rgba(251, 191, 36, 0.16), transparent 72%),
+    radial-gradient(24% 20% at 90% 22%, rgba(232, 121, 249, 0.14), transparent 70%);
+  filter: blur(42px);
+  mix-blend-mode: screen;
+  animation: caustic-drift 26s var(--ease-out) infinite alternate;
+}
+@keyframes caustic-drift {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  50%  { transform: translate3d(-3%, 2%, 0) scale(1.08); }
+  100% { transform: translate3d(2%, -3%, 0) scale(1.03); }
+}
+
+/* —— 水滴滴落 —— */
+.drip-field {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+.drip {
+  position: absolute;
+  width: 9px;
+  height: 13px;
+  border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%;
+  background: radial-gradient(circle at 34% 26%,
+      rgba(255, 255, 255, 0.95),
+      rgba(167, 139, 250, 0.55) 42%,
+      rgba(34, 211, 238, 0.26) 72%,
+      transparent);
+  box-shadow: 0 0 12px rgba(167, 139, 250, 0.45);
+  opacity: 0;
+  animation: drip-fall var(--dur, 9s) cubic-bezier(0.55, 0.06, 0.68, 0.19) infinite;
+  animation-delay: var(--delay, 0s);
+}
+@keyframes drip-fall {
+  0%   { transform: translateY(-6vh) scaleY(0.72); opacity: 0; }
+  8%   { opacity: 0.9; }
+  72%  { transform: translateY(64vh) scaleY(1.08); opacity: 0.85; }
+  86%  { transform: translateY(64vh) scaleY(0.42) scaleX(1.5); opacity: 0.55; }
+  100% { transform: translateY(64vh) scaleY(0.2) scaleX(2); opacity: 0; }
+}
+
+/* Hero 内容浮到影视层之上 */
+.hero-content {
+  position: relative;
+  z-index: 2;
+}
+
+/* ============================================================
+   3. 琉璃玻璃材质
+   ============================================================ */
+
+.project-card,
+.video-card,
+.contact-card {
+  background: var(--glass-surface);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-color: var(--glass-edge);
+  box-shadow: var(--glass-highlight), var(--shadow-md);
+}
+
+/* 边缘色散：把描边换成光谱 */
+.project-card::before,
+.video-card::before {
+  background: var(--grad-liuli) !important;
+  background-size: 220% 100% !important;
+  animation: edge-shift 9s linear infinite;
+  opacity: 0.22 !important;
+}
+@keyframes edge-shift {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 220% 50%; }
+}
+.project-card:hover::before,
+.video-card:hover::before {
+  opacity: 0.85 !important;
+}
+
+/* 悬停扫光：像光在琉璃棱面上滑过 */
+.project-card::after,
+.video-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(108deg,
+      transparent 36%,
+      rgba(255, 255, 255, 0.13) 47%,
+      rgba(255, 255, 255, 0.05) 54%,
+      transparent 64%);
+  background-size: 260% 100%;
+  background-position: 130% 0;
+  opacity: 0;
+  transition: opacity 0.35s var(--ease-out), background-position 0.9s var(--ease-out);
+  pointer-events: none;
+}
+.project-card:hover::after,
+.video-card:hover::after {
+  opacity: 1;
+  background-position: -30% 0;
+}
+
+/* 技能标签：釉彩釉面质感 */
+.skill-tag {
+  background: linear-gradient(140deg, rgba(34, 211, 238, 0.10), rgba(167, 139, 250, 0.09));
+  border-color: rgba(34, 211, 238, 0.26);
+}
+.skill-tag:hover {
+  border-color: rgba(251, 191, 36, 0.42);
+  box-shadow: 0 0 18px rgba(34, 211, 238, 0.16);
+}
+
+/* ============================================================
+   4. 文字与控件
+   ============================================================ */
+
+/* 琉璃光谱渐变文字
+   注意：.hero h1 带 .animate-in 入场动画（animation: fade-up ... forwards），
+   若在此处用 animation 简写覆盖，会让 fade-up 失效、opacity 永远停在 0 导致标题隐形。
+   因此：渐变样式对两者统一设置，流光动画只给没有 .animate-in 的 .section-title。 */
+.hero h1,
+.section-title {
+  background: linear-gradient(96deg,
+      #ffffff 0%, #dbeafe 30%,
+      var(--liuli-cyan) 54%,
+      var(--liuli-violet) 76%,
+      #ffffff 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+/* 流光：仅作用于无入场动画的标题 */
+.section-title {
+  animation: title-shimmer 16s ease-in-out infinite alternate;
+}
+@keyframes title-shimmer {
+  from { background-position: 0% 50%; }
+  to   { background-position: 100% 50%; }
+}
+
+.section-label {
+  color: var(--liuli-cyan);
+}
+
+.btn-primary {
+  background: var(--grad-liuli);
+  background-size: 200% 100%;
+  box-shadow: 0 8px 26px rgba(99, 102, 241, 0.28);
+  transition: background-position 0.6s var(--ease-out), transform 0.25s var(--ease-out),
+              box-shadow 0.25s var(--ease-out);
+}
+.btn-primary:hover {
+  background-position: 100% 0;
+  box-shadow: 0 12px 34px rgba(167, 139, 250, 0.36);
+  transform: translateY(-2px);
+}
+
+.btn-outline {
+  border-color: rgba(34, 211, 238, 0.34);
+  color: #a5f3fc;
+}
+.btn-outline:hover {
+  border-color: rgba(251, 191, 36, 0.5);
+  color: #fde68a;
+  background: rgba(34, 211, 238, 0.07);
+}
+
+.tech-badge {
+  background: linear-gradient(140deg, rgba(34, 211, 238, 0.10), rgba(232, 121, 249, 0.08));
+  border-color: rgba(167, 139, 250, 0.24);
+}
+
+/* 区块之间的琉璃液面细线 */
+.section + .section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(34, 211, 238, 0.26),
+      rgba(167, 139, 250, 0.22),
+      rgba(251, 191, 36, 0.16),
+      transparent);
+}
+
+/* ============================================================
+   5. 响应式与可访问性
+   ============================================================ */
+
+/* 移动端：视频降级为静态图，避免流量与解码开销 */
+@media (max-width: 899px) {
+  .hero-media video { display: none; }
+  .hero-media {
+    background-image: url('../assets/hero/hero-poster-sm.webp');
+  }
+  .hero-scrim {
+    background: linear-gradient(180deg,
+        rgba(4, 7, 14, 0.80) 0%,
+        rgba(4, 7, 14, 0.90) 48%,
+        rgba(4, 7, 14, 0.96) 100%);
+  }
+  .drip-field { display: none; }
+  /* 只停 .section-title 的流光；.hero h1 的 fade-up 入场动画必须保留，
+     否则 opacity 会停在 0，标题在移动端不可见 */
+  .section-title { animation: none; background-position: 30% 0; }
+  .project-card::before, .video-card::before { animation: none; }
+}
+
+/* 降低动效偏好：停掉所有持续动画，保留静态构图 */
+@media (prefers-reduced-motion: reduce) {
+  .hero-caustics,
+  .drip,
+  .hero h1,
+  .section-title,
+  .bg-glow,
+  .project-card::before,
+  .video-card::before {
+    animation: none !important;
+  }
+  /* 视频隐藏后由 .hero-media 的静态背景兜底 */
+  .hero-media video { display: none; }
+  /* 双保险：停掉入场动画后显式保证元素可见（依赖 style.css 的 .animate-in 兜底） */
+  .animate-in,
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* 键盘可达性：焦点环用琉璃光谱 */
+:focus-visible {
+  outline: 2px solid var(--liuli-cyan);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
