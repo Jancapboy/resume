@@ -7,7 +7,10 @@
   <title>全栈工程师 | 简历</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <!-- 字体异步加载：Google Fonts 在国内可达性差，阻塞式加载会拖慢首屏文字呈现 -->
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap"
+        rel="stylesheet" media="print" onload="this.media='all';this.onload=null">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap"></noscript>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/liuli.css">
   <link rel="stylesheet" href="css/studio.css">
@@ -21,13 +24,8 @@
 </head>
 <body>
 
-  <!-- 加载遮罩 -->
-  <div class="boot" id="boot">
-    <div style="display:flex;flex-direction:column;align-items:center">
-      <div id="boot-text">INITIALIZING</div>
-      <div class="boot-bar"><i></i></div>
-    </div>
-  </div>
+  <!-- 加载指示：顶部 2px 进度条，不遮挡内容、不锁滚动 -->
+  <div class="boot" id="boot"><i></i></div>
 
   <!-- 系统状态栏 -->
   <div class="statusbar" id="statusbar" aria-hidden="true">
@@ -35,6 +33,7 @@
     <span class="sb-item plain sb-hide-sm"><span class="sb-key" style="color:var(--text-muted)">LOC</span>&nbsp;<span class="sb-val" id="sb-loc">CN</span></span>
     <span class="sb-item plain sb-hide-sm"><span class="sb-key" style="color:var(--text-muted)">LAT</span>&nbsp;<span class="sb-val" id="sb-lat">--</span></span>
     <span class="sb-item sb-live"><span class="sb-val">ONLINE</span></span>
+    <span class="sb-item plain sb-hide-sm"><span class="sb-val" id="sb-state">LOADING</span></span>
     <span class="sb-sep"></span>
     <span class="sb-item plain sb-hide-sm"><span class="sb-key" style="color:var(--text-muted)">STACK</span>&nbsp;<span class="sb-val" id="sb-stack">--</span></span>
     <span class="sb-item plain"><span class="sb-key" style="color:var(--text-muted)">VER</span>&nbsp;<span class="sb-val" id="sb-ver">1.0</span></span>

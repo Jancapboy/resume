@@ -38,6 +38,33 @@
 .hero-caustics { z-index: 3; }
 .drip-field { z-index: 4; }
 
+/* 锚点跳转与 scrollIntoView 都要避开状态栏 + 固定导航，
+   否则 section 标题会被导航遮住 */
+.section,
+.section-header,
+#skills,
+#projects,
+#videos,
+#opensource,
+#contact {
+  scroll-margin-top: calc(var(--statusbar-h) + 76px);
+}
+
+/* AI 悬浮按钮：滚动后降低存在感，避免长期遮挡卡片与标签内容 */
+.ai-fab {
+  transition: opacity 0.35s var(--ease-out), transform 0.35s var(--ease-out),
+              background 0.25s, border-color 0.25s;
+}
+body.scrolled .ai-fab {
+  opacity: 0.42;
+  transform: scale(0.88);
+}
+body.scrolled .ai-fab:hover,
+body.scrolled .ai-fab:focus-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
 /* 状态栏（34px）+ 固定导航（约 62px）共同占据顶部，
    Hero 必须留出足够上边距，否则内容会被导航压住 */
 .nav {
@@ -248,6 +275,78 @@
 }
 .term-line.dim {
   color: var(--text-muted);
+}
+
+/* ============================================================
+   3b. 技术能力：按类别分组的矩阵
+   ------------------------------------------------------------
+   原先 37 个技能标签混排成一片，结构感全无。
+   改为按类别分组：每组独立面板 + 左侧色条标识方向，
+   组标题已表达分类，标签内不再重复徽章。
+   ============================================================ */
+
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(248px, 1fr));
+  gap: 12px;
+  justify-content: stretch;
+  align-items: start;
+}
+.skill-group {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--glass-line);
+  border-radius: var(--radius-md);
+  background: linear-gradient(158deg, rgba(255, 255, 255, 0.042), rgba(255, 255, 255, 0.012));
+  padding: 15px 17px 16px;
+}
+.skill-group::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--liuli-cyan);
+  opacity: 0.85;
+}
+.skill-group.sg-1::before { background: var(--liuli-indigo); }
+.skill-group.sg-2::before { background: var(--liuli-violet); }
+.skill-group.sg-3::before { background: var(--liuli-magenta); }
+.skill-group.sg-4::before { background: var(--liuli-amber); }
+.skill-group.sg-5::before { background: var(--liuli-teal); }
+
+.skill-group-head {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  margin-bottom: 12px;
+}
+.skill-group-name {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+.skill-group-count {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--text-muted);
+  border: 1px solid var(--glass-line);
+  border-radius: 100px;
+  padding: 1px 7px;
+}
+.skill-group-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.skill-group-tags .skill-tag {
+  padding: 5px 10px;
+  font-size: 12.5px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
 }
 
 /* ============================================================
@@ -578,44 +677,39 @@
 }
 
 /* ============================================================
-   7. 加载遮罩
+   7. 加载指示（顶部进度条）
+   ------------------------------------------------------------
+   刻意不做全屏遮罩：window.load 要等 CDN 动效库与背景视频全部就绪，
+   国内网络下会阻塞数秒，全屏遮罩期间用户既看不到内容也滚不动。
+   改为顶部 2px 进度条：内容立即可见，滚动始终可用。
    ============================================================ */
 
 .boot {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
   z-index: 999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg-abyss);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.18em;
-  color: var(--liuli-cyan);
-  transition: opacity 0.6s var(--ease-out), visibility 0.6s;
+  background: rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+  pointer-events: none;
+  transition: opacity 0.45s var(--ease-out);
 }
 .boot.done {
   opacity: 0;
-  visibility: hidden;
 }
-.boot-bar {
-  width: 120px;
-  height: 1px;
-  margin-top: 12px;
-  background: rgba(255, 255, 255, 0.1);
-  overflow: hidden;
-}
-.boot-bar i {
+.boot i {
   display: block;
   height: 100%;
-  width: 40%;
+  width: 38%;
   background: var(--liuli-cyan);
-  animation: boot-slide 1.1s var(--ease-out) infinite;
+  box-shadow: 0 0 10px var(--liuli-cyan);
+  animation: boot-slide 1.05s var(--ease-out) infinite;
 }
 @keyframes boot-slide {
   0% { transform: translateX(-100%); }
-  100% { transform: translateX(320%); }
+  100% { transform: translateX(360%); }
 }
 
 /* ============================================================

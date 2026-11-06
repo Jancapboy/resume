@@ -59,7 +59,11 @@ function applyData(data) {
   document.dispatchEvent(new CustomEvent('resume:dataready', { detail: data }));
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
+// 不等待 DOMContentLoaded：defer 脚本（GSAP 等 CDN 资源）的加载会推迟
+// DOMContentLoaded 触发，而国内访问 cdnjs 常常很慢——等它等于等 CDN，
+// 首屏要多等好几秒。DOM 解析完毕即开始渲染。
+(function () {
+  const start = async () => {
   // --- 导航滚动效果 ---
   const nav = document.getElementById('nav');
   window.addEventListener('scroll', () => {
@@ -98,7 +102,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
   }
-});
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start);
+  } else {
+    start();
+  }
+})();
 
 /* ================================================
    渲染函数
@@ -122,11 +133,31 @@ function renderProfile(profile) {
 
 function renderSkills(skills) {
   const grid = document.getElementById('skills-grid');
-  grid.innerHTML = skills.map((skill, i) => `
-    <span class="skill-tag" style="animation: fade-up 0.5s ${0.3 + i * 0.04}s var(--ease-out) both">
-      ${skill.name}
-      <span class="skill-category">${skill.category}</span>
-    </span>
+  if (!grid) return;
+
+  // 按类别分组呈现：混杂的标签云看不出技术栈结构，
+  // 分组后每个方向的覆盖度一目了然，组标题已表达分类，标签内不再重复徽章
+  const groups = [];
+  const index = new Map();
+  (skills || []).forEach((s) => {
+    const c = s.category || '其它';
+    if (!index.has(c)) {
+      index.set(c, groups.length);
+      groups.push({ name: c, items: [] });
+    }
+    groups[index.get(c)].items.push(s.name);
+  });
+
+  grid.innerHTML = groups.map((g, gi) => `
+    <div class="skill-group sg-${gi % 6}" style="animation: fade-up 0.55s ${0.1 + gi * 0.06}s var(--ease-out) both">
+      <div class="skill-group-head">
+        <span class="skill-group-name">${g.name}</span>
+        <span class="skill-group-count">${g.items.length}</span>
+      </div>
+      <div class="skill-group-tags">
+        ${g.items.map((n) => `<span class="skill-tag">${n}</span>`).join('')}
+      </div>
+    </div>
   `).join('');
 }
 

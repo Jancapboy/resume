@@ -23,21 +23,27 @@
   if (HAS_GSAP) gsap.registerPlugin.apply(gsap, [HAS_ST && ScrollTrigger, HAS_SPLIT && SplitText].filter(Boolean));
 
   /* ============================================================
-     0. 加载遮罩
+     0. 加载指示
+     ------------------------------------------------------------
+     刻意不等 window.load：那要等 CDN 动效库与背景视频全部就绪，
+     国内网络下会阻塞数秒。此处在 DOM 就绪后即刻收尾，内容始终可见、
+     页面始终可滚动。
      ============================================================ */
   function closeBoot() {
     const boot = $('#boot');
-    if (!boot) return;
-    const txt = $('#boot-text');
-    if (txt) txt.textContent = 'READY';
-    setTimeout(() => {
+    if (boot) {
       boot.classList.add('done');
-      document.body.style.overflow = '';
-    }, REDUCED ? 0 : 220);
+      setTimeout(() => { boot.style.display = 'none'; }, 500);
+    }
+    const sb = $('#sb-state');
+    if (sb) sb.textContent = 'READY';
   }
-  document.body.style.overflow = 'hidden';
-  window.addEventListener('load', () => setTimeout(closeBoot, 420));
-  setTimeout(closeBoot, 4200); // 兜底：任何资源卡住都不让用户面对白屏
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(closeBoot, 120));
+  } else {
+    setTimeout(closeBoot, 120);
+  }
+  setTimeout(closeBoot, 2500); // 兜底：进度条绝不能一直挂着
 
   /* ============================================================
      1. 系统状态栏
@@ -411,6 +417,12 @@
      ============================================================ */
   function boot(withData) {
     initStatusBar();
+
+    // 滚动标记：用于降低悬浮按钮存在感，避免遮挡内容
+    window.addEventListener('scroll', () => {
+      document.body.classList.toggle('scrolled', window.scrollY > 140);
+    }, { passive: true });
+
     initCursor();
     initTerminal();
     initMetrics(withData);
@@ -418,8 +430,10 @@
     initProjectCards(withData);
     initScroll();
 
-    // Lenis 平滑滚动：接管原生滚动并驱动 ScrollTrigger
-    if (HAS_LENIS && HAS_ST && !REDUCED) {
+    // Lenis 平滑滚动：接管原生滚动并驱动 ScrollTrigger。
+    // 移动端不启用：原生触摸滚动手感更好，也避开与 ScrollTrigger 的兼容问题。
+    const isCoarse = window.matchMedia('(pointer: coarse)').matches;
+    if (HAS_LENIS && HAS_ST && !REDUCED && !isCoarse) {
       const lenis = new window.Lenis({
         duration: 1.05,
         easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -436,7 +450,7 @@
         const target = document.querySelector(a.getAttribute('href'));
         if (!target) return;
         e.preventDefault();
-        lenis.scrollTo(target, { offset: -70 });
+        lenis.scrollTo(target, { offset: -118 });
       });
       window.__lenis = lenis;
     }
