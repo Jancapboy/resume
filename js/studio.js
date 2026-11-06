@@ -11,16 +11,37 @@
 (function () {
   'use strict';
 
-  const HAS_GSAP = typeof window.gsap !== 'undefined';
-  const HAS_ST = typeof window.ScrollTrigger !== 'undefined';
-  const HAS_SPLIT = typeof window.SplitText !== 'undefined';
-  const HAS_LENIS = typeof window.Lenis !== 'undefined';
+  // 依赖检测必须是动态的：本脚本以 async 加载，可能早于 GSAP 执行，
+  // 若在顶层求值就会永久判定为「不可用」而失去动效。
+  const HAS_GSAP = () => typeof window.gsap !== 'undefined';
+  const HAS_ST = () => typeof window.ScrollTrigger !== 'undefined';
+  const HAS_SPLIT = () => typeof window.SplitText !== 'undefined';
+  const HAS_LENIS = () => typeof window.Lenis !== 'undefined';
   const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const $ = (s, r) => (r || document).querySelector(s);
   const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
 
-  if (HAS_GSAP) gsap.registerPlugin.apply(gsap, [HAS_ST && ScrollTrigger, HAS_SPLIT && SplitText].filter(Boolean));
+  let _pluginsReady = false;
+  function ensurePlugins() {
+    if (_pluginsReady || !HAS_GSAP()) return _pluginsReady;
+    const list = [];
+    if (HAS_ST()) list.push(window.ScrollTrigger);
+    if (HAS_SPLIT()) list.push(window.SplitText);
+    if (list.length) window.gsap.registerPlugin.apply(window.gsap, list);
+    _pluginsReady = true;
+    return true;
+  }
+
+  // 等待动效库就绪（最多 3 秒）；即便超时，非动效功能也已正常工作
+  function waitForGsap(cb) {
+    if (HAS_GSAP()) { ensurePlugins(); cb(true); return; }
+    let tries = 0;
+    const timer = setInterval(() => {
+      if (HAS_GSAP()) { clearInterval(timer); ensurePlugins(); cb(true); }
+      else if (++tries > 30) { clearInterval(timer); cb(false); }
+    }, 100);
+  }
 
   /* ============================================================
      0. 加载指示
@@ -132,7 +153,7 @@
     const lines = $$('.term-line', body);
     if (!lines.length) return;
 
-    if (!HAS_GSAP || REDUCED) {
+    if (!HAS_GSAP() || REDUCED) {
       lines.forEach((l) => { l.style.opacity = 1; l.style.transform = 'none'; });
       return;
     }
@@ -152,7 +173,7 @@
      ============================================================ */
   function animateCount(el, target, suffix) {
     if (!el) return;
-    if (!HAS_GSAP || REDUCED) {
+    if (!HAS_GSAP() || REDUCED) {
       el.textContent = target + (suffix || '');
       return;
     }
@@ -378,11 +399,11 @@
      8. 滚动编排
      ============================================================ */
   function initScroll() {
-    if (!HAS_GSAP) return;
+    if (!HAS_GSAP()) return;
 
     // Hero 标题：逐字揭示（SplitText 可用时）
     const h1 = $('#hero-name');
-    if (h1 && HAS_SPLIT && !REDUCED) {
+    if (h1 && HAS_SPLIT() && !REDUCED) {
       try {
         const split = new SplitText(h1, { type: 'chars,words', charsClass: 'sp-char' });
         gsap.set(h1, { opacity: 1 });
@@ -398,7 +419,7 @@
     }
 
     // 分区标题：进入时上移淡入
-    if (HAS_ST && !REDUCED) {
+    if (HAS_ST() && !REDUCED) {
       $$('.section-title').forEach((t) => {
         if (t.classList.contains('animate-in')) return;
         gsap.from(t, {
@@ -424,16 +445,29 @@
     }, { passive: true });
 
     initCursor();
-    initTerminal();
     initMetrics(withData);
     initGitHubPanel();
     initProjectCards(withData);
-    initScroll();
 
-    // Lenis 平滑滚动：接管原生滚动并驱动 ScrollTrigger。
-    // 移动端不启用：原生触摸滚动手感更好，也避开与 ScrollTrigger 的兼容问题。
+    // 依赖 GSAP 的部分等库就绪后再启动
+    waitForGsap(function (ok) {
+      if (!ok) {
+        console.info('[studio] 动效库未就绪，已降级为无 GSAP 模式');
+        initTerminal();   // 终端逐行揭示降级为直接显示
+        return;
+      }
+      initTerminal();
+      initScroll();
+      setupLenis();
+    });
+
+  }
+
+  // Lenis 平滑滚动：接管原生滚动并驱动 ScrollTrigger。
+  // 移动端不启用：原生触摸滚动手感更好，也避开与 ScrollTrigger 的兼容问题。
+  function setupLenis() {
     const isCoarse = window.matchMedia('(pointer: coarse)').matches;
-    if (HAS_LENIS && HAS_ST && !REDUCED && !isCoarse) {
+    if (HAS_LENIS() && HAS_ST() && !REDUCED && !isCoarse) {
       const lenis = new window.Lenis({
         duration: 1.05,
         easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
