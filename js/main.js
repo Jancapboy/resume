@@ -54,6 +54,9 @@ function applyData(data) {
   safe(() => renderSkills(data.profile.skills), 'skills');
   safe(() => renderProjects(data.projects), 'projects');
   safe(() => renderVideos(data.videos), 'videos');
+
+  // 通知动效层：数据已就绪，可以启动编排
+  document.dispatchEvent(new CustomEvent('resume:dataready', { detail: data }));
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -111,11 +114,10 @@ function renderProfile(profile) {
   document.getElementById('hero-summary').textContent = profile.summary;
   document.title = `${profile.name} | 简历`;
 
-  // 打字机效果（只在首次渲染时跑，避免数据刷新后重复播放）
-  if (!_profileRendered) {
-    _profileRendered = true;
-    typeWriter(document.getElementById('hero-title'), profile.title || '');
-  }
+  // 副标题直接呈现：逐字打字会延迟关键信息的可读性，
+  // 该角色已由终端档案（.hero-terminal）承担。
+  const sub = document.getElementById('hero-title');
+  if (sub && !sub.textContent) sub.textContent = profile.title || '';
 }
 
 function renderSkills(skills) {
@@ -157,8 +159,8 @@ function renderProjects(projects) {
     </a>
   `).join('');
 
-  // 绑定 3D 倾斜
-  document.querySelectorAll('[data-tilt]').forEach(bindTilt);
+  // 卡片的高光跟随与架构展开由 studio.js 统一处理，
+  // 这里不再绑定裸 mousemove 3D 倾斜（无节流会掉帧）。
 }
 
 /* 视频作品 */
@@ -197,10 +199,10 @@ function renderVideos(videos) {
 
 let _effectsInited = false;
 function initEffects() {
-  // 粒子/光晕/视差只初始化一次；reveal 每次重绘后都要重新绑定新插入的元素
+  // 鼠标光晕与视差只初始化一次；reveal 每次重绘后都要重新绑定新插入的元素。
+  // canvas 粒子背景已移除：与内容无关的装饰噪音且持续占用主线程。
   if (!_effectsInited) {
     _effectsInited = true;
-    initParticles();
     initCursorGlow();
     initParallax();
   }
@@ -208,93 +210,7 @@ function initEffects() {
 }
 
 // 打字机
-function typeWriter(el, text) {
-  if (!el || !text) return;
-  el.textContent = '';
-  const cursor = document.createElement('span');
-  cursor.className = 'type-cursor';
-  el.appendChild(cursor);
-
-  let i = 0;
-  const speed = 60;
-  function step() {
-    if (i < text.length) {
-      cursor.before(document.createTextNode(text[i]));
-      i++;
-      setTimeout(step, speed);
-    }
-  }
-  // 稍微延迟，让 hero 入场动画先播
-  setTimeout(step, 600);
-}
-
 // 粒子背景
-function initParticles() {
-  const canvas = document.getElementById('particle-canvas');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  let w, h;
-  const particles = [];
-  const COUNT = 60;
-
-  function resize() {
-    w = canvas.width = window.innerWidth;
-    h = canvas.height = window.innerHeight;
-  }
-  resize();
-  window.addEventListener('resize', resize);
-
-  for (let i = 0; i < COUNT; i++) {
-    particles.push({
-      x: Math.random() * w,
-      y: Math.random() * h,
-      vx: (Math.random() - 0.5) * 0.4,
-      vy: (Math.random() - 0.5) * 0.4,
-      r: Math.random() * 1.6 + 0.4,
-      color: ['#3b82f6', '#8b5cf6', '#06b6d4'][Math.floor(Math.random() * 3)],
-    });
-  }
-
-  function draw() {
-    ctx.clearRect(0, 0, w, h);
-
-    // 连线
-    for (let i = 0; i < particles.length; i++) {
-      for (let j = i + 1; j < particles.length; j++) {
-        const dx = particles[i].x - particles[j].x;
-        const dy = particles[i].y - particles[j].y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < 120) {
-          ctx.beginPath();
-          ctx.moveTo(particles[i].x, particles[i].y);
-          ctx.lineTo(particles[j].x, particles[j].y);
-          ctx.strokeStyle = `rgba(59, 130, 246, ${0.12 * (1 - dist / 120)})`;
-          ctx.lineWidth = 0.5;
-          ctx.stroke();
-        }
-      }
-    }
-
-    // 绘制粒子
-    particles.forEach((p) => {
-      p.x += p.vx;
-      p.y += p.vy;
-      if (p.x < 0 || p.x > w) p.vx *= -1;
-      if (p.y < 0 || p.y > h) p.vy *= -1;
-
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fillStyle = p.color;
-      ctx.globalAlpha = 0.5;
-      ctx.fill();
-      ctx.globalAlpha = 1;
-    });
-
-    requestAnimationFrame(draw);
-  }
-  draw();
-}
-
 // 滚动 reveal
 function initReveal() {
   const els = document.querySelectorAll('.reveal');
@@ -350,19 +266,4 @@ function initParallax() {
 }
 
 // 3D 卡片倾斜
-function bindTilt(card) {
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-  card.addEventListener('mousemove', (e) => {
-    const rect = card.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const rx = ((y / rect.height) - 0.5) * -8;
-    const ry = ((x / rect.width) - 0.5) * 8;
-    card.style.transform = `perspective(800px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-4px)`;
-  });
-
-  card.addEventListener('mouseleave', () => {
-    card.style.transform = '';
-  });
-}

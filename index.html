@@ -10,14 +10,44 @@
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/liuli.css">
+  <link rel="stylesheet" href="css/studio.css">
+
+  <!-- 动效栈：GSAP 3.13（ScrollTrigger / SplitText 自 3.13 起免费）+ Lenis。
+       全部通过 CDN 加载，任一失败时 studio.js 会自动降级到 CSS 动效。 -->
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/SplitText.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script>
 </head>
 <body>
+
+  <!-- 加载遮罩 -->
+  <div class="boot" id="boot">
+    <div style="display:flex;flex-direction:column;align-items:center">
+      <div id="boot-text">INITIALIZING</div>
+      <div class="boot-bar"><i></i></div>
+    </div>
+  </div>
+
+  <!-- 系统状态栏 -->
+  <div class="statusbar" id="statusbar" aria-hidden="true">
+    <span class="sb-item"><span class="sb-val" id="sb-clock">--:--:--</span></span>
+    <span class="sb-item plain sb-hide-sm"><span class="sb-key" style="color:var(--text-muted)">LOC</span>&nbsp;<span class="sb-val" id="sb-loc">CN</span></span>
+    <span class="sb-item plain sb-hide-sm"><span class="sb-key" style="color:var(--text-muted)">LAT</span>&nbsp;<span class="sb-val" id="sb-lat">--</span></span>
+    <span class="sb-item sb-live"><span class="sb-val">ONLINE</span></span>
+    <span class="sb-sep"></span>
+    <span class="sb-item plain sb-hide-sm"><span class="sb-key" style="color:var(--text-muted)">STACK</span>&nbsp;<span class="sb-val" id="sb-stack">--</span></span>
+    <span class="sb-item plain"><span class="sb-key" style="color:var(--text-muted)">VER</span>&nbsp;<span class="sb-val" id="sb-ver">1.0</span></span>
+  </div>
+
+  <!-- 自定义光标 -->
+  <div class="cursor-ring" id="cursor-ring" aria-hidden="true"></div>
+  <div class="cursor-dot" id="cursor-dot" aria-hidden="true"></div>
 
   <!-- 动态背景层 -->
   <div class="bg-grid"></div>
   <div class="bg-glow top" data-parallax="0.4"></div>
   <div class="bg-glow bottom" data-parallax="0.6"></div>
-  <canvas id="particle-canvas"></canvas>
   <div class="cursor-glow" id="cursor-glow"></div>
 
   <!-- 导航 -->
@@ -42,6 +72,7 @@
       <video class="hero-video" autoplay muted loop playsinline preload="auto" poster="assets/hero/hero-poster.jpg">
         <source src="assets/hero/hero-droplet.mp4" type="video/mp4">
       </video>
+      <canvas class="hero-glass" id="hero-glass" aria-hidden="true"></canvas>
       <div class="hero-scrim"></div>
       <div class="hero-caustics"></div>
       <div class="drip-field">
@@ -66,6 +97,47 @@
         <div class="hero-actions animate-in" style="animation-delay:0.5s">
           <a href="#projects" class="btn btn-primary">查看项目</a>
           <a href="#contact" class="btn btn-outline">联系我</a>
+        </div>
+
+        <!-- 终端档案：替代传统打字机，以结构化输出呈现专业身份 -->
+        <div class="hero-terminal" id="hero-terminal">
+          <div class="term-bar">
+            <i></i><i></i><i></i>
+            <span>profile.json — zsh</span>
+          </div>
+          <div class="term-body" id="term-body">
+            <div class="term-line"><span class="term-prompt">$</span><span class="term-key">whoami --format=json</span></div>
+            <div class="term-line dim">&#123;</div>
+            <div class="term-line"><span class="term-key">&nbsp;&nbsp;"role"</span><span>: </span><span class="term-val">"数据库架构 / 全栈 / AI 应用"</span></div>
+            <div class="term-line"><span class="term-key">&nbsp;&nbsp;"focus"</span><span>: </span><span class="term-val str">["高可用架构", "数据采集", "LLM 工程"]</span></div>
+            <div class="term-line"><span class="term-key">&nbsp;&nbsp;"stack"</span><span>: </span><span class="term-val str">"Python · TypeScript · Go · SQL"</span></div>
+            <div class="term-line"><span class="term-key">&nbsp;&nbsp;"status"</span><span>: </span><span class="term-val">"开放远程协作"</span></div>
+            <div class="term-line dim">&#125;</div>
+          </div>
+        </div>
+
+        <!-- 指标矩阵：数字全部来自站点自身数据与 GitHub 公开 API，可验证 -->
+        <div class="metrics" id="metrics">
+          <div class="metric">
+            <div class="metric-num"><span data-count="0">0</span></div>
+            <div class="metric-label">交付项目</div>
+            <div class="metric-source">site data</div>
+          </div>
+          <div class="metric">
+            <div class="metric-num"><span data-count="0">0</span></div>
+            <div class="metric-label">AI 视频作品</div>
+            <div class="metric-source">site data</div>
+          </div>
+          <div class="metric">
+            <div class="metric-num"><span data-count="0">0</span></div>
+            <div class="metric-label">技术栈覆盖</div>
+            <div class="metric-source">site data</div>
+          </div>
+          <div class="metric">
+            <div class="metric-num"><span data-count="0">0</span></div>
+            <div class="metric-label">公开仓库</div>
+            <div class="metric-source">github api</div>
+          </div>
         </div>
       </div>
     </div>
@@ -120,6 +192,34 @@
 
       <div class="video-grid reveal reveal-delay-1" id="videos-grid">
         <!-- Populated by JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- 开源活跃度：数据来自 GitHub 公开 API，实时拉取 -->
+  <section class="section" id="opensource">
+    <div class="container">
+      <div class="section-header reveal">
+        <p class="section-label">Open source</p>
+        <h2 class="section-title">开源活跃度</h2>
+        <p class="section-desc">数据实时取自 GitHub 公开 API，非静态文案</p>
+      </div>
+
+      <div class="gh-panel reveal reveal-delay-1">
+        <div class="gh-head">
+          <span class="gh-title">github.com/Jancapboy</span>
+          <div class="gh-meta">
+            <span id="gh-repos">— repos</span>
+            <span id="gh-push">— pushes / 30d</span>
+            <span id="gh-lang-top">—</span>
+          </div>
+        </div>
+        <div class="gh-chart" id="gh-chart" aria-label="近 12 周提交活跃度"></div>
+        <div class="gh-axis">
+          <span>12 周前</span>
+          <span id="gh-axis-right">本周</span>
+        </div>
+        <div class="gh-langs" id="gh-langs"></div>
       </div>
     </div>
   </section>
@@ -186,5 +286,7 @@
 
   <script src="js/main.js"></script>
   <script src="js/ai.js"></script>
+  <script src="js/glass.js" defer></script>
+  <script src="js/studio.js" defer></script>
 </body>
 </html>
