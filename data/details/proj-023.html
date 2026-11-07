@@ -1,0 +1,186 @@
+<!-- 工程感设计系统升级 - 独立内容页 -->
+<div class="detail-content-block">
+  <h2 class="detail-subtitle">🎛️ 核心命题：把简历从「文档」升级成「工作台」</h2>
+  <p class="detail-lead">个人站最容易做成千篇一律的渐变卡片。这次的方向是<strong>工程感</strong>——顶部状态栏、终端档案、指标矩阵、GitHub 实时面板、卡片内可展开的架构分层，配一层真正跑在 GPU 上的液态玻璃折射。但有一条铁律贯穿全程：<strong>屏幕上每个数字都必须可验证，接口失败就显示「—」，绝不编造。</strong></p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">渲染层</div>
+      <h3 class="arch-card-title">手写 WebGL2 折射</h3>
+      <p class="arch-card-desc">液态玻璃原本的首选是 Three.js，但 r128 min 版就要 603KB。<strong>最终放弃引擎，改用原生 WebGL2 手写 fragment shader</strong>——零依赖、零加载体积。</p>
+      <div class="arch-card-api">
+        <span class="tech-badge">WebGL2</span>
+        <span class="tech-badge">GLSL</span>
+      </div>
+      <ul class="card-highlights">
+        <li>js/glass.js 共 260 行，单一层全屏 shader 完成全部效果</li>
+        <li>液态噪声位移 + RGB 三通道色散 + 菲涅尔边缘光 + 玻璃棱边高光</li>
+        <li>视频作为纹理采样，玻璃层直接折射 Hero 背景</li>
+        <li>相比 Three.js 方案省下约 603KB 加载体积</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">降级策略</div>
+      <h3 class="arch-card-title">三道门槛 + 动态降级</h3>
+      <p class="arch-card-desc">WebGL 效果是锦上添花，<strong>任何情况下都不能影响功能</strong>。所以进入前先过三道设备门槛，运行中再按实测帧率动态降级。</p>
+      <ul class="card-highlights">
+        <li>入口门槛：移动端 / hardwareConcurrency &lt; 4 / prefers-reduced-motion → 直接不创建画布</li>
+        <li>帧率门槛：连续两次采样低于 24fps 才触发降级（单次抖动不误判）</li>
+        <li>内部渲染分辨率上限 1600×900，视觉无明显差异但帧率稳定得多</li>
+        <li>降级后 resize() 必须跳过——否则 clientWidth = 0 会把画布缩成 1×1</li>
+        <li>降级完成后由原生 video 直接呈现，功能不受影响</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">编排层</div>
+      <h3 class="arch-card-title">动效栈自托管</h3>
+      <p class="arch-card-desc">GSAP 3.13 + ScrollTrigger + SplitText + Lenis 四件套全部自托管，<strong>并把「依赖是否存在」的判定从顶层常量改成动态函数</strong>——否则脚本加载顺序一变就整段失效。</p>
+      <ul class="card-highlights">
+        <li>四件套实测合计 136,859 字节（约 137 KB）</li>
+        <li>studio.js 改 async 加载，内部轮询等待 GSAP（≤3 秒）后启用动效</li>
+        <li>任一依赖缺失或网络失败 → 自动降级为静态呈现</li>
+        <li>css/studio.css 839 行 + js/studio.js 506 行，含状态栏 / 终端 / 指标矩阵 / GitHub 面板 / 自定义光标 / 架构展开 / 代码块 / 转场</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">数据层</div>
+      <h3 class="arch-card-title">指标全部可验证</h3>
+      <p class="arch-card-desc">四项指标分两个来源，<strong>任何一个拿不到都不许编</strong>——前三项来自站点自身数据，第四项来自 GitHub 公开 API，失败即显示「—」。</p>
+      <ul class="card-highlights">
+        <li>交付项目 / AI 视频作品 / 技术栈覆盖：来自 projects.json 实时统计（21 / 8 / 85 项）</li>
+        <li>公开仓库数：GitHub 公开 API 实测 27 个</li>
+        <li>语言分布实测：Python 13 / TypeScript 7 / HTML 2 / CSS 1 / Go 1 / Shell 1</li>
+        <li>近 12 周活跃度用各仓库 pushed_at 聚合——公开 events 接口只覆盖最近 30 天，铺不满 12 周</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 数据来源表 -->
+  <h2 class="detail-subtitle">📐 每一项数字的来源与口径</h2>
+  <p class="detail-lead">指标矩阵最容易变成「看起来很专业的假数据」。这里把四项指标逐个列出数据源与失败时的行为，让可信度可被检验。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">📊 指标矩阵数据来源</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>指标</th>
+            <th>数据源</th>
+            <th>实测值</th>
+            <th>失败行为</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>交付项目</td>
+            <td>站点自身 projects.json</td>
+            <td class="best">随项目增补自动重算</td>
+            <td>内联兜底数据已覆盖</td>
+          </tr>
+          <tr>
+            <td>AI 视频作品</td>
+            <td>站点自身 projects.json</td>
+            <td class="best">8</td>
+            <td>内联兜底数据已覆盖</td>
+          </tr>
+          <tr>
+            <td>技术栈覆盖</td>
+            <td>全部项目 techStack 字段去重</td>
+            <td class="best">随项目增补自动重算</td>
+            <td>内联兜底数据已覆盖</td>
+          </tr>
+          <tr>
+            <td>公开仓库</td>
+            <td>api.github.com 公开接口</td>
+            <td class="best">27</td>
+            <td class="best">显示「—」，并标注接口不可达</td>
+          </tr>
+          <tr class="bench-total">
+            <td>近 12 周活跃</td>
+            <td>各仓库 pushed_at 聚合（12 柱）</td>
+            <td class="best">改用 pushed_at 而非 events</td>
+            <td>接口不可达时提示并自动重试</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>活跃度口径换过一次：</strong>最初用 <code>events/public</code> 聚合，但该接口只覆盖最近 30 天，铺不满 12 周；改用各仓库 <code>pushed_at</code> 后分布完整且同样真实。这条改动的意义是——<strong>宁可换一个口径，也不用插值把柱子凑齐。</strong></p>
+  </div>
+
+  <!-- 踩坑 -->
+  <div class="bench-wrap">
+    <h3 class="bench-title">🔧 升级过程中的关键踩坑</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>坑</th>
+            <th>现象</th>
+            <th>根因</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>标题变乱码噪点</td>
+            <td>主标题渐变变成一片噪点</td>
+            <td class="best">SplitText 逐字拆分后每个字符被独立裁剪一次渐变</td>
+          </tr>
+          <tr>
+            <td>标题彻底隐形</td>
+            <td>首屏标题 opacity 永远停在 0</td>
+            <td class="best">animation 简写覆盖了 .animate-in 的入场动画</td>
+          </tr>
+          <tr>
+            <td>技术全掉进「其它组件」</td>
+            <td>MySQL 等未归入数据层</td>
+            <td class="best">分层正则漏了 <code>/i</code> 标志</td>
+          </tr>
+          <tr>
+            <td>Hero 内容顶到导航下</td>
+            <td>加状态栏后首屏排版错位</td>
+            <td class="best">补 padding-top: calc(var(--statusbar-h) + 78px)</td>
+          </tr>
+          <tr>
+            <td>整页 JS 被吞</td>
+            <td>initProjectCards / initScroll / boot 全部消失</td>
+            <td class="best">正则 <code>.*?</code> 匹配到文件末尾的 <code>})();</code></td>
+          </tr>
+          <tr>
+            <td>Pages 构建卡 3 小时</td>
+            <td>legacy Jekyll 构建卡在 building</td>
+            <td class="best">加 .nojekyll，同类构建 30 秒完成</td>
+          </tr>
+          <tr class="bench-total">
+            <td>死代码残留</td>
+            <td>装饰噪音占主线程</td>
+            <td class="best">typeWriter / initParticles / bindTilt 三函数物理删除</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>最危险的一个坑是「用 animation 简写覆盖带入场动画的元素」：</strong>它不会报错，只是让元素静默消失——而且移动端媒体查询里的 <code>animation: none</code> 同样致命。规则只有一条：<strong>绝不用 animation 简写覆盖带入场动画的元素</strong>，流光效果只给没有 <code>.animate-in</code> 的 section 标题。</p>
+  </div>
+
+  <!-- 沉淀 -->
+  <div class="arch-tips">
+    <h3 class="bench-title">📌 三条可迁移的结论</h3>
+    <div class="arch-tips-grid">
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 1</span>
+        <p><strong>视觉增强必须自带降级路径</strong><br><span class="arch-tip-note">效果是锦上添花，功能不能被它绑架</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 2</span>
+        <p><strong>宁可换口径，也不用插值凑数据</strong><br><span class="arch-tip-note">pushed_at 替代 events/public，真实优先于好看</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 3</span>
+        <p><strong>宁可删掉装饰，也不留死代码</strong><br><span class="arch-tip-note">打字机 / 粒子 / 裸 mousemove 倾斜全部物理删除</span></p>
+      </div>
+    </div>
+  </div>
+</div>

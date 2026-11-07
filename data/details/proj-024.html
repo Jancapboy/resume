@@ -1,0 +1,205 @@
+<!-- 移动端首屏性能与滚动可见性根因修复 - 独立内容页 -->
+<div class="detail-content-block">
+  <h2 class="detail-subtitle">🐛 核心命题：用户说的「加载慢」和「项目不显示」，其实是两个病</h2>
+  <p class="detail-lead">用户反馈是三句话：竖屏加载慢、技术能力布局不行、项目区不显示。实测拆开后发现这是<strong>两类完全独立的病因</strong>：一类在<strong>加载链路</strong>——一串阻塞把 load 事件拖到 21 秒；另一类在<strong>渲染触发条件</strong>——一个语义误用让整块项目区永久停在 opacity: 0。</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">病因 A</div>
+      <h3 class="arch-card-title">加载链路五处阻塞</h3>
+      <p class="arch-card-desc">load 事件实测 21483ms。而 load 要等 <strong>CDN 动效库 + Google Fonts + 背景视频</strong>全部就绪——其中任意一个挂着，首屏就黑屏。</p>
+      <ul class="card-highlights">
+        <li>全屏加载遮罩在等 window.load，且期间 lock body 滚动，用户干瞪眼十几秒</li>
+        <li>DOMContentLoaded 被 defer 的外网脚本阻塞——数据渲染挂在这个事件上</li>
+        <li>fonts.googleapis.com 阻塞式加载，国内可达性差</li>
+        <li>cdnjs.cloudflare.com / cdn.jsdelivr.net 在国内常年挂起，实测始终未完成</li>
+        <li>技能区 37 个标签平铺混排，看不出技术栈结构</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">病因 B</div>
+      <h3 class="arch-card-title">阈值语义误用</h3>
+      <p class="arch-card-desc">IntersectionObserver 的 threshold 语义是「<strong>相交面积 ÷ 元素自身面积</strong>」，不是「占视口多少」。这个除数用错，整块超高元素就永远触发不了。</p>
+      <ul class="card-highlights">
+        <li>项目网格高 12646px，手机视口仅 844px</li>
+        <li>即便元素完全盖住视口，相交比也只有 844/12646 ≈ 6.7%</li>
+        <li>6.7% &lt; 12% 阈值 → 永远拿不到 .visible → opacity 永久停在 0</li>
+        <li>视频区只有 3247px（相交比 26%）所以正常显示——这恰好解释了「中间有距离」的错觉：那块其实是空白</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">修复</div>
+      <h3 class="arch-card-title">加载侧：拆掉所有阻塞</h3>
+      <p class="arch-card-desc">核心思路是<strong>让渲染不再依赖任何外部资源的就绪时刻</strong>——能提前的提前，能自托管的自托管，能不等的就不等。</p>
+      <ul class="card-highlights">
+        <li>全屏遮罩 → 顶部 2px 进度条，不遮挡内容、不锁滚动，DOM 就绪后 120ms 收尾，2.5s 兜底</li>
+        <li>main.js 改为 DOM 解析完毕立即渲染（仅 readyState === 'loading' 时才监听）</li>
+        <li>Google Fonts 改 <code>media="print" onload="this.media='all'"</code> 异步加载 + noscript 兜底</li>
+        <li>GSAP / ScrollTrigger / SplitText / Lenis 四件套自托管，实测合计 134 KB</li>
+        <li>studio.js 改 async 加载，依赖检测从顶层常量改为动态函数，轮询 ≤3 秒后启用动效，超时自动降级</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">修复</div>
+      <h3 class="arch-card-title">可见性侧：双观察器</h3>
+      <p class="arch-card-desc">按元素高度分流，让「超高元素」和「普通元素」走两套触发策略；同时补一条兜底，杜绝任何因阈值或布局异常导致的空白区块。</p>
+      <ul class="card-highlights">
+        <li>超高元素（高 &gt; 1.5 屏）：threshold 0 + rootMargin '0px 0px -15% 0px'，顶端进入视口即触发</li>
+        <li>普通元素：保留 threshold 0.12，避免过早出现</li>
+        <li>2.5 秒兜底：仍未 visible 且已滚到可见区则强制显示</li>
+        <li>窄屏压缩：描述 -webkit-line-clamp 2 行、高亮列表隐藏、技术标签留 3 个 + 「+N」溢出徽章、卡片 padding 28 → 20px</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 性能对比 -->
+  <h2 class="detail-subtitle">📐 修复前后量化对比（390×844 视口实测）</h2>
+  <p class="detail-lead">以下数字全部由探针在<strong>真实手机视口</strong>下实测采集，不是估算，也不是照抄日志。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">📊 首屏加载性能</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>指标</th>
+            <th>修复前</th>
+            <th>修复后</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>window.load</td>
+            <td>21483ms</td>
+            <td class="best">828ms</td>
+          </tr>
+          <tr>
+            <td>FCP（首次内容绘制）</td>
+            <td>1316ms</td>
+            <td class="best">352ms</td>
+          </tr>
+          <tr>
+            <td>DOM 可交互</td>
+            <td>1222ms</td>
+            <td class="best">256ms</td>
+          </tr>
+          <tr>
+            <td>DOMContentLoaded</td>
+            <td>1782ms</td>
+            <td class="best">595ms</td>
+          </tr>
+          <tr class="bench-total">
+            <td>body 滚动锁</td>
+            <td>有（黑屏期间无法滚动）</td>
+            <td class="best">无</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>load 事件从 21.5 秒降到 0.83 秒，降幅 96%。</strong>关键不是压缩资源，而是<strong>切断「渲染」对「外部资源就绪」的依赖链</strong>——遮罩只是表象，真正的元凶是三个本不该阻塞首屏的等待。</p>
+  </div>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">📐 移动端布局压缩效果</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>指标</th>
+            <th>修复前</th>
+            <th>修复后</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>项目网格高度</td>
+            <td>12646px</td>
+            <td class="best">5446px</td>
+          </tr>
+          <tr>
+            <td>单张项目卡高度</td>
+            <td>421 ~ 831px</td>
+            <td class="best">224 ~ 256px</td>
+          </tr>
+          <tr>
+            <td>移动端整页屏数</td>
+            <td>25 屏</td>
+            <td class="best">16 屏</td>
+          </tr>
+          <tr>
+            <td>项目区 opacity（真实手机）</td>
+            <td>0（整块不可见）</td>
+            <td class="best">1</td>
+          </tr>
+          <tr class="bench-total">
+            <td>技能区呈现</td>
+            <td>数十个标签平铺混排</td>
+            <td class="best">按 9 个分类分组面板</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>「项目和视频之间空出好几屏」的真实原因不是有空白块，而是整块项目区压根没渲染出来。</strong>DOM 间距实测只有 344px——空白是 opacity: 0 造成的视觉错觉，用户的直觉描述是准确的，但指向的是错误的位置。</p>
+  </div>
+
+  <!-- 诊断盲区 -->
+  <div class="arch-tips">
+    <h3 class="bench-title">📌 最有价值的一条：为什么之前移动端测试全绿</h3>
+    <div class="arch-tips-grid">
+      <div class="arch-tip">
+        <span class="arch-tip-tag">盲区</span>
+        <p><strong>headless Chrome 默认 prefers-reduced-motion: reduce</strong><br><span class="arch-tip-note">而站点降级规则里恰好有 .reveal { opacity: 1 !important }</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">后果</span>
+        <p><strong>强制显示掩盖了「不可见」类 bug</strong><br><span class="arch-tip-note">真实手机默认 no-preference，不触发该覆盖</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">解法</span>
+        <p><strong>显式 setEmulatedMedia 为 no-preference</strong><br><span class="arch-tip-note">自建 reveal_check.py 已内置该模拟，测移动端必须带上</span></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 工具链 -->
+  <div class="bench-wrap">
+    <h3 class="bench-title">🛠️ 自建诊断工具链</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>工具</th>
+            <th>解决什么</th>
+            <th>关键能力</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>mobile_diag.py</td>
+            <td>竖屏整体体检</td>
+            <td>boot 状态 / 滚动锁 / 技能分组 / 卡片尺寸 / timing / 最慢资源 Top6 / 滚动后 opacity 复检 / 双视口截图</td>
+          </tr>
+          <tr>
+            <td>gap_diag.py</td>
+            <td>「为什么中间空好几屏」</td>
+            <td>实测 section 与 grid 边界、逐卡高度构成、隐藏撑高元素扫描</td>
+          </tr>
+          <tr>
+            <td>reveal_check.py</td>
+            <td>「元素到底显不显示」</td>
+            <td class="best">模拟真人滚动后检查 .reveal 是否拿到 visible、opacity 是否为 1，内置 no-preference 模拟</td>
+          </tr>
+          <tr class="bench-total">
+            <td>共同点</td>
+            <td>都不是截图对比</td>
+            <td class="best">都是读 DOM 度量与计算样式，拿数字说话</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>三个工具都支持 <code>TARGET_URL</code> 切线上。</strong>本地测的是代码，线上测的是交付——两者结论不一致时，差异本身就指向了环境问题（缓存、CDN、资源就绪顺序）。</p>
+  </div>
+</div>

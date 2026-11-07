@@ -3,7 +3,7 @@
     "name": "全栈工程师",
     "title": "高级后端开发 / 数据库 & 自动化专家",
     "location": "中国",
-    "summary": "多年全栈开发经验，深耕数据库高可用架构、数据自动化抓取、AI 应用开发及企业级运维。2026 年主攻 AI 视频与 AI 漫剧全流程生成、LangGraph 多智能体工作流，并以 Vibe Coding 方式主导从需求到上线的完整交付闭环。擅长 MySQL 集群、OceanBase、Python 爬虫、企业微信集成及 AI 视频 / 3D 内容生成。近期主攻 EdgeOne 边缘函数与 Serverless 表单网关、GitHub Pages + EdgeOne 双通道全球交付与访问令牌自动化，以及移动端自适应与离线兜底渲染工程。近期主攻约束求解与多端协同工程（CP-SAT 联合排程、CRDT 冲突分层、事件溯源运行时）、可复现的回合制战棋 Web 应用（React 18 + 种子化 PRNG + 30 项引擎自测），以及基于全球探针的站点可达性实测与网络延迟基线体系。",
+    "summary": "多年全栈开发经验，深耕数据库高可用架构、数据自动化抓取、AI 应用开发及企业级运维。2026 年主攻 AI 视频与 AI 漫剧全流程生成、LangGraph 多智能体工作流，并以 Vibe Coding 方式主导从需求到上线的完整交付闭环。擅长 MySQL 集群、OceanBase、Python 爬虫、企业微信集成及 AI 视频 / 3D 内容生成。近期主攻 EdgeOne 边缘函数与 Serverless 表单网关、GitHub Pages + EdgeOne 双通道全球交付与访问令牌自动化，以及移动端自适应与离线兜底渲染工程。近期主攻约束求解与多端协同工程（CP-SAT 联合排程、CRDT 冲突分层、事件溯源运行时）、可复现的回合制战棋 Web 应用（React 18 + 种子化 PRNG + 30 项引擎自测），以及基于全球探针的站点可达性实测与网络延迟基线体系。近期主攻前端设计与性能工程（原生 WebGL2 手写液态玻璃折射层、GSAP 四件套动效编排、真实数据驱动的终端档案与 GitHub 仪表盘）、移动端首屏加载性能与滚动可见性根因修复（load 事件 21483ms → 828ms、IntersectionObserver 阈值语义纠偏），以及基于 RunningHub 云端应用编排的 AI 素材流水线与琉璃玻璃拟态设计系统。",
     "skills": [
       {
         "name": "MySQL MGR",
@@ -152,6 +152,30 @@
       {
         "name": "SRE 可观测性",
         "category": "运维"
+      },
+      {
+        "name": "RunningHub 工作流编排",
+        "category": "AI"
+      },
+      {
+        "name": "WebGL2 / GLSL",
+        "category": "开发"
+      },
+      {
+        "name": "GSAP 动效编排",
+        "category": "开发"
+      },
+      {
+        "name": "IntersectionObserver",
+        "category": "开发"
+      },
+      {
+        "name": "前端性能优化",
+        "category": "开发"
+      },
+      {
+        "name": "设计令牌体系",
+        "category": "开发"
       }
     ]
   },
@@ -639,6 +663,83 @@
         "Python",
         "CDN / 边缘节点",
         "GitHub Pages"
+      ],
+      "screenshot": "",
+      "link": ""
+    },
+    {
+      "id": "proj-022",
+      "title": "琉璃液态玻璃主题与 RunningHub 云端素材流水线",
+      "category": "设计系统 / AI 素材生产",
+      "public": true,
+      "description": "为个人站建立一套琉璃水晶质感的玻璃拟态主题层，并用 RunningHub 云端应用编排打通 AI 素材的规模化生产与多规格降级分发。",
+      "highlights": [
+        "琉璃主题层 css/liuli.css 387 行：自建 7 色光谱令牌（青碧 #22d3ee → 靛蓝 #6366f1 → 藕紫 #a78bfa → 品红 #e879f9 → 琥珀 #fbbf24），玻璃材质用 backdrop-filter: blur(22px) saturate(175%) + 152° 内高光渐变 + 光谱描边",
+        "Hero 素材全流程云端产出：hero-droplet.mp4 实测 1280×720 / H.264 / 5.17s / 662KB，配 1280×720 首帧海报 79KB 与 960×540 移动端降级图 36KB，原始 4.2MB 原图与 2.3MB 原视频只留在设计目录不上线",
+        "RunningHub 编排走 webappId + 节点参数：MJ 风格文生图 2115537275114311682（节点 19:aspect_ratio / 10:text）、H3 多参考生视频 2116538861068308482（节点 167:prompt 运镜 / 163:value 时长 / 268:value 放大 / 238:image 首帧）",
+        "逆向出消费级 Key 的真实边界：qwen-image-2.0-pro 报 1014 Access Denied（限企业共享 Key）、rhart-image-g-2 报 40310（CN 节点已下线），据此确定只能走 AI 应用（run-app）路径而非模型端点",
+        "参数校验踩坑具体到值：aspect_ratio 属 MJ 命名体系，写 16:9 (Standard) 报 805 工作流运行失败，正确值是 16:9 (Widescreen)；qwen 端点提示词上限 800 字，超长报 1007；失败不扣积分",
+        "成本与产出可核算：单轮迭代消耗 526 RH 币（生图 46 + H3 视频约 480），积分余额 11006 → 10480"
+      ],
+      "techStack": [
+        "RunningHub API",
+        "MJ 图像生成",
+        "MiniMax-H3 视频生成",
+        "CSS 玻璃拟态",
+        "CSS backdrop-filter",
+        "FFmpeg"
+      ],
+      "screenshot": "",
+      "link": ""
+    },
+    {
+      "id": "proj-023",
+      "title": "工程感设计系统升级（WebGL2 液态玻璃 + GSAP 编排 + 真实数据仪表盘）",
+      "category": "前端工程 / 设计系统",
+      "public": true,
+      "description": "把个人站从静态卡片页升级为工程感工作台：手写 WebGL2 液态玻璃折射层、GSAP 四件套编排动效，并让状态栏、终端档案、指标矩阵与 GitHub 面板全部接入真实数据源。",
+      "highlights": [
+        "零依赖液态玻璃：放弃 Three.js（r128 min 版 603KB）改用原生 WebGL2 手写 fragment shader（js/glass.js 260 行），单层全屏 shader 完成液态噪声位移 + RGB 三通道色散 + 菲涅尔边缘光 + 玻璃棱边高光，视频直接作纹理采样",
+        "三道降级门槛 + 动态降级双保险：移动端 / hardwareConcurrency < 4 / prefers-reduced-motion 直接不创建画布；运行期连续两次采样低于 24fps 才降级（单次抖动不误判），降级后 resize() 必须跳过，否则 clientWidth=0 会把画布缩成 1×1；内部渲染分辨率上限 1600×900",
+        "动效栈全部自托管：GSAP 3.13.0 / ScrollTrigger 3.13.0 / SplitText 3.13.0 / Lenis 1.1.18 共 136,859 字节，studio.js 改 async 加载并把依赖检测从顶层常量改为动态函数，内部轮询 ≤3 秒后启用动效、超时自动降级",
+        "指标矩阵每一项都写明数据源：交付项目 / AI 视频作品 / 技术栈覆盖取自站点自身 projects.json（实测 21 / 8 / 85 项），公开仓库数取自 api.github.com（实测 27 个，语言分布 Python 13 / TypeScript 7 / HTML 2 / CSS 1 / Go 1 / Shell 1），接口失败显示「—」而非编造",
+        "近 12 周活跃度口径纠偏：events/public 接口只覆盖最近 30 天、铺不满 12 周，改用各仓库 pushed_at 聚合，分布完整且同样真实",
+        "工程洁癖与隐式 bug 修复：typeWriter / initParticles / bindTilt 三个函数物理删除不留死代码；分层正则漏 /i 标志导致 MySQL 掉进「其它组件」已修正；animation 简写覆盖 .animate-in 会让标题永久隐形，故主标题改纯色 #f4f7ff；加 .nojekyll 后 Pages 构建从卡 3 小时缩短到 30 秒"
+      ],
+      "techStack": [
+        "WebGL2",
+        "GLSL",
+        "GSAP 3.13",
+        "ScrollTrigger",
+        "SplitText",
+        "Lenis",
+        "GitHub API",
+        "Chrome DevTools Protocol"
+      ],
+      "screenshot": "",
+      "link": ""
+    },
+    {
+      "id": "proj-024",
+      "title": "移动端首屏性能与滚动可见性根因修复",
+      "category": "前端性能 / 可观测性",
+      "public": true,
+      "description": "把用户口中的「加载慢」和「项目区不显示」拆成两个独立病灶逐一根治：一个是加载链路上的五处阻塞，另一个是 IntersectionObserver 阈值语义误用导致超高元素永久不可见。",
+      "highlights": [
+        "加载侧定位五个根因：全屏遮罩等 window.load 且锁 body 滚动、DOMContentLoaded 被 defer 的外网脚本阻塞、Google Fonts 阻塞式加载、cdnjs/jsdelivr 在国内常年挂起（实测始终未完成）、技能区 37 个标签平铺混排看不出结构",
+        "加载侧量化收益（390×844 实测）：window.load 21483ms → 828ms、FCP 1316ms → 352ms、DOM 可交互 1222ms → 256ms、DOMContentLoaded 1782ms → 595ms，且全程无滚动锁",
+        "修复手段：全屏遮罩改顶部 2px 进度条、main.js 改 DOM 解析完毕立即渲染、Google Fonts 改 media=print 异步加载、四个动效库自托管（实测 136,859 字节）、技能区按 category 重组为 9 组面板",
+        "可见性侧根因是阈值语义：IntersectionObserver 的 threshold 是「相交面积 ÷ 元素自身面积」，项目网格高 12646px、手机视口仅 844px，相交比仅 844/12646 ≈ 6.7% < 12%，永远拿不到 .visible，opacity 永久停在 0——用户看到的「项目和视频之间空出好几屏」其实是空白而非间距",
+        "双观察器方案：超高元素（高度 > 1.5 屏）改用 threshold 0 + rootMargin '0px 0px -15% 0px'，普通元素保留 threshold 0.12，另加 2.5 秒兜底强制显示；项目网格高 12646px → 5446px、单卡 421~831px → 224~256px、移动端整页 25 屏 → 16 屏",
+        "自建三支诊断脚本并踩出测试盲区：gap_diag.py 实测区块边界与逐卡高度构成、reveal_check.py 模拟真人滚动复检可见性、mobile_diag.py 采集 timing 与最慢资源 Top6；关键教训是 headless Chrome 默认 prefers-reduced-motion: reduce 会触发 .reveal{opacity:1!important} 掩盖不可见类 bug，必须显式模拟 no-preference 才能复现真实手机"
+      ],
+      "techStack": [
+        "Chrome DevTools Protocol",
+        "Performance API",
+        "IntersectionObserver",
+        "CDN 自托管",
+        "GSAP 3.13",
+        "移动端适配"
       ],
       "screenshot": "",
       "link": ""
