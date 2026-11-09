@@ -1,0 +1,294 @@
+<!-- 工厂智能取件机器人软件层原型 - 独立内容页 -->
+<div class="detail-content-block">
+  <h2 class="detail-subtitle">🤖 命题：硬件还没到，软件层必须先能跑能测</h2>
+  <p class="detail-lead">客户需求是一台带机械臂的工厂自动取件机器人小车，从货架拿元器件送到指定工位，硬件已采购（KICKPi K7 / RK3576 6TOPS NPU + STM32F407ZGT6 + 扫地机器人底盘轮 + Astra Pro Plus 深度相机 + 360° 激光雷达），但<strong>机械臂型号未定、YOLOv8 需自训</strong>。<br>难点不在写算法，而在于：<strong>整套系统不能因为「还没装 ROS2」就一行都跑不起来</strong>。</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">决策 1</div>
+      <h3 class="arch-card-title">纯 Python 内核 + ROS2 薄适配层</h3>
+      <p class="arch-card-desc"><code>fpv_core</code> / <code>fpv_scheduler</code> / <code>fpv_bt</code> / <code>fpv_perception</code> 全部<strong>不 import rclpy</strong>，只有 <code>fpv_core/ros2_adapter.py</code> 负责类型转换。</p>
+      <ul class="card-highlights">
+        <li>起因很具体：本机 WSL 是 <strong>Ubuntu 26.04</strong>，ROS2 官方二进制包尚未支持该版本</li>
+        <li>要求客户先装 ROS2 才肯验证算法不合理——软件层必须能独立跑起来</li>
+        <li>配套 <code>scripts/setup_wsl.sh A|B|C</code>：Docker 跑 Humble / 重装 24.04 装 Jazzy / 纯 Python</li>
+        <li>实测核对：全仓 grep <code>rclpy</code> 只命中 contracts.py 注释、ros2_adapter.py 惰性导入与 real_drivers.py 注释</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">决策 2</div>
+      <h3 class="arch-card-title">契约层是唯一事实来源</h3>
+      <p class="arch-card-desc">所有类型集中在 <code>fpv_core/contracts.py</code>，各子包一律 import 而不重复定义。</p>
+      <ul class="card-highlights">
+        <li><code>Shelf.pose</code> 的语义被固化为<strong>机器人停靠位</strong>，不是货架本身位置</li>
+        <li>槽位世界坐标统一由 <code>Shelf.slot_world_position(level, slot)</code> 提供</li>
+        <li>这个语义一开始理解错了（当成货架本身）→ 机器人站到货架上、物料距离 0.001m、检测全为 0</li>
+        <li>教训已写进架构文档，避免下一任接手者重踩</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">决策 3</div>
+      <h3 class="arch-card-title">HAL 用 Protocol，真机与仿真同接口</h3>
+      <p class="arch-card-desc">配置里改一行 <code>backend: sim | real</code> 即可切换底层实现，上层算法一行不改。</p>
+      <ul class="card-highlights">
+        <li>所有第三方依赖（pyserial / can / rknn / ultralytics）惰性导入</li>
+        <li>开发机缺这些库也能 import 全部模块并跑完测试</li>
+        <li>fpv_msgs 提供 4 个 msg + 1 个 srv + 2 个 action 的 ROS2 接口定义</li>
+        <li>效果：开发机不需要真机也能做全流程回归</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 调度内核 -->
+  <h2 class="detail-subtitle">🧮 调度内核：四个算法，四个独立的坑</h2>
+  <p class="detail-lead">调度层不是「写个队列」那么简单。<strong>TaskQueue、Batcher、Allocator、GridPlanner</strong> 四个模块各自踩了不同的坑，其中三个是单元测试直接抓出来的。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">🔧 调度内核实现要点</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>模块</th>
+            <th>实现要点</th>
+            <th>踩过的坑</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>TaskQueue</td>
+            <td>堆键 <code>(-优先级, 创建时间, 入队序号, task_id)</code></td>
+            <td class="best">必须补入队序号：<code>created_at</code> 只到微秒精度，批量创建时相同，仅靠它 FIFO 不稳定</td>
+          </tr>
+          <tr>
+            <td>Batcher</td>
+            <td>按货架聚类 → 路径长度估算 → 与逐单执行对比收益</td>
+            <td>聚类粒度错了会拆散同货架任务，收益反而为负</td>
+          </tr>
+          <tr>
+            <td>Allocator</td>
+            <td>打分 <code>w1/距离 + w2·优先级 + w3·电量健康度</code>（w1=1.0 / w2=0.02 / w3=0.05）；货架与工位独占锁；等待图 DFS 找环</td>
+            <td>破环时释放<strong>持有资源最少</strong>的那台车，否则一台车解不开就全线卡死</td>
+          </tr>
+          <tr>
+            <td>GridPlanner</td>
+            <td>八方向栅格 A*，对角启发式可采纳，禁穿角</td>
+            <td class="best">路径简化的 <code>_line_clear</code> 恒返回 True，直线简化后直接穿过障碍物 → 改为按 resolution/2 步长沿连线采样做真实障碍检测</td>
+          </tr>
+          <tr class="bench-total">
+            <td>重试计数</td>
+            <td>统一为单一计数点</td>
+            <td><code>fail()</code> 与 <code>transition()</code> 都自增 attempts → 同一失败被计两次</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>可迁移经验：</strong>「距离」在打分函数里用<strong>除法</strong>而非减法，是为了让「越近越好」与「优先级/电量越高越好」方向统一为同一个「越大越优」的标量，否则加权求和的符号会互相抵消。</p>
+  </div>
+
+  <!-- 感知与 VLA -->
+  <h2 class="detail-subtitle">👁️ 感知与指令理解：单目 + 中文口语指令</h2>
+  <p class="detail-lead">两个问题都出在「看起来很简单的假设」上：<strong>单目相机看不完 3 层货架</strong>，以及<strong>中文指令不一定含动词「取」</strong>。</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">分层扫描</div>
+      <h3 class="arch-card-title">逐层调整俯仰角扫视</h3>
+      <p class="arch-card-desc">底层物料投影 v=800 已超出 720 视场，单目一次看不完。解法是<strong>逐层调整俯仰角</strong>，让每层物料落在视野中心再合并结果。</p>
+      <ul class="card-highlights">
+        <li>每层用专门为该层高度设计的相机外参（俯仰角随层高增大）</li>
+        <li>跨帧去重靠稳定 <code>slot_key</code>（货架:层:槽位）</li>
+        <li class="best">不能用像素位置去重——俯仰角一变，同一物料的像素位置就会移动</li>
+        <li>实测 5 个货架共 25 个库存位，检出 25 / 25</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">坐标变换</div>
+      <h3 class="arch-card-title">外参变换必须补齐旋转</h3>
+      <p class="arch-card-desc"><code>base_to_camera</code> 最初只做平移不算旋转，导致物料投影直接飞出视野。</p>
+      <ul class="card-highlights">
+        <li>补齐完整 RPY 变换链：世界 → base_link → 相机</li>
+        <li>俯仰角符号约定（正值俯视）一旦搞反，投影会整体偏到反方向</li>
+        <li>这类 bug 靠肉眼看截图很难定位，靠「投影点是否落在视场内」反推最快</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">VLA</div>
+      <h3 class="arch-card-title">中文隐含语义判定</h3>
+      <p class="arch-card-desc">规则解析器先显式匹配动词（取 / 拿 / 抓 / 捡 / 取件 / 拿取），但真实指令常写成<strong>「把电容送到工位」</strong>——一个「取」字都没有。</p>
+      <ul class="card-highlights">
+        <li>补充隐含语义判定：物料 + 货架 + 工位三者齐备即视为取件</li>
+        <li>另有 VLA id 归一化崩溃：短路访问了不存在的属性</li>
+        <li>本地 VLM（Qwen2.5-VL）作为规则解析器的补充通道</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">底盘</div>
+      <h3 class="arch-card-title">到位判定要同时看位置与朝向</h3>
+      <p class="arch-card-desc">曾出现到位朝向偏差 10.8° 超过容差 8.6°，导致 dock 判定永远失败。</p>
+      <ul class="card-highlights">
+        <li>改为位置到达后<strong>原地微调朝向</strong>再判到位</li>
+        <li>原地转向不计入行驶距离，避免污染里程统计</li>
+        <li>容差判定：位置误差在容差内 <em>且</em> 朝向误差在容差内，两者都要满足</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 验收数据 -->
+  <h2 class="detail-subtitle">📊 验收数据：全部为本地复测结果</h2>
+  <p class="detail-lead">下表每一项都是<strong>本次重新跑一遍得到的实测值</strong>，不是抄日志里的结论。测试用 Python 3.10 + PyYAML 环境执行。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">📈 实测验收指标</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>验收项</th>
+            <th>结果</th>
+            <th>复测方式</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>代码规模</td>
+            <td>5601 行 Python</td>
+            <td>src 5052 行 + tests 549 行，共 8 个包</td>
+          </tr>
+          <tr>
+            <td>单元测试</td>
+            <td class="best">49 个全部通过</td>
+            <td>unittest 实测 <code>Ran 49 tests in 47.264s — OK</code></td>
+          </tr>
+          <tr>
+            <td>端到端取放</td>
+            <td class="best">11 / 11 = 100%</td>
+            <td>seed 42 / 7 / 99 三次复跑，成功率均 100%</td>
+          </tr>
+          <tr>
+            <td>货架物料检出</td>
+            <td class="best">25 / 25</td>
+            <td>分层扫描逐货架统计，与库存完全一致</td>
+          </tr>
+          <tr>
+            <td>批次优化收益</td>
+            <td>41.3% / 39.2% / 48.5%</td>
+            <td>seed 42 / 7 / 99 各自实测：146.79→86.13m / 128.59→78.12m / 141.98→73.18m</td>
+          </tr>
+          <tr>
+            <td>连续任务省里程</td>
+            <td class="best">658.54m → 543.15m</td>
+            <td>8 任务场景对比 <code>return_home</code> 开/关，省 17.5%</td>
+          </tr>
+          <tr>
+            <td>数字孪生面板</td>
+            <td class="best">实测可跑</td>
+            <td>FastAPI + WebSocket + ECharts，<code>/</code> 与 <code>/api/snapshot</code> 均返回 200</td>
+          </tr>
+          <tr class="bench-total">
+            <td>测试抓出的真 bug</td>
+            <td>10 个</td>
+            <td>全部由单元测试暴露，含 A* 简化穿障碍、FIFO 不稳、分配只执行 2/8 等</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>「分配只执行 2/8」的根因值得记一笔：</strong>分配器一次性把每台车锁死在一个任务上，后续任务无人认领。改成<strong>任务循环派发</strong>（每台车循环领任务直到队列空）+ 线程真并发后才是满负荷。同类的还有「连续任务回原点浪费路径」——加 <code>return_home=False</code> 后 8 任务总里程由 658.54m 降到 543.15m。</p>
+  </div>
+
+  <!-- 数字孪生 -->
+  <h2 class="detail-subtitle">🖥️ 数字孪生面板：把仿真跑成可看的闭环</h2>
+  <p class="detail-lead">验收不能只给一堆数字，得让人<strong>看见</strong>机器人动起来。面板用 FastAPI + WebSocket 推流，前端 ECharts 画图。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">🧰 面板实现要点</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>环节</th>
+            <th>做法</th>
+            <th>要点</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>推流</td>
+            <td>WebSocket <code>/ws</code> + 0.5 秒广播周期</td>
+            <td>机器人位置与任务状态实时刷新</td>
+          </tr>
+          <tr>
+            <td>状态</td>
+            <td>线程安全存储 + 快照接口 <code>/api/snapshot</code></td>
+            <td class="best">快照含 shelves / stations / robots / tasks / alerts / recent_events</td>
+          </tr>
+          <tr>
+            <td>演示</td>
+            <td>LiveDemo 后台起仿真线程并推送遥测</td>
+            <td>面板直接反映 pending→done 与成功率</td>
+          </tr>
+          <tr class="bench-total">
+            <td>实测</td>
+            <td>首页 200 / 快照接口 200</td>
+            <td>本次启动后逐个验证，非「代码写了就算」</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 沉淀 -->
+  <h2 class="detail-subtitle">📌 四条可迁移的结论</h2>
+
+  <div class="arch-tips">
+    <h3 class="bench-title">💡 沉淀</h3>
+    <div class="arch-tips-grid">
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 1</span>
+        <p><strong>硬件没到位时，先把 ROS2 隔离在薄适配层</strong><br><span class="arch-tip-note">核心算法不依赖任何中间件，软件层才能独立跑、独立测、独立交付</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 2</span>
+        <p><strong>语义要在契约层写死，并写进文档</strong><br><span class="arch-tip-note">「pose 是停靠位还是货架位置」这种歧义，一个词写错会让检测全为 0</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 3</span>
+        <p><strong>去重键要选稳定标识，不能选会动的东西</strong><br><span class="arch-tip-note">跨帧用 slot_key，不用像素位置——视角一变像素就漂</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 4</span>
+        <p><strong>验收数字要能被第三方复现</strong><br><span class="arch-tip-note">测试可跑、种子固定、口径写清，结论才站得住</span></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 技术栈 -->
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">技术栈</div>
+      <h3 class="arch-card-title">实现用到的技术</h3>
+      <p class="arch-card-desc">
+        <span class="tech-badge">Python</span>
+        <span class="tech-badge">ROS2 / rclpy</span>
+        <span class="tech-badge">HAL 硬件抽象层</span>
+        <span class="tech-badge">行为树 Behavior Tree</span>
+        <span class="tech-badge">A* 栅格路径规划</span>
+        <span class="tech-badge">任务队列与批次优化</span>
+        <span class="tech-badge">YOLOv8 + RKNN 推理</span>
+        <span class="tech-badge">FastAPI + WebSocket</span>
+        <span class="tech-badge">ECharts 数字孪生面板</span>
+      </p>
+      <ul class="card-highlights">
+        <li>纯 Python 核心（无 rclpy 依赖）+ ROS2 薄适配层</li>
+        <li>HAL 用 Protocol 抽象，<code>backend: sim | real</code> 一行切换</li>
+        <li>真机侧预留 YOLOv8 → ONNX → RKNN 的 NPU 推理路径</li>
+        <li>待客户确认：机械臂型号（需接 MoveIt2）、YOLOv8 自训数据、Nav2 / slam_toolbox 接入、colcon build 在 Ubuntu 24.04 上验证、相机内参与手眼标定</li>
+      </ul>
+    </div>
+  </div>
+</div>

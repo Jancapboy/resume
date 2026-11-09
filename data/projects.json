@@ -3,7 +3,7 @@
     "name": "全栈工程师",
     "title": "高级后端开发 / 数据库 & 自动化专家",
     "location": "中国",
-    "summary": "多年全栈开发经验，深耕数据库高可用架构、数据自动化抓取、AI 应用开发及企业级运维。2026 年主攻 AI 视频与 AI 漫剧全流程生成、LangGraph 多智能体工作流，并以 Vibe Coding 方式主导从需求到上线的完整交付闭环。擅长 MySQL 集群、OceanBase、Python 爬虫、企业微信集成及 AI 视频 / 3D 内容生成。近期主攻 EdgeOne 边缘函数与 Serverless 表单网关、GitHub Pages + EdgeOne 双通道全球交付与访问令牌自动化，以及移动端自适应与离线兜底渲染工程。近期主攻约束求解与多端协同工程（CP-SAT 联合排程、CRDT 冲突分层、事件溯源运行时）、可复现的回合制战棋 Web 应用（React 18 + 种子化 PRNG + 30 项引擎自测），以及基于全球探针的站点可达性实测与网络延迟基线体系。近期主攻前端设计与性能工程（原生 WebGL2 手写液态玻璃折射层、GSAP 四件套动效编排、真实数据驱动的终端档案与 GitHub 仪表盘）、移动端首屏加载性能与滚动可见性根因修复（load 事件 21483ms → 828ms、IntersectionObserver 阈值语义纠偏），以及基于 RunningHub 云端应用编排的 AI 素材流水线与琉璃玻璃拟态设计系统。",
+    "summary": "多年全栈开发经验，深耕数据库高可用架构、数据自动化抓取、AI 应用开发及企业级运维。2026 年主攻 AI 视频与 AI 漫剧全流程生成、LangGraph 多智能体工作流，并以 Vibe Coding 方式主导从需求到上线的完整交付闭环。擅长 MySQL 集群、OceanBase、Python 爬虫、企业微信集成及 AI 视频 / 3D 内容生成。近期主攻 EdgeOne 边缘函数与 Serverless 表单网关、GitHub Pages + EdgeOne 双通道全球交付与访问令牌自动化，以及移动端自适应与离线兜底渲染工程。近期主攻约束求解与多端协同工程（CP-SAT 联合排程、CRDT 冲突分层、事件溯源运行时）、可复现的回合制战棋 Web 应用（React 18 + 种子化 PRNG + 30 项引擎自测），以及基于全球探针的站点可达性实测与网络延迟基线体系。近期主攻前端设计与性能工程（原生 WebGL2 手写液态玻璃折射层、GSAP 四件套动效编排、真实数据驱动的终端档案与 GitHub 仪表盘）、移动端首屏加载性能与滚动可见性根因修复（load 事件 21483ms → 828ms、IntersectionObserver 阈值语义纠偏），以及基于 RunningHub 云端应用编排的 AI 素材流水线与琉璃玻璃拟态设计系统。近期主攻工业机器人软件层工程（纯 Python 内核与 ROS2 解耦、契约层锁定类型语义、Protocol 抽象统一真机与仿真、调度内核与数字孪生面板闭环），以 49 项单元测试与 11/11 端到端取放的成功率作为交付验收口径。",
     "skills": [
       {
         "name": "MySQL MGR",
@@ -175,6 +175,26 @@
       },
       {
         "name": "设计令牌体系",
+        "category": "开发"
+      },
+      {
+        "name": "ROS2 / rclpy",
+        "category": "开发"
+      },
+      {
+        "name": "机器人调度内核",
+        "category": "开发"
+      },
+      {
+        "name": "行为树 / A* 规划",
+        "category": "开发"
+      },
+      {
+        "name": "YOLOv8 目标检测",
+        "category": "AI"
+      },
+      {
+        "name": "数字孪生可视化",
         "category": "开发"
       }
     ]
@@ -740,6 +760,34 @@
         "CDN 自托管",
         "GSAP 3.13",
         "移动端适配"
+      ],
+      "screenshot": "",
+      "link": ""
+    },
+    {
+      "id": "proj-025",
+      "title": "工厂智能取件机器人软件层原型（纯 Python 内核 + ROS2 薄适配）",
+      "category": "机器人 / 边缘计算",
+      "public": true,
+      "description": "为工厂自动取件机器人小车交付可独立运行的完整软件层：把核心算法与 ROS2 解耦、用契约层锁定类型语义、用 Protocol 抽象统一真机与仿真接口，并配套可回归的调度内核与数字孪生面板。",
+      "highlights": [
+        "架构决策一：核心包零 rclpy 依赖，只有 fpv_core/ros2_adapter.py 做类型转换——起因是本机 WSL 为 Ubuntu 26.04 而 ROS2 官方二进制包尚未支持该版本，配套 scripts/setup_wsl.sh 给出 Docker 跑 Humble / 重装 24.04 装 Jazzy / 纯 Python 三套方案，软件层必须能独立跑通",
+        "架构决策二：所有类型集中在 fpv_core/contracts.py 作为唯一事实来源，并把 Shelf.pose 语义固化为「机器人停靠位」而非货架本身（槽位世界坐标统一由 Shelf.slot_world_position(level, slot) 提供）——该语义一度理解错，导致机器人站到货架上、物料距离 0.001m、检测全为 0，教训已写进架构文档",
+        "架构决策三：HAL 用 Protocol 抽象，配置 backend: sim | real 一行切换真机与仿真，pyserial / can / rknn / ultralytics 等第三方依赖惰性导入，开发机缺这些库仍能 import 全部模块并跑完测试；另提供 4 个 msg + 1 个 srv + 2 个 action 的 ROS2 接口定义",
+        "调度内核四个模块各踩一个坑，全部由单元测试抓出：A* 路径简化的 _line_clear 恒返回 True 导致直线穿障碍（改为按 resolution/2 步长沿线采样做真实障碍检测）；TaskQueue 堆键缺入队序号致同批任务 FIFO 不稳（created_at 仅微秒精度、批量创建时相同）；fail() 与 transition() 双自增致重试被计两次；分配器一次性把每台车锁死在一个任务上导致 11 个任务只执行 2 个（改为任务循环派发 + 线程真并发）",
+        "感知与指令理解两处关键修正：单目相机看不完 3 层货架（底层物料投影 v=800 超出 720 视场），改为逐层调整俯仰角扫视并按稳定 slot_key（货架:层:槽位）跨帧去重——不能用像素位置，因俯仰角一变像素就会移动；base_to_camera 只做平移不算旋转导致物料投影飞出视野，补齐完整 RPY 变换链（世界→base_link→相机）",
+        "验收全部为独立复测值：49 个单元测试全部通过（unittest 实测 Ran 49 tests in 47.264s OK）；11 个任务端到端取放 11/11 = 100%，seed 42 / 7 / 99 三次复跑成功率均 100%；分层扫描货架物料检出 25/25；批次优化收益 41.3% / 39.2% / 48.5%（146.79→86.13m / 128.59→78.12m / 141.98→73.18m）；关闭连续任务回原点后 8 任务总里程 658.54m → 543.15m 省 17.5%；FastAPI + WebSocket + ECharts 数字孪生面板实测 / 与 /api/snapshot 均返回 200"
+      ],
+      "techStack": [
+        "Python",
+        "ROS2 / rclpy",
+        "HAL 硬件抽象层",
+        "行为树 Behavior Tree",
+        "A* 栅格路径规划",
+        "任务队列与批次优化",
+        "YOLOv8 + RKNN 推理",
+        "FastAPI + WebSocket",
+        "ECharts 数字孪生面板"
       ],
       "screenshot": "",
       "link": ""
