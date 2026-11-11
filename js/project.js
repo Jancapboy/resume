@@ -108,10 +108,10 @@ function renderProject(proj) {
    技术分层：按项目真实 techStack 归类，归类规则显式可查
    ============================================================ */
 const LAYER_RULES = [
-  { name: '接入层', cls: '', re: /react|vue|javascript|typescript|^node(\.js)?$|vite|zustand|three\.js|^css|移动端适配|edge headless|chrome devtools|websocket|rest api|api$|webhook|^cors|cdn|localstorage|es2023|^html|前端|接入|webgl|gsl|gsap|scrolltrigger|splittext|lenis|intersectionobserver|backdrop-filter|echarts|数字孪生/i },
-  { name: '服务层', cls: 'l2', re: /python|spring boot|shell|node-?red|langchain|langgraph|^dag$|^lcel$|openclaw|自动化流水线|aiohttp|media|selenium|playwright|curl|globalping|check-host|git(hub)? cli|数字人|^tts$|^llm$|^fde$|mulberry|or-tools|cassowary|crdt|oplog|自动化|流媒体|一致性控制|ros2|rclpy|行为树|路径规划|任务队列|硬件抽象/i },
-  { name: '数据层', cls: '', re: /mysql|redis|oceanbase|mgr|proxysql|sql server|rss|知识图谱|数据库|存储|mongo|postgres|kafka|clickhouse|elastic|数据|缓存/i },
-  { name: '基础设施', cls: 'l3', re: /linux|docker|nginx|caddy|systemd|wsl|mihomo|edgeone|github pages|cloudstudio|edge functions|gpu 集群|ffmpeg|server酱|部署|运维|k8s|kubernetes|prometheus|ci\/cd|架构|工程|grafana/i },
+  { name: '接入层', cls: '', re: /react|vue|javascript|typescript|^node(\.js)?$|vite|zustand|three\.js|^css|移动端适配|edge headless|chrome devtools|websocket|rest api|api$|webhook|^cors|cdn|localstorage|es2023|^html|前端|接入|webgl|gsl|gsap|scrolltrigger|splittext|lenis|intersectionobserver|backdrop-filter|echarts|数字孪生|cdp|datamatrix|rfid|sse|unrealbloom|二维码/i },
+  { name: '服务层', cls: 'l2', re: /python|spring boot|shell|node-?red|langchain|langgraph|^dag$|^lcel$|openclaw|自动化流水线|aiohttp|media|selenium|playwright|curl|globalping|check-host|git(hub)? cli|数字人|^tts$|^llm$|^fde$|mulberry|or-tools|cassowary|crdt|oplog|自动化|流媒体|一致性控制|ros2|rclpy|行为树|路径规划|任务队列|硬件抽象|^go |stl|几何推导|哈希链|契约层|故障分类|网格简化|门禁决策|顶点焊接/i },
+  { name: '数据层', cls: '', re: /mysql|redis|oceanbase|mgr|proxysql|sql server|rss|知识图谱|数据库|存储|mongo|postgres|kafka|clickhouse|elastic|数据|缓存|sqlite/i },
+  { name: '基础设施', cls: 'l3', re: /linux|docker|nginx|caddy|systemd|wsl|mihomo|edgeone|github pages|cloudstudio|edge functions|gpu 集群|ffmpeg|server酱|部署|运维|k8s|kubernetes|prometheus|ci\/cd|架构|工程|grafana|资产门禁/i },
   { name: 'AI / 模型', cls: 'l2', re: /llm|langchain|langgraph|hunyuan|lora|comfyui|minimax|数字人|^tts$|ai 漫剧|知识图谱|agent|rag|deepseek|stable diffusion|模型|智能体|生成|yolov8|rknn/i }
 ];
 

@@ -3,7 +3,7 @@
     "name": "全栈工程师",
     "title": "高级后端开发 / 数据库 & 自动化专家",
     "location": "中国",
-    "summary": "多年全栈开发经验，深耕数据库高可用架构、数据自动化抓取、AI 应用开发及企业级运维。2026 年主攻 AI 视频与 AI 漫剧全流程生成、LangGraph 多智能体工作流，并以 Vibe Coding 方式主导从需求到上线的完整交付闭环。擅长 MySQL 集群、OceanBase、Python 爬虫、企业微信集成及 AI 视频 / 3D 内容生成。近期主攻 EdgeOne 边缘函数与 Serverless 表单网关、GitHub Pages + EdgeOne 双通道全球交付与访问令牌自动化，以及移动端自适应与离线兜底渲染工程。近期主攻约束求解与多端协同工程（CP-SAT 联合排程、CRDT 冲突分层、事件溯源运行时）、可复现的回合制战棋 Web 应用（React 18 + 种子化 PRNG + 30 项引擎自测），以及基于全球探针的站点可达性实测与网络延迟基线体系。近期主攻前端设计与性能工程（原生 WebGL2 手写液态玻璃折射层、GSAP 四件套动效编排、真实数据驱动的终端档案与 GitHub 仪表盘）、移动端首屏加载性能与滚动可见性根因修复（load 事件 21483ms → 828ms、IntersectionObserver 阈值语义纠偏），以及基于 RunningHub 云端应用编排的 AI 素材流水线与琉璃玻璃拟态设计系统。近期主攻工业机器人软件层工程（纯 Python 内核与 ROS2 解耦、契约层锁定类型语义、Protocol 抽象统一真机与仿真、调度内核与数字孪生面板闭环），以 49 项单元测试与 11/11 端到端取放的成功率作为交付验收口径。",
+    "summary": "多年全栈开发经验，深耕数据库高可用架构、数据自动化抓取、AI 应用开发及企业级运维。2026 年主攻 AI 视频与 AI 漫剧全流程生成、LangGraph 多智能体工作流，并以 Vibe Coding 方式主导从需求到上线的完整交付闭环。擅长 MySQL 集群、OceanBase、Python 爬虫、企业微信集成及 AI 视频 / 3D 内容生成。近期主攻 EdgeOne 边缘函数与 Serverless 表单网关、GitHub Pages + EdgeOne 双通道全球交付与访问令牌自动化，以及移动端自适应与离线兜底渲染工程。近期主攻约束求解与多端协同工程（CP-SAT 联合排程、CRDT 冲突分层、事件溯源运行时）、可复现的回合制战棋 Web 应用（React 18 + 种子化 PRNG + 30 项引擎自测），以及基于全球探针的站点可达性实测与网络延迟基线体系。近期主攻前端设计与性能工程（原生 WebGL2 手写液态玻璃折射层、GSAP 四件套动效编排、真实数据驱动的终端档案与 GitHub 仪表盘）、移动端首屏加载性能与滚动可见性根因修复（load 事件 21483ms → 828ms、IntersectionObserver 阈值语义纠偏），以及基于 RunningHub 云端应用编排的 AI 素材流水线与琉璃玻璃拟态设计系统。近期主攻工业机器人软件层工程（纯 Python 内核与 ROS2 解耦、契约层锁定类型语义、Protocol 抽象统一真机与仿真、调度内核与数字孪生面板闭环），以 49 项单元测试与 11/11 端到端取放的成功率作为交付验收口径。近期在物料防错与三维管线方向继续推进：把货架格口的位置、物料与时效编码进单条二维码标签，读码失败或三者任一不符即拒绝生成抓取计划（新增 16 个测试，单元测试总数 49 → 65 全绿）；并以 Go 自研门禁编排运行时（四态决策 PASS / BLOCK / CHALLENGE / ROUTE、三介入位置、审计哈希链、95 项测试）与 STL→three.js 几何压缩管线（397.7 万面压至 71.5 万面、189.6MB → 16.6MB）拓展工程纵深。",
     "skills": [
       {
         "name": "MySQL MGR",
@@ -195,6 +195,34 @@
       },
       {
         "name": "数字孪生可视化",
+        "category": "开发"
+      },
+      {
+        "name": "二维码物料防错",
+        "category": "开发"
+      },
+      {
+        "name": "视觉读码与标签契约",
+        "category": "开发"
+      },
+      {
+        "name": "Go 并发服务",
+        "category": "开发"
+      },
+      {
+        "name": "门禁决策引擎",
+        "category": "AI Agent"
+      },
+      {
+        "name": "审计哈希链",
+        "category": "开发"
+      },
+      {
+        "name": "网格简化与顶点焊接",
+        "category": "开发"
+      },
+      {
+        "name": "three.js 场景工程",
         "category": "开发"
       }
     ]
@@ -788,6 +816,85 @@
         "YOLOv8 + RKNN 推理",
         "FastAPI + WebSocket",
         "ECharts 数字孪生面板"
+      ],
+      "screenshot": "",
+      "link": ""
+    },
+    {
+      "id": "proj-026",
+      "title": "货架格口二维码标签校验与物料唯一身份核验（读码失败即拒抓）",
+      "category": "机器人 / 物料防错",
+      "public": true,
+      "description": "为工厂取件机器人补上「货架上放的到底是不是该物料」这一环：用二维码标签把格口位置、应放物料、时效编码成一条可校验的凭证，视觉读码失败或三者任一不符一律拒绝生成抓取计划。",
+      "highlights": [
+        "标签契约设计：SlotTag 用 FPV:<shelf_id>:<level>:<slot>:<material_id>:<valid_until_epoch> 一条编码同时承载「位置 + 物料 + 时效」三项信息，一次读码即完成三重校验——RFID 只能存 UID，物料对应关系还得回查服务端",
+        "读码后端三实现共用一套接口：VisionSlotReader（视觉解码）、RfidSlotReader（备选）、SimulatedSlotReader（仿真），开发机没装 opencv 也能跑通全部测试；降级路径与有后端路径严格分开，避免「降级成功」被误判成「读码成功」",
+        "故障四分离 + 根因三提示：unreadable / position_mismatch / material_mismatch / expired 分开归类，其中 material_mismatch 是最严重的一类；另给 unreadable 附 fault_hint（no_image_source 指向接线、no_backend 指向缺依赖、decode_failed 指向贴码方式），让现场能按提示排查而不是笼统报「读不出」",
+        "把校验做成硬闸门：在行为树里把「格口标签校验」节点插到「规划抓取」之前，校验不通过直接拒绝、不产生 grasp_plan——校验通过与否不再依赖上层自觉，而是由树结构保证；配套新增 16 个测试，核心用例 test_wrong_material_blocks_grasp 锁死「物料不符时不得抓取」",
+        "方案选型用现场约束倒推：从视觉分不清 0805 与 0603 电容这一事实出发，比较二维码与 RFID 两套货架端方案——二维码方案零 ESP32、标签 ¥4 + 标签座 ¥40 + 照明 ¥10 ≈ ¥80，RFID 方案需 30 个 ESP32 节点约 ¥1095，成本差 270 倍；方案最终落到 docs/货架端标签方案-二维码与RFID对比.md",
+        "相机安装高度用真实 FOV 反推：Astra Pro Plus 的 RGB 视场为水平 66.1°、垂直 40.2°，按此算出 z=0.42m 只能看到货架 0~0.42m（第 1 层），必须加高到 z=1.2m、俯角 30° 才能覆盖 0.62~1.07m（第 3 层）——这是纯几何推导，不靠现场试错"
+      ],
+      "techStack": [
+        "Python",
+        "DataMatrix / 二维码视觉解码",
+        "RFID 读码备选",
+        "契约层 SlotTag",
+        "行为树校验闸门",
+        "故障分类与根因提示",
+        "相机 FOV 几何推导"
+      ],
+      "screenshot": "",
+      "link": ""
+    },
+    {
+      "id": "proj-027",
+      "title": "门禁驱动 Agent 编排系统（OPC Gate：四态决策 + 审计哈希链）",
+      "category": "AI Agent / 治理",
+      "public": true,
+      "description": "用 Go 实现一套带前置门禁的 Agent 编排运行时：每次节点执行前后与最终输出前都过一道可插拔门禁，门禁返回 PASS / BLOCK / CHALLENGE / ROUTE 四态裁决，CHALLENGE 可挂起等人审批后原地恢复，所有裁决写入哈希链审计日志。",
+      "highlights": [
+        "四态门禁语义而非二元开关：PASS（可改写上下文继续）/ BLOCK（终止）/ CHALLENGE（挂起等人工审批）/ ROUTE（切分支）。CHALLENGE 的恢复语义是最容易做错的一环——恢复时用 Run.PendingGate 记住是哪道门禁挂起的并跳过它，避免重复调 LLM 与重复扣配额",
+        "三个介入位置把治理插进流程而不是外挂：pre_node（能不能做）、post_node（做完能不能用）、pre_final（能不能对外输出）；门禁自身故障时默认 fail_open=false 即阻断，安全侧优先",
+        "审计链做成不可绕过：hash = sha256(seq | prev_hash | 规范化内容) 逐条串联，改动或删除任一行，其后所有行的 prev_hash 校验全部失败——这是「门禁不可绕过」的技术底座，而非日志字符串",
+        "内置七类门禁 authz / quota / cost / risk / policy / approval / identity，覆盖角色租户 Claim 鉴权、配额扣减、成本熔断、提示注入与越权检测、PII 脱敏合规、人工审批二次确认、七问身份声明核对；纯 Go SQLite（modernc.org/sqlite v1.60.1，免 CGO）单文件部署",
+        "规模为实测值：15993 行 Go、12 个 internal 包、95 个 Go 测试（go test ./... 实测 7 个包全部 ok，gate 22 / chat 21 / canary 17 / identity 11 / core 10 / site 2 / solar-gate 12）",
+        "把门禁体系自建成一个站点做端到端验证：不让 LLM 直接写 HTML，而是只让它产出结构化 JSON 规格、渲染由受控代码完成，spec→render→vision→ship 四阶段各由对应门禁守护；页面「特效即数据」——每个视觉元素都对应库里一条真实裁决（粒子沿决策链流动=每次裁决、冲击波=BLOCK、冻结环=CHALLENGE、分叉光带=ROUTE），关掉数据库页面就空了，这是判断特效是否为真的标准"
+      ],
+      "techStack": [
+        "Go 1.27",
+        "四态门禁决策引擎",
+        "审计哈希链 SHA-256",
+        "SQLite (modernc.org/sqlite)",
+        "Agent 工作流编排",
+        "SSE 事件推送",
+        "CLI + HTTP API"
+      ],
+      "screenshot": "",
+      "link": ""
+    },
+    {
+      "id": "proj-028",
+      "title": "STL→three.js 几何压缩管线与太阳系空间站可视化",
+      "category": "图形工程 / 三维管线",
+      "public": true,
+      "description": "自研 Go 转换器把 7 个二进制 STL 共 397.7 万三角面压到 71.5 万面（189.6MB → 16.6MB，压缩 91%），再用 three.js 搭出可交互的太阳系与轨道空间站，并用启动前资产门禁与 CDP 交互验证兜住质量。",
+      "highlights": [
+        "顶点焊接改用 float32 位模式哈希（math.Float32bits）做键，实现无损合并——原先按「包围盒/100000」量化，gun 模型 11.8 万面被错误并到 2625 个顶点（真实唯一顶点 59434），几何直接毁掉；STL 内部本就是 float32，同一位置必然同位模式，量化步长这个无解的变量就此消失",
+        "QEM 简化改为分层收缩：每轮重建候选集、按边长排序短边优先、每轮朝目标收拢 15%、最多 40 轮。第一版把 11.8 万面压到 2384 面（只剩 2%）而且「看起来成功了」——根因是塌缩后只为新邻居补候选，候选集迅速枯竭，堆提前耗尽时循环就退出",
+        "导出前加 dropDegenerate() 剔除零面积与重复索引的面（用叉积长度判零，eps=1e-14）：legs 模型有 2 个面三点共线（Y/Z 完全相同、索引各不相同），索引检查抓不到，但会让 three.js 法线计算产出 NaN 导致整场景崩掉——这个 bug 是被抽样体检发现的",
+        "转换结果为实测值：7 个模型输入 3,976,980 面 → 输出 715,401 面（保留 18.0%），.bin 产物合计 16.60 MB；焊接后 v/f 比 0.514，按欧拉公式 V=F/2+2，三角面网格 v/f 天然接近 0.5，是健康分布而非焊接过度",
+        "场景实现全程序化、零外部贴图：太阳用 canvas 生成米粒组织与暗子纹理 + 三层加法混合日冕壳 + 2600 粒子喷发；八大行星用真实轨道参数与程序化纹理（地球海陆云 / 木星条带与大红斑 / 土星环卡西尼缝）；三层视差星空按色温分层（橙红 2200 粒子 / 蓝白 / 白）；UnrealBloom 的 threshold 实测取 0.38",
+        "把「看起来太小/看不见」变成可量化判据：空间站原总高 13 单位，在 orbit 215、距离 255~685 的全景机位下换算只有 13~35px，肉眼只会得出「没显示」的错误结论（实际一直在渲染，draw call 正常）——改用 fov 反算屏幕像素高度，阈值定 40px 为「可辨」，站体放大到 34 单位后实测 73px → 200px（2.72 倍），并配「检视模式」自动暂停公转，否则 0.075 rad/s 的公转让相机永远在追"
+      ],
+      "techStack": [
+        "Go 1.27",
+        "STL 二进制解析",
+        "float32 位模式顶点焊接",
+        "QEM 网格简化",
+        "three.js / WebGL",
+        "UnrealBloom 后期",
+        "CDP 交互验证",
+        "资产门禁"
       ],
       "screenshot": "",
       "link": ""

@@ -1,0 +1,320 @@
+<!-- STL→three.js 几何压缩管线与太阳系空间站 - 独立内容页 -->
+<div class="detail-content-block">
+  <h2 class="detail-subtitle">🪐 397.7 万面压到 71.5 万面，然后让它们真的飞起来</h2>
+  <p class="detail-lead">原始素材是 7 个二进制 STL，共 397.7 万三角面、189.6 MB——直接丢进浏览器会让整页崩掉。这个项目分两步解决：先写一个 Go 转换器把网格压到能进 GPU 的体量，再把压好的模型组装成一个可交互的太阳系轨道空间站。</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">第一步</div>
+      <h3 class="arch-card-title">顶点焊接：用位模式哈希</h3>
+      <p class="arch-card-desc">STL 里每个顶点都重复出现多次，必须先焊接。原先按「包围盒 / 100000」量化坐标，结果把 gun 模型 11.8 万面错误并成 <strong>2625 个顶点</strong>（真实唯一顶点 59434），几何直接毁掉。</p>
+      <ul class="card-highlights">
+        <li>根因：量化步长是个无解变量——太小顶点分裂，太大过度合并，且边界顶点会因舍入方向分裂</li>
+        <li>修复：改用 float32 的位模式（math.Float32bits）做哈希键</li>
+        <li>理由：STL 内部本就是 float32，同一位置必然同位模式，<strong>无损</strong></li>
+        <li>量化步长这个变量就此消失</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">第二步</div>
+      <h3 class="arch-card-title">QEM 简化：分层收缩</h3>
+      <p class="arch-card-desc">第一版把 11.8 万面压到 2384 面（只剩 2%），而且<strong>看起来成功了</strong>——面数确实降了，几何却已崩坏。</p>
+      <ul class="card-highlights">
+        <li>根因：塌缩后只为新邻居补候选，候选集迅速枯竭，堆提前耗尽时循环就退出</li>
+        <li>次因：用「两端邻接面数差 &gt; 8」近似判断边界，把绝大多数边都拒了</li>
+        <li>修复：每轮重建候选集、按边长排序短边优先、每轮朝目标收拢 15%、最多 40 轮</li>
+        <li>「面数降了」不等于「几何对了」——必须同时看形状</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">第三步</div>
+      <h3 class="arch-card-title">导出前剔除退化面</h3>
+      <p class="arch-card-desc">legs 模型有 2 个面三点共线（Y/Z 完全相同），但索引各不相同——所以索引检查抓不到它。</p>
+      <ul class="card-highlights">
+        <li>后果：three.js 法线计算会产出 NaN，整个场景崩掉</li>
+        <li>修复：导出前加 dropDegenerate()，用叉积长度判零面积（eps=1e-14）</li>
+        <li>这个 bug 是被 gateway_test.go 的<strong>抽样体检</strong>发现的，不是被主流程发现的</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">澄清</div>
+      <h3 class="arch-card-title">v/f ≈ 0.5 是健康分布</h3>
+      <p class="arch-card-desc">焊接后顶点面数比只有 0.514，看着偏低，疑似焊接过度。</p>
+      <ul class="card-highlights">
+        <li>实际按欧拉公式 V = F/2 + 2，三角面网格的 v/f 天然接近 0.5</li>
+        <li>这是健康的分布，不是问题</li>
+        <li>据此把体检阈值从 0.3~3.0 收紧到合理区间——<strong>先确认什么是正常，再谈异常</strong></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 转换结果 -->
+  <h2 class="detail-subtitle">📊 转换结果（实测自 manifest.json）</h2>
+  <p class="detail-lead">下表为转换产物元信息的真实数值，不是估算。target_triangles 统一取 110000。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">📐 七个模型的输入输出对照</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>模型</th>
+            <th>输入三角面</th>
+            <th>输出三角面</th>
+            <th>焊接顶点</th>
+            <th>.bin 大小</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>body</td>
+            <td>1,321,929</td>
+            <td>86,783</td>
+            <td>47,043</td>
+            <td>2.07 MB</td>
+          </tr>
+          <tr>
+            <td>arml</td>
+            <td>899,382</td>
+            <td>95,490</td>
+            <td>50,284</td>
+            <td>2.24 MB</td>
+          </tr>
+          <tr>
+            <td>legs</td>
+            <td>889,910</td>
+            <td>96,918</td>
+            <td>51,134</td>
+            <td>2.28 MB</td>
+          </tr>
+          <tr>
+            <td>hair</td>
+            <td>307,047</td>
+            <td>108,006</td>
+            <td>54,495</td>
+            <td>2.48 MB</td>
+          </tr>
+          <tr>
+            <td>armr</td>
+            <td>228,928</td>
+            <td>109,710</td>
+            <td>54,958</td>
+            <td>2.51 MB</td>
+          </tr>
+          <tr>
+            <td>cable</td>
+            <td>211,060</td>
+            <td>108,655</td>
+            <td>54,717</td>
+            <td>2.50 MB</td>
+          </tr>
+          <tr>
+            <td>gun</td>
+            <td>118,724</td>
+            <td>109,839</td>
+            <td>54,994</td>
+            <td>2.52 MB</td>
+          </tr>
+          <tr class="bench-total">
+            <td>合计</td>
+            <td>3,976,980</td>
+            <td>715,401（保留 18.0%）</td>
+            <td>367,625</td>
+            <td>16.60 MB</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>质量档位是门禁反馈驱动的：</strong>target=80k → 50.3 万面 / 11.8MB（body 只剩 4%，细节损失大）；target=150k → 96.7 万面 / 22.4MB（面数与体积<strong>两项都超预算</strong>）；target=110k → 71.5 万面 / 16.6MB，最终选定。</p>
+  </div>
+
+  <!-- 场景实现 -->
+  <h2 class="detail-subtitle">🌞 场景全程序化，零外部贴图</h2>
+  <p class="detail-lead">所有视觉元素都由代码生成——太阳的米粒组织与暗子、行星的海陆云与条带、土星环的卡西尼缝，全部是 canvas 程序化纹理，不依赖任何贴图资源。</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">太阳</div>
+      <h3 class="arch-card-title">三层日冕 + 2600 粒子</h3>
+      <p class="arch-card-desc">程序化 canvas 纹理（米粒组织 + 暗子）+ 三层加法混合日冕壳 + 粒子喷发。</p>
+      <ul class="card-highlights">
+        <li>日冕粒子 2600 个</li>
+        <li>UnrealBloom threshold 实测取 0.38</li>
+        <li>0.72 太高会让日冕失去 bloom 变成暗色块</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">行星</div>
+      <h3 class="arch-card-title">八大行星真实轨道</h3>
+      <p class="arch-card-desc">用真实轨道参数（压缩半径）+ 程序化纹理构建。</p>
+      <ul class="card-highlights">
+        <li>地球海陆云、木星条带与大红斑</li>
+        <li>土星环含卡西尼缝</li>
+        <li>三层视差星空按色温分层（橙红 2200 粒子 / 蓝白 / 白）</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">空间站</div>
+      <h3 class="arch-card-title">7 个模型组装成轨道空间站</h3>
+      <p class="arch-card-desc">body 核心舱 / armL-R 太阳翼 / legs 桁架 / gun 桅杆 / hair 天线 / cable 缆线。</p>
+      <ul class="card-highlights">
+        <li>站体总高由 13 单位放大到 34 单位（×2.6）</li>
+        <li>部件偏移、航行灯、引擎辉光同步放大</li>
+        <li>不同步会散成碎片，失去整体感</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">巡检</div>
+      <h3 class="arch-card-title">「检视模式」自动暂停公转</h3>
+      <p class="arch-card-desc">聚焦任何行星后视野只有约 53 单位高，空间站在 orbit 215 必然在视野外。</p>
+      <ul class="card-highlights">
+        <li>站体以 0.075 rad/s 公转 + 垂直 7.5 单位起伏</li>
+        <li>不暂停的话相机永远在追——那是「人在追狗」</li>
+        <li>跟随 lerp 0.12 → 0.20（0.12 追不上，实测相机偏离 166 单位）</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 量化判据 -->
+  <h2 class="detail-subtitle">📏 把「看起来太小」变成可量化的判据</h2>
+  <p class="detail-lead">用户反馈「空间站没有显示」。查下来它<strong>一直在渲染</strong>（复选框勾着、draw call 正常），只是小到无法辨认。这是设计问题，不是 bug——但<strong>肉眼只会得出「没显示」的错误结论</strong>，量化才能区分「没渲染」和「渲染了但看不见」。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">🔢 屏幕像素高度反算</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>环节</th>
+            <th>做法 / 数值</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>全景机位参数</td>
+            <td>相机 radius 470 / fov 55°，空间站 orbit 215，距离 255~685</td>
+          </tr>
+          <tr>
+            <td>可视高度范围</td>
+            <td>265 ~ 713 单位</td>
+          </tr>
+          <tr>
+            <td>站体原始高度</td>
+            <td>13 单位 → 屏幕仅 13~35px，7 个部件每个不到 5px</td>
+          </tr>
+          <tr>
+            <td>反算公式</td>
+            <td><code>screenPx = 世界尺寸 / (2 × 距离 × tan(fov/2)) × 视口高度</code></td>
+          </tr>
+          <tr>
+            <td>可辨阈值</td>
+            <td>≥ 40px；检视后放大倍数 ≥ 1.8×</td>
+          </tr>
+          <tr class="bench-total">
+            <td>改后实测</td>
+            <td class="best">73px → 200px（2.72 倍）</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>可复用经验：</strong>这类「看起来太小 / 看不见」的问题，都该用<strong>屏幕占比量化</strong>，而不是靠描述。判据设计成脚本（station-check.mjs）后，它就成了可回归的自动化检查。</p>
+  </div>
+
+  <!-- 资产门禁 -->
+  <h2 class="detail-subtitle">🚧 启动前资产门禁：让崩溃在启动前就暴露</h2>
+  <p class="detail-lead">three.js 项目最常见的翻车方式是「页面卡在正在装配」——ES module 静态 import 一旦解析失败，整个模块都不执行，main() 里的 try/catch 全部失效。这类问题在浏览器里几乎无法排查：控制台只留一条 404。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">🔧 五项启动前检查 + 路由门禁</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>检查项</th>
+            <th>拦下什么</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1. importmap 覆盖</td>
+            <td>裸模块说明符未映射；且前缀映射值必须以 / 结尾</td>
+          </tr>
+          <tr>
+            <td>2. 依赖存在</td>
+            <td>目标文件缺失（如漏下载 OutputShader.js）</td>
+          </tr>
+          <tr>
+            <td>3. 完整依赖闭包可解析</td>
+            <td>vendor 目录结构不符官方布局导致深层 404</td>
+          </tr>
+          <tr>
+            <td>4. 具名导入符号确实被导出</td>
+            <td>用了 7 处 THREE.* 却没 import THREE → ReferenceError</td>
+          </tr>
+          <tr>
+            <td>5. 静态资源体积预算</td>
+            <td>前端资源超预算（模型二进制有独立预算）</td>
+          </tr>
+          <tr class="bench-total">
+            <td>路由层门禁</td>
+            <td class="best">路径穿越 403 + 后缀白名单（仅 .bin/.json）+ 单文件体积预算</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>实测拦截：</strong><code>..%2f..%2fwin.ini</code> → 403、<code>%2e%2e%2fsecret.txt</code> → 403、<code>shell.exe</code> → 403。注意 <code>../../etc/passwd</code> 返回 200 是因为 <strong>Go http 客户端发送前就归一化了 ..</strong>，服务端从未见到穿越路径。</p>
+  </div>
+
+  <!-- 技术栈 -->
+  <h2 class="detail-subtitle">🧰 技术栈</h2>
+  <p class="detail-lead">几何管线与场景渲染的技术组成。</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">技术栈</div>
+      <h3 class="arch-card-title">实现用到的技术</h3>
+      <p class="arch-card-desc">
+        <span class="tech-badge">Go 1.27</span>
+        <span class="tech-badge">STL 二进制解析</span>
+        <span class="tech-badge">float32 位模式顶点焊接</span>
+        <span class="tech-badge">QEM 网格简化</span>
+        <span class="tech-badge">three.js / WebGL</span>
+        <span class="tech-badge">UnrealBloom 后期</span>
+        <span class="tech-badge">CDP 交互验证</span>
+        <span class="tech-badge">资产门禁</span>
+      </p>
+      <ul class="card-highlights">
+        <li>导出格式：交错顶点属性 + uint32 索引的 .bin，附 .json 元信息</li>
+        <li>前端零外部贴图，纹理全部程序化生成</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 交互验证 -->
+  <h2 class="detail-subtitle">🎯 交互 bug 必须用交互验证</h2>
+  <p class="detail-lead">此前几轮全靠静态截图 + 读代码，结果聚焦行星后黑屏这种交互 bug 根本发现不了。改用 CDP 驱动 headless 浏览器后，才拿到客观判据。</p>
+
+  <div class="arch-tips">
+    <h3 class="bench-title">📌 三条可迁移的结论</h3>
+    <div class="arch-tips-grid">
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 1</span>
+        <p><strong>ES module 静态 import 失败 = 整个模块不执行</strong><br><span class="arch-tip-note">try/catch 与 .catch() 全部失效，只能靠不依赖 module 的经典脚本守卫兜底</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 2</span>
+        <p><strong>写检查器必须按浏览器语义实现</strong><br><span class="arch-tip-note">importmap 前缀映射是字符串替换，尾斜杠会被吃掉</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 3</span>
+        <p><strong>交互 bug 必须用交互验证</strong><br><span class="arch-tip-note">静态截图抓不到聚焦黑屏这类问题</span></p>
+      </div>
+    </div>
+  </div>
+</div>

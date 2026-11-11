@@ -1,0 +1,217 @@
+<!-- 货架格口二维码标签校验与物料唯一身份核验 - 独立内容页 -->
+<div class="detail-content-block">
+  <h2 class="detail-subtitle">🏷️ 抓错物料：光「看见」不等于「认对了」</h2>
+  <p class="detail-lead">机器人已经能在货架前定位到格口、扫到物料轮廓、规划抓取姿态。但有一个问题始终没被回答：<strong>货架上这个格子，放的到底是不是该物料？</strong>视觉分不清 0805 和 0603 的电容——两者在相机里几乎一样。这个项目就是给「物料身份」补上一条可校验的凭证链。</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">契约</div>
+      <h3 class="arch-card-title">一条标签编码三件事</h3>
+      <p class="arch-card-desc">标签格式 <code>FPV:&lt;shelf_id&gt;:&lt;level&gt;:&lt;slot&gt;:&lt;material_id&gt;:&lt;valid_until_epoch&gt;</code>，例如 <code>FPV:SH-002:1:3:MAT-001:1799999999</code>。位置、物料、时效编码在一起，<strong>一次读码完成三重校验</strong>。</p>
+      <ul class="card-highlights">
+        <li>位置校验：读到的是不是机器人要停靠的那个格口</li>
+        <li>物料校验：这个格口当前该放的是不是任务指定的物料</li>
+        <li>时效校验：标签/物料信息是否已过期（valid_until=0 表示长期有效）</li>
+        <li>契约层唯一定义：SlotTag 放在 fpv_core/contracts.py（540 行），各子包一律 import 不重复定义</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">实现</div>
+      <h3 class="arch-card-title">三后端 + 故障四分离</h3>
+      <p class="arch-card-desc"><code>fpv_perception/slot_tag.py</code>（391 行）实现三个读码后端，共用一套 <code>SlotReader</code> 接口；<code>SlotVerifier</code> 把「读不出」拆成四种性质完全不同的故障。</p>
+      <ul class="card-highlights">
+        <li>VisionSlotReader 视觉解码 / RfidSlotReader 备选 / SimulatedSlotReader 仿真</li>
+        <li>unreadable 读不到、position_mismatch 位置错、material_mismatch 物料错（最严重）、expired 已过期</li>
+        <li>fault_hint 三提示：no_image_source 指向接线、no_backend 指向缺依赖、decode_failed 指向贴码方式</li>
+        <li>开发机没装 opencv 也能 import 全部模块跑完测试</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">闸门</div>
+      <h3 class="arch-card-title">校验不通过就不产生抓取计划</h3>
+      <p class="arch-card-desc">「格口标签校验」节点插在行为树的「视觉检测之后、规划抓取之前」。校验不通过 → 拒绝抓取 → <strong>不产生 grasp_plan</strong>。校验与否不再依赖上层自觉，由树结构本身保证。</p>
+      <ul class="card-highlights">
+        <li>节点位置在 fpv_bt/factory_bt.py:332，早于「规划抓取」节点</li>
+        <li>核心用例 test_wrong_material_blocks_grasp 锁死「物料不符时不得抓取」</li>
+        <li>新增 16 个测试，单元测试总数 49 → 65 全绿</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">选型</div>
+      <h3 class="arch-card-title">用现场约束倒推方案</h3>
+      <p class="arch-card-desc">方案不是选出来的，是被约束逼出来的：视觉不可靠 → 必须有唯一身份凭证 → 凭证要贴 84 个格口 → 于是「每个格口一个 ESP32 节点」的成本问题浮出水面。</p>
+      <ul class="card-highlights">
+        <li>二维码方案零 ESP32：标签 ¥4 + 标签座 ¥40 + 照明 ¥10 ≈ ¥80</li>
+        <li>RFID 方案需 30 个 ESP32 节点，约 ¥1095</li>
+        <li>成本差 270 倍，且二维码方案复用已有相机</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 方案对比 -->
+  <h2 class="detail-subtitle">💰 货架端方案选型：成本差 270 倍</h2>
+  <p class="detail-lead">先用 RapidOCR 全量识别客户发来的 20 张物料截图，提取商品标题与订单号，确认客户<strong>实际没有采购 ESP32</strong>——方案缺口由此暴露：货架端是「哑」的。随后比较两套货架端身份方案。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">📊 二维码 vs RFID 方案对比（84 个格口）</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>成本项</th>
+            <th>RFID 方案</th>
+            <th>二维码方案</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>标签</td>
+            <td>RFID 贴纸 ¥0.3 × 84 = ¥25</td>
+            <td class="best">二维码贴纸 ¥0.05 × 84 = ¥4</td>
+          </tr>
+          <tr>
+            <td>读取硬件</td>
+            <td>RC522 × 1（末端）+ 走线</td>
+            <td class="best">¥0（相机已有）</td>
+          </tr>
+          <tr>
+            <td>ESP32 节点</td>
+            <td>30 个 = ¥690</td>
+            <td class="best">0</td>
+          </tr>
+          <tr>
+            <td>标签座 / 照明</td>
+            <td>—</td>
+            <td class="best">¥40 + ¥10</td>
+          </tr>
+          <tr class="bench-total">
+            <td>合计</td>
+            <td>约 ¥1095</td>
+            <td class="best">约 ¥80（实测采购清单）</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>成本差 270 倍</strong>，且二维码方案不需要新增任何电子节点。RFID 降级为备选：仅在<strong>现场重油污 / 强反光 / 无照明</strong>时才启用，且只需机械臂末端 1 个节点（¥61.5）。</p>
+  </div>
+
+  <!-- 相机高度推导 -->
+  <h2 class="detail-subtitle">📐 相机必须加高到 1.2m：纯几何推导</h2>
+  <p class="detail-lead">客户已购的 Astra Pro Plus 深度相机，其 RGB 视场为<strong>水平 66.1°、垂直 40.2°</strong>。装多高才看得见三层货架？这不是现场试错问题，是一次三角函数计算。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">📊 两种安装方案的视野覆盖</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>安装方案</th>
+            <th>可见高度范围</th>
+            <th>覆盖货架层</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>方案① 低位相机 z=0.42m，俯角 20°</td>
+            <td>0 ~ 0.42m</td>
+            <td>仅第 1 层</td>
+          </tr>
+          <tr class="bench-total">
+            <td>方案② 加高支架 z=1.20m，俯角 30°</td>
+            <td class="best">0.62 ~ 1.07m</td>
+            <td class="best">第 3 层</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>一次只覆盖 40% 货架宽（可见宽 0.81m / 货架宽 2.0m）不是问题</strong>——任务已指定目标格口，只需读那一个标签，不必扫全架。客户已购相机配件含「加高支架」选项。</p>
+  </div>
+
+  <!-- 采购清单演进 -->
+  <h2 class="detail-subtitle">🧾 采购清单的三次收敛</h2>
+  <p class="detail-lead">方案演进过程中，采购清单被反复推翻——每次推翻都来自一个更具体的现场约束。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">🔧 清单演进与收敛原因</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>版本</th>
+            <th>金额</th>
+            <th>收敛原因</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>初版</td>
+            <td>¥913</td>
+            <td>其中 ¥360（39%）是开发便利品（BOX-3 ¥180、逻辑分析仪 ¥30、多余开发板）</td>
+          </tr>
+          <tr>
+            <td>最小验证批</td>
+            <td>¥112</td>
+            <td>真正验证读码链路只需开发板×1 + N4 模组×2 + RC522×2 + 标签×20 + LDO×3</td>
+          </tr>
+          <tr>
+            <td>方案 B：末端 RFID</td>
+            <td>¥61.5</td>
+            <td>RFID 天线装机械臂末端，经 STM32→CAN→K7，0 个 ESP32（省 ¥1095）</td>
+          </tr>
+          <tr class="bench-total">
+            <td>终版：二维码标签</td>
+            <td class="best">¥80</td>
+            <td class="best">标签 ¥4 + 标签座 ¥40 + 照明 ¥10，0 个 ESP32</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>方案 B 的启示：</strong>RFID 天线装机械臂末端——机械臂本来就要伸到格口，末端天线天生跟着任务走。前提是机械臂可装天线 + 走线，而这恰好是那个未定的阻塞项，所以当时该催机械臂型号，而不是先买 30 个 ESP32。</p>
+  </div>
+
+  <!-- 技术栈 -->
+  <h2 class="detail-subtitle">🧰 技术栈</h2>
+  <p class="detail-lead">读码、防错与几何推导部分的技术组成。</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">技术栈</div>
+      <h3 class="arch-card-title">实现用到的技术</h3>
+      <p class="arch-card-desc">
+        <span class="tech-badge">Python</span>
+        <span class="tech-badge">DataMatrix / 二维码视觉解码</span>
+        <span class="tech-badge">RFID 读码备选</span>
+        <span class="tech-badge">契约层 SlotTag</span>
+        <span class="tech-badge">行为树校验闸门</span>
+        <span class="tech-badge">故障分类与根因提示</span>
+        <span class="tech-badge">相机 FOV 几何推导</span>
+      </p>
+      <ul class="card-highlights">
+        <li>契约层唯一定义：SlotTag 位于 fpv_core/contracts.py</li>
+        <li>读码后端三实现共用 SlotReader 接口，开发机缺依赖也能跑测试</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 沉淀 -->
+  <div class="arch-tips">
+    <h3 class="bench-title">📌 三条可迁移的结论</h3>
+    <div class="arch-tips-grid">
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 1</span>
+        <p><strong>「看见了」和「认对了」是两件事</strong><br><span class="arch-tip-note">轮廓识别无法区分同尺寸物料，必须有唯一身份凭证</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 2</span>
+        <p><strong>校验要做成闸门，不要做成提示</strong><br><span class="arch-tip-note">插在行为树里，不通过就不产生抓取计划</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 3</span>
+        <p><strong>故障要分类到可行动的粒度</strong><br><span class="arch-tip-note">no_image_source / no_backend / decode_failed 对应三种现场处置</span></p>
+      </div>
+    </div>
+  </div>
+</div>

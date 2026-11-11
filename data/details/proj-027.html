@@ -1,0 +1,290 @@
+<!-- 门禁驱动 Agent 编排系统（OPC Gate） - 独立内容页 -->
+<div class="detail-content-block">
+  <h2 class="detail-subtitle">🚧 给 Agent 装上闸门：四态决策而非二元开关</h2>
+  <p class="detail-lead">Agent 编排最危险的地方在于「它下一步要做什么你拦不住」。这个项目把治理做成运行时的一部分：每个节点执行前后、以及最终对外输出前，都要过一道可插拔门禁。门禁不是 approve / reject 的二元开关，而是四种语义完全不同的决策。</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">四态</div>
+      <h3 class="arch-card-title">PASS / BLOCK / CHALLENGE / ROUTE</h3>
+      <p class="arch-card-desc">四种决策对应四种完全不同的后续流程。其中 <strong>CHALLENGE 的恢复语义</strong>是最容易做错的一环。</p>
+      <ul class="card-highlights">
+        <li>PASS：可改写上下文继续执行</li>
+        <li>BLOCK：立即终止运行</li>
+        <li>CHALLENGE：挂起，等人工审批后恢复</li>
+        <li>ROUTE：切换到另一条分支</li>
+        <li>恢复时用 Run.PendingGate 记住是哪道门禁挂起的，跳过它——否则重复调 LLM、重复扣配额</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">位置</div>
+      <h3 class="arch-card-title">三个介入点</h3>
+      <p class="arch-card-desc">治理插在流程里而不是外挂在外围，每道门禁知道自己「能做什么判断」。</p>
+      <ul class="card-highlights">
+        <li>pre_node：能不能做（开工前）</li>
+        <li>post_node：做完能不能用（产出后）</li>
+        <li>pre_final：能不能对外输出（最后一道闸）</li>
+        <li>门禁自身故障时默认 fail_open=false，即阻断——安全侧优先</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">审计</div>
+      <h3 class="arch-card-title">哈希链让门禁不可绕过</h3>
+      <p class="arch-card-desc">每条裁决写入审计表，<code>hash = sha256(seq | prev_hash | 规范化内容)</code> 逐条串联。</p>
+      <ul class="card-highlights">
+        <li>改动或删除任意一行，其后所有行的 prev_hash 校验全部失败</li>
+        <li>这是「门禁不可绕过」的技术底座，而非日志里的一句承诺</li>
+        <li>纯 Go SQLite（modernc.org/sqlite v1.60.1）免 CGO，单文件部署</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">门禁库</div>
+      <h3 class="arch-card-title">内置七类门禁</h3>
+      <p class="arch-card-desc">通过注册表装配，可插拔扩展，每类都有独立单测。</p>
+      <ul class="card-highlights">
+        <li>authz 角色 / 租户 / Claim 鉴权</li>
+        <li>quota 租户配额检查与扣减</li>
+        <li>cost 单次运行成本熔断</li>
+        <li>risk 提示注入与越权检测</li>
+        <li>policy PII 脱敏与合规策略</li>
+        <li>approval 人工审批与二次确认</li>
+        <li>identity 七问身份声明校验与责任主体核对</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 工程规模 -->
+  <h2 class="detail-subtitle">📊 工程规模与测试分布（实测）</h2>
+  <p class="detail-lead">以下为 <code>go test ./...</code> 实测结果，7 个包全部 ok，非日志声明。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">📈 各包测试分布</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>包</th>
+            <th>职责</th>
+            <th>测试数</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>internal/gate</td>
+            <td>门禁引擎与七类内置门禁</td>
+            <td class="best">22</td>
+          </tr>
+          <tr>
+            <td>internal/chat</td>
+            <td>交互式 REPL 与身份一致性</td>
+            <td class="best">21</td>
+          </tr>
+          <tr>
+            <td>internal/canary</td>
+            <td>灰度与漂移检测</td>
+            <td class="best">17</td>
+          </tr>
+          <tr>
+            <td>cmd/solar-gate</td>
+            <td>资产门禁与网关</td>
+            <td class="best">12</td>
+          </tr>
+          <tr>
+            <td>internal/identity</td>
+            <td>身份声明与谱系</td>
+            <td class="best">11</td>
+          </tr>
+          <tr>
+            <td>internal/core</td>
+            <td>编排引擎与节点执行</td>
+            <td class="best">10</td>
+          </tr>
+          <tr>
+            <td>internal/site</td>
+            <td>站点渲染与事件推送</td>
+            <td class="best">2</td>
+          </tr>
+          <tr class="bench-total">
+            <td>合计</td>
+            <td>15993 行 Go，12 个 internal 包</td>
+            <td class="best">95</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>三类门禁各有独立单测</strong>，资产门禁 6 个测试覆盖各失败场景。站点侧靠三层兜底：Go 单测（预算 / 索引 / 退化面）+ 启动前资产门禁（import 闭包完整性）+ headless 浏览器真实渲染验证。</p>
+  </div>
+
+  <!-- 特效即数据 -->
+  <h2 class="detail-subtitle">✨ 特效即数据：用门禁体系自建站点做验证</h2>
+  <p class="detail-lead">要验证门禁体系是否真在运行，最直接的办法是<strong>用它建一个站</strong>。但不让 LLM 直接写 HTML——它只产出结构化 JSON 规格（标题 / 副标 / 区块 / 配色），渲染由受控代码完成：既拿到 LLM 的创意与文案能力，又守住安全边界（渲染层 HTML 转义）与结构一致性。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">🔮 每个视觉元素都对应一条真实裁决</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>视觉效果</th>
+            <th>对应的门禁裁决</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>粒子沿决策链流动</td>
+            <td>每次裁决产生粒子</td>
+          </tr>
+          <tr>
+            <td>冲击波</td>
+            <td>BLOCK</td>
+          </tr>
+          <tr>
+            <td>冻结环</td>
+            <td>CHALLENGE（视觉上「卡住」）</td>
+          </tr>
+          <tr>
+            <td>分叉光带</td>
+            <td>ROUTE</td>
+          </tr>
+          <tr class="bench-total">
+            <td>右上角徽标</td>
+            <td class="best">实时 hash chain 自证</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>判断特效是否为真的标准：关掉数据库，页面就空了。</strong>如果视觉元素与真实裁决无关，那它只是动画。实测运行 45 秒产生 17 次裁决：<code>{'PASS': 7, 'BLOCK': 6, 'CHALLENGE': 3, 'ROUTE': 1}</code>，审计链完整。</p>
+  </div>
+
+  <!-- 四阶段流水线 -->
+  <h2 class="detail-subtitle">🚦 四阶段流水线，每阶段门禁守护</h2>
+  <p class="detail-lead">站点构建被拆成四个阶段，每个阶段都有对应门禁在把关——不是最后统一审一次。</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">spec</div>
+      <h3 class="arch-card-title">LLM 出规格</h3>
+      <p class="arch-card-desc">产出结构化 JSON 规格（标题 / 副标 / 区块 / 配色）。</p>
+      <ul class="card-highlights">
+        <li>cost 门禁：成本熔断</li>
+        <li>risk 门禁：提示注入与越权检测</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">render</div>
+      <h3 class="arch-card-title">受控渲染</h3>
+      <p class="arch-card-desc">渲染由受控代码完成，HTML 全转义。</p>
+      <ul class="card-highlights">
+        <li>policy 门禁：PII 脱敏与合规</li>
+        <li>结构一致性由代码保证，不靠模型自觉</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">vision</div>
+      <h3 class="arch-card-title">动效装配</h3>
+      <p class="arch-card-desc">把裁决映射为视觉元素。</p>
+      <ul class="card-highlights">
+        <li>authz 门禁：谁有权限发布</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">ship</div>
+      <h3 class="arch-card-title">落盘对外</h3>
+      <p class="arch-card-desc">最终对外确认。</p>
+      <ul class="card-highlights">
+        <li>approval 门禁：人工审批与二次确认</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 踩坑 -->
+  <h2 class="detail-subtitle">🐛 修掉的四个真 bug</h2>
+  <p class="detail-lead">这些不是重构中顺手改的，都是被真实运行与测试逼出来的——其中第 2 个影响面最大，因为它让一个一直坏着的功能看起来是好的。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">🔧 四个 bug 与根因</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>现象</th>
+            <th>根因</th>
+            <th>修复</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>playground 广播了，订阅端收不到</td>
+            <td>Hub 未复用：广播到 Hub A、SSE 订阅 Hub B</td>
+            <td>改为 App 级惰性单例</td>
+          </tr>
+          <tr>
+            <td>所有审计查询失效</td>
+            <td>payload 列直接扫进 json.RawMessage 报 unsupported Scan</td>
+            <td class="best">先扫 string 再转</td>
+          </tr>
+          <tr>
+            <td>页面四个计数全是 0</td>
+            <td>统计只数 default 租户，且试跑不产生 run</td>
+            <td>跨租户聚合 + 从审计日志统计</td>
+          </tr>
+          <tr class="bench-total">
+            <td>CSS 样式大面积错乱</td>
+            <td>CSS 里 % 密度极高，逐个转义 %% 极易漏</td>
+            <td class="best">改用 {{placeholder}} + ReplaceAll</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>第 2 个 bug 最值得记：</strong><code>audit list</code> 之前一直是坏的，只是没人发现——因为没有审计查询需求时，不会有任何报错暴露它。<strong>没有测试覆盖的功能，等于不存在的功能。</strong></p>
+  </div>
+
+  <!-- 技术栈 -->
+  <h2 class="detail-subtitle">🧰 技术栈</h2>
+  <p class="detail-lead">门禁运行时与审计链的技术组成。</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">技术栈</div>
+      <h3 class="arch-card-title">实现用到的技术</h3>
+      <p class="arch-card-desc">
+        <span class="tech-badge">Go 1.27</span>
+        <span class="tech-badge">四态门禁决策引擎</span>
+        <span class="tech-badge">审计哈希链 SHA-256</span>
+        <span class="tech-badge">SQLite (modernc.org/sqlite)</span>
+        <span class="tech-badge">Agent 工作流编排</span>
+        <span class="tech-badge">SSE 事件推送</span>
+        <span class="tech-badge">CLI + HTTP API</span>
+      </p>
+      <ul class="card-highlights">
+        <li>纯 Go SQLite 免 CGO，单文件 21MB，符合「一人部署一切」</li>
+        <li>门禁通过注册表装配，可插拔扩展</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 沉淀 -->
+  <div class="arch-tips">
+    <h3 class="bench-title">📌 三条可迁移的结论</h3>
+    <div class="arch-tips-grid">
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 1</span>
+        <p><strong>审批型门禁必须记住「是哪一道」挂起的</strong><br><span class="arch-tip-note">否则恢复时重复调 LLM、重复扣配额</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 2</span>
+        <p><strong>门禁自身故障默认应阻断</strong><br><span class="arch-tip-note">fail_open=false，fail_open 意味着绕过</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 3</span>
+        <p><strong>用真实数据驱动特效，才算验证了系统</strong><br><span class="arch-tip-note">关掉数据库页面就空了，这是自检标准</span></p>
+      </div>
+    </div>
+  </div>
+</div>
