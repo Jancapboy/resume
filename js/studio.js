@@ -492,15 +492,25 @@
 
   // 等待数据就绪；超时兜底（数据层失败也要让页面动起来）
   let started = false;
+  let lastData = null;
   const start = (d) => {
     if (started) {
-      // 数据迟到时补齐指标，避免显示 0
-      if (d) initMetrics(d);
+      // 数据迟到时补齐指标，避免显示 0；同一份数据只补一次，防止数字重复滚动
+      if (d && d !== lastData) {
+        lastData = d;
+        initMetrics(d);
+      }
       return;
     }
     started = true;
+    lastData = d || null;
     boot(d || null);
   };
   document.addEventListener('resume:dataready', (e) => start(e.detail));
-  setTimeout(() => start(null), 2600);
+  // 本脚本以 async 加载，可能晚于 main.js 派发事件（监听器尚未注册，事件已丢失），
+  // 因此兜底时优先读 main.js 挂在 window 上的数据，而不是直接传 null。
+  setTimeout(
+    () => start(window.__resumeData || null),
+    window.__resumeData ? 0 : 2600
+  );
 })();

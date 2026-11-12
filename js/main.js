@@ -42,6 +42,10 @@ function dataSignature(d) {
 }
 
 function applyData(data) {
+  // 挂到 window 供动效层兜底读取：studio.js 以 async 加载，
+  // 可能在它注册 resume:dataready 监听前本函数就已派发事件，
+  // 事件丢失会导致指标矩阵显示 0（数据其实存在）。
+  window.__resumeData = data;
   // 各渲染单元独立容错：单个区块失败不影响其余区块渲染
   const safe = (fn, label) => {
     try {
