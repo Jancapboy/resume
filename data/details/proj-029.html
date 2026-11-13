@@ -1,0 +1,195 @@
+<!-- Meridian 服务端 CP-SAT 自动重排闭环 - 独立内容页 -->
+<div class="detail-content-block">
+  <h2 class="detail-subtitle">🔁 排程不该是「打开页面算一次」</h2>
+  <p class="detail-lead">Meridian 原本的排程是一次性的：打开页面，跑一次求解器，看到一张甘特图。但项目推进的真实节奏是<strong>状态一直在变</strong>——有人开工、有人交付、有人把进度推到 100%。当排程结果只在「打开页面那一次」正确，它在工程上就是错的。这个项目把求解器从页面搬到了服务端，让排程变成随状态自动重算的闭环。</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">链路</div>
+      <h3 class="arch-card-title">六步闭环</h3>
+      <p class="arch-card-desc">改任务状态 → 写入 OpLog → 服务端从 OpLog 推导当前状态 → 调用 CP-SAT 重排 → 把新排程写回 OpLog 广播 → 各端甘特图实时更新。全链路无人工触发。</p>
+      <ul class="card-highlights">
+        <li>状态变更的唯一入口是 OpLog，服务端不读别的状态源</li>
+        <li>推导与求解分离：derive_state 负责语义，solver 只管约束</li>
+        <li>结果写回 OpLog 而非旁路推送，事件流始终是唯一事实来源</li>
+        <li>排程指纹比对，相同则不广播，避免无意义刷新</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">语义</div>
+      <h3 class="arch-card-title">三条重排规则</h3>
+      <p class="arch-card-desc">重排不是「把没做完的重新排一遍」这么朴素。三条规则分别对应三种真实业务语义，全部写进求解器模型而非上层过滤。</p>
+      <ul class="card-highlights">
+        <li><strong>done 固定占用资源</strong>：进度不能倒退，已完成任务必须留在原时间轴上</li>
+        <li><strong>doing 保留当前 start 作为 release_time</strong>：正在做的事不轻易挪动，做最小扰动</li>
+        <li><strong>进度到 100 自动置 done</strong>：消除「状态 doing 但进度 100」的矛盾态</li>
+        <li>字典序三阶段 P1→P2→P3，每阶段锁定上阶段最优值，而非加权求和近似</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">根因</div>
+      <h3 class="arch-card-title">容量违规的真因</h3>
+      <p class="arch-card-desc">第一版把已完成任务<strong>从模型里剔除</strong>，结果排出 8 处容量违规——REV 资源容量为 1 却被排了 2 个重叠任务。根因不是漏了校验，而是<strong>求解器根本看不见那个任务还占着资源</strong>。</p>
+      <ul class="card-highlights">
+        <li>直觉解法：加一个后置校验，发现重叠就报错</li>
+        <li>正确解法：给 solver 加 fixed_intervals 支持</li>
+        <li>用 NewFixedSizeIntervalVar 建常量区间，参与同一条 AddCumulative 约束</li>
+        <li>约束写进模型，才不会漏判——事后校验永远只能兜住已发生的错误</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">接口</div>
+      <h3 class="arch-card-title">新增 API 与事件</h3>
+      <p class="arch-card-desc">新增 <code>GET /meridian/api/schedule</code> 与 <code>POST /meridian/api/reschedule</code> 两个接口，以及 <code>schedule.update</code> 事件；前端 runtime 补上对应的 applyOp 分支后，甘特图才会跟着动。</p>
+      <ul class="card-highlights">
+        <li>GET /api/schedule 返回 makespan / objectives / pinned 等聚合指标</li>
+        <li>POST /api/reschedule 触发一次重排并广播</li>
+        <li>schedule.update 事件携带任务级排程变更</li>
+        <li>漏掉前端 applyOp 分支 = 后端全对、界面不动</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 实测数据 -->
+  <h2 class="detail-subtitle">📊 实测数据（本次独立复测，非照抄日志）</h2>
+  <p class="detail-lead">种子数据为 <strong>18 任务 / 5 资源 / horizon 120h</strong>。下表数字均为本地实际运行与线上接口实测采集。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">📈 重排语义与性能实测</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>场景</th>
+            <th>makespan</th>
+            <th>求解状态</th>
+            <th>耗时</th>
+            <th>说明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>基线（全部 todo）</td>
+            <td>49h</td>
+            <td>OPTIMAL</td>
+            <td>0.057s</td>
+            <td>三阶段全部最优</td>
+          </tr>
+          <tr>
+            <td>T14 置 doing</td>
+            <td class="best">56h</td>
+            <td>OPTIMAL</td>
+            <td>0.047s</td>
+            <td>关键路径被正确拉长</td>
+          </tr>
+          <tr>
+            <td>progress 置 100</td>
+            <td>49h</td>
+            <td>OPTIMAL</td>
+            <td>0.040s</td>
+            <td>自动置 done，回到基线</td>
+          </tr>
+          <tr>
+            <td>纯求解 5 次采样</td>
+            <td>—</td>
+            <td>OPTIMAL</td>
+            <td>0.103~0.174s</td>
+            <td>solve_sec 指标</td>
+          </tr>
+          <tr class="bench-total">
+            <td>线上 /api/schedule</td>
+            <td>56h</td>
+            <td>OPTIMAL</td>
+            <td>0.023s</td>
+            <td>pinned=12，公网 HTTPS 实测 200</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>关于两组耗时：</strong>端到端重排（0.040~0.057s）与纯求解（0.103~0.174s）不是同一口径——端到端只重排未固定的部分，而 <code>solve()</code> 会重建完整模型跑满三阶段字典序。线上 <code>/api/schedule</code> 返回的 <code>solve_sec=0.023</code> 是服务端真实单次耗时，量级与端到端一致。</p>
+  </div>
+
+  <!-- 踩坑 -->
+  <div class="bench-wrap">
+    <h3 class="bench-title">🐛 踩过的坑与根因</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>现象</th>
+            <th>根因</th>
+            <th>修法</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>容量违规 8 处</td>
+            <td>已完成任务被剔除，求解器看不到它占资源</td>
+            <td class="best">fixed_intervals + NewFixedSizeIntervalVar</td>
+          </tr>
+          <tr>
+            <td>HTTP 接口 500</td>
+            <td>asyncio.create_task 在 API 路径没有 event loop</td>
+            <td class="best">改 async def + await broadcast</td>
+          </tr>
+          <tr>
+            <td>Caddy 条件重启失效</td>
+            <td>先覆盖再比对，且临时文件已提前删除</td>
+            <td class="best">比较必须在覆盖前，临时文件最后清理</td>
+          </tr>
+          <tr>
+            <td>部署影响其他端口</td>
+            <td>每次部署都无条件 restart Caddy</td>
+            <td class="best">加内容比对，无变化则跳过重启</td>
+          </tr>
+          <tr>
+            <td>doing 但进度 100</td>
+            <td>node.progress 事件不改状态</td>
+            <td class="best">进度 100 自动置 done</td>
+          </tr>
+          <tr class="bench-total">
+            <td>公网 502 误报</td>
+            <td>服务器自己 curl 公网 IP，NAT hairpin 不支持</td>
+            <td class="best">验证站点健康度必须从外部访问</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>最后一条最值得记：</strong>13440 根路径 502 时，Caddy 日志里反向隧道（18931）的失败记录只有 01-22 的 4 次，11-11 当天零次——服务器自测公网 IP 的报错与本次部署毫无关系。<strong>定位问题要选对观测点</strong>，服务器自测公网 IP 是典型的错误观测点。</p>
+  </div>
+
+  <!-- 沉淀 -->
+  <div class="arch-tips">
+    <h3 class="bench-title">📌 三条可迁移的结论</h3>
+    <div class="arch-tips-grid">
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 1</span>
+        <p><strong>约束要写进模型，不能写在校验里</strong><br><span class="arch-tip-note">事后校验只能兜住已发生的错误</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 2</span>
+        <p><strong>重排要最小扰动，不是推倒重来</strong><br><span class="arch-tip-note">doing 任务保留 start 作为 release_time</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 3</span>
+        <p><strong>事件流必须是唯一事实来源</strong><br><span class="arch-tip-note">结果写回 OpLog，别开旁路推送</span></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">🧰 技术栈</h3>
+    <div class="arch-tips-grid">
+      <span class="tech-badge">OR-Tools CP-SAT</span>
+      <span class="tech-badge">OpLog 事件溯源</span>
+      <span class="tech-badge">固定区间约束 fixed_intervals</span>
+      <span class="tech-badge">字典序三阶段求解</span>
+      <span class="tech-badge">Python aiohttp</span>
+      <span class="tech-badge">Caddy 反向代理</span>
+      <span class="tech-badge">systemd</span>
+    </div>
+  </div>
+</div>

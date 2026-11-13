@@ -1,0 +1,182 @@
+<!-- 个人微信群聊接入通道选型与群聊能力实测 - 独立内容页 -->
+<div class="detail-content-block">
+  <h2 class="detail-subtitle">📱 「老板在微信群里 @ 一个能干活的 AI」</h2>
+  <p class="detail-lead">需求很具体：老板在<strong>个人微信群</strong>里 @ 一个能查状态、下指令、跑工具的 AI 助手。但这条路上有一个很容易踩的坑——<strong>官方渠道插件的能力边界</strong>。个人微信与企业微信常被混为一谈，「官方支持个人微信」不等于「官方插件支持群聊」。这个项目做的就是把边界查清楚，把方案定下来。</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">实测</div>
+      <h3 class="arch-card-title">不看宣传，看源码</h3>
+      <p class="arch-card-desc">自写 <code>check_channel_group_support.py</code> 下载插件 tarball，逐项检查四件事：<code>groupPolicy</code> 默认值、会话类型是否写死 direct、群相关 API 标识频次、README / CHANGELOG 群聊声明。插件升级后可随时复验。</p>
+      <ul class="card-highlights">
+        <li>判据是<strong>默认值</strong>而不是「有没有群聊相关代码」</li>
+        <li>会话类型写死 <code>direct</code> 是最硬的否定证据</li>
+        <li>README 声明与源码实现分开统计，防止宣传口径混淆</li>
+        <li>脚本自动定位 npm（WorkBuddy 内置 Python 的 PATH 会截断）</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">对照</div>
+      <h3 class="arch-card-title">两个插件的实测结论</h3>
+      <p class="arch-card-desc">本次实跑脚本的完整输出：</p>
+      <ul class="card-highlights">
+        <li><strong>个人微信 v2.4.10</strong>：groupPolicy <code>['disabled']</code>、会话类型 <code>['direct']</code>、群相关标识<strong>零命中</strong>、README 与 CHANGELOG 群聊记录<strong>各 0 次</strong> → 确实不支持群聊</li>
+        <li><strong>企业微信 v2026.10.30</strong>：groupPolicy <code>['allowlist','open']</code>、chatId 命中 <strong>169 次</strong>、README 声明群聊 <strong>8 次</strong> → 支持群聊</li>
+        <li>同一个插件包，两套完全不同的群聊能力</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">纠错</div>
+      <h3 class="arch-card-title">两次说错，两次更正</h3>
+      <p class="arch-card-desc">选型过程中我自己的两次口误，都被源码证据推翻——这类错误如果不查源码就会一路错到部署：</p>
+      <ul class="card-highlights">
+        <li>第一次错：说「openclaw 只能接个人微信」→ <strong>错</strong>，接私聊完全没问题（腾讯官方插件），只是那个插件不支持群聊</li>
+        <li>第二次错：说「个人微信已支持群聊」→ <strong>也错</strong>，源码为证确实不支持</li>
+        <li>准确结论：官方微信插件只支持私聊；个人微信群聊必须走 Wechaty 这条路</li>
+        <li>两次错误的共同点：都是拿「一个插件」推「整个生态」</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">落地</div>
+      <h3 class="arch-card-title">LightAgent 真跑通</h3>
+      <p class="arch-card-desc">选型不是看 README 宣传——把仓库 clone 下来逐文件看，并且真的把侧车跑起来。</p>
+      <ul class="card-highlights">
+        <li>LightAgent（MIT / Python / 23 stars），<strong>wechat4u puppet 在 2026-11 仍能成功输出微信登录二维码</strong></li>
+        <li>侧车 8 个 .mjs 模块共 2,933 行，<code>node --test</code> 实测 <strong>61 项测试全部通过</strong>（467ms）</li>
+        <li>Python 侧依赖轻（numpy / aiohttp / requests 等基础库），无重型 ML 框架</li>
+        <li>微信群通道目录 64 个 Python 模块共 26,778 行——工程级而非玩具级</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 选型对比 -->
+  <h2 class="detail-subtitle">⚖️ puppet 路线实测对比</h2>
+  <p class="detail-lead">个人微信群聊的技术路线全部依赖 Wechaty 的 puppet（协议实现层），puppet 的存活状况是决定性因素。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">📊 各 puppet 路线可用性（2026-11 实测口径）</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>Puppet</th>
+            <th>协议</th>
+            <th>可用性</th>
+            <th>封号风险</th>
+            <th>成本</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Web 协议</td>
+            <td>HTTP</td>
+            <td>已基本失效</td>
+            <td>极高</td>
+            <td>免费</td>
+          </tr>
+          <tr class="bench-total">
+            <td><strong>wechat4u</strong></td>
+            <td>微信 4.0 逆向</td>
+            <td><strong>本次实测可登录</strong></td>
+            <td>中高</td>
+            <td>免费</td>
+          </tr>
+          <tr>
+            <td>PadLocal</td>
+            <td>iPad 协议模拟</td>
+            <td>中高</td>
+            <td>中</td>
+            <td>付费 token</td>
+          </tr>
+          <tr>
+            <td>Desktop 协议</td>
+            <td>桌面端</td>
+            <td>高</td>
+            <td>中</td>
+            <td>免费（需一台桌面机）</td>
+          </tr>
+          <tr>
+            <td>Android + worktool</td>
+            <td>无障碍服务</td>
+            <td>高</td>
+            <td>低</td>
+            <td>一台安卓手机</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>可配置即逃生舱：</strong><code>wechat_group_puppet</code> 默认 <code>wechaty-puppet-wechat4u</code>（免费），一行配置即可换成 <code>wechaty-puppet-padlocal</code>（付费）——默认走免费路线，出问题有付费兜底，而不是把生死押在一条路上。sidecar 内置 node:22 多阶段构建镜像。</p>
+  </div>
+
+  <!-- 架构 -->
+  <h2 class="detail-subtitle">🏗️ 架构决策：分工，而不是迁移</h2>
+  <p class="detail-lead">最终方案是<strong>两个系统各司其职</strong>，而不是把已有能力推倒重来。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">🔀 通道分工与风险对策</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>角色</th>
+            <th>承担</th>
+            <th>说明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>LightAgent</td>
+            <td>微信群入口</td>
+            <td>承接个人微信群消息与 @ 事件</td>
+          </tr>
+          <tr>
+            <td>OpenClaw</td>
+            <td>执行</td>
+            <td>已有 5 个 agent / 飞书 4 账号 / 工具链 / 工厂机器人面板，不动</td>
+          </tr>
+          <tr class="bench-total">
+            <td>企业微信</td>
+            <td>零风险兜底通道</td>
+            <td>已配 groupPolicy=open、dmPolicy=pairing，任一通道异常不影响整体</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>为什么不迁移：</strong>OpenClaw 侧已有 agent、账号、工具链与面板，把微信群能力迁进去等于重写；让 LightAgent 只做「入口」、OpenClaw 只做「执行」，两边互补，改动面最小。</p>
+  </div>
+
+  <!-- 风险 -->
+  <div class="arch-tips">
+    <h3 class="bench-title">📌 风险与对策：写进文档，不留到上线后</h3>
+    <div class="arch-tips-grid">
+      <div class="arch-tip">
+        <span class="arch-tip-tag">风险 1</span>
+        <p><strong>所有免费 puppet 都被官方重点打击</strong><br><span class="arch-tip-note">「稳定跑数月」基本是幸存者偏差</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">对策 1</span>
+        <p><strong>专用小号 + 白名单群 + 只在被 @ 时回</strong><br><span class="arch-tip-note">再叠加随机延迟，避免行为熵坍缩</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">结论</span>
+        <p><strong>不存在零风险方案，账号风险是真实的</strong><br><span class="arch-tip-note">微信群有真实封号风险，必须提前接受</span></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">🧰 技术栈</h3>
+    <div class="arch-tips-grid">
+      <span class="tech-badge">Wechaty</span>
+      <span class="tech-badge">wechat4u puppet</span>
+      <span class="tech-badge">LightAgent</span>
+      <span class="tech-badge">OpenClaw 渠道插件</span>
+      <span class="tech-badge">Node.js sidecar</span>
+      <span class="tech-badge">Python</span>
+      <span class="tech-badge">插件源码能力比对</span>
+    </div>
+  </div>
+</div>

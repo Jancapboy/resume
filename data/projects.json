@@ -3,7 +3,7 @@
     "name": "全栈工程师",
     "title": "高级后端开发 / 数据库 & 自动化专家",
     "location": "中国",
-    "summary": "多年全栈开发经验，深耕数据库高可用架构、数据自动化抓取、AI 应用开发及企业级运维。2026 年主攻 AI 视频与 AI 漫剧全流程生成、LangGraph 多智能体工作流，并以 Vibe Coding 方式主导从需求到上线的完整交付闭环。擅长 MySQL 集群、OceanBase、Python 爬虫、企业微信集成及 AI 视频 / 3D 内容生成。近期主攻 EdgeOne 边缘函数与 Serverless 表单网关、GitHub Pages + EdgeOne 双通道全球交付与访问令牌自动化，以及移动端自适应与离线兜底渲染工程。近期主攻约束求解与多端协同工程（CP-SAT 联合排程、CRDT 冲突分层、事件溯源运行时）、可复现的回合制战棋 Web 应用（React 18 + 种子化 PRNG + 30 项引擎自测），以及基于全球探针的站点可达性实测与网络延迟基线体系。近期主攻前端设计与性能工程（原生 WebGL2 手写液态玻璃折射层、GSAP 四件套动效编排、真实数据驱动的终端档案与 GitHub 仪表盘）、移动端首屏加载性能与滚动可见性根因修复（load 事件 21483ms → 828ms、IntersectionObserver 阈值语义纠偏），以及基于 RunningHub 云端应用编排的 AI 素材流水线与琉璃玻璃拟态设计系统。近期主攻工业机器人软件层工程（纯 Python 内核与 ROS2 解耦、契约层锁定类型语义、Protocol 抽象统一真机与仿真、调度内核与数字孪生面板闭环），以 49 项单元测试与 11/11 端到端取放的成功率作为交付验收口径。近期在物料防错与三维管线方向继续推进：把货架格口的位置、物料与时效编码进单条二维码标签，读码失败或三者任一不符即拒绝生成抓取计划（新增 16 个测试，单元测试总数 49 → 65 全绿）；并以 Go 自研门禁编排运行时（四态决策 PASS / BLOCK / CHALLENGE / ROUTE、三介入位置、审计哈希链、95 项测试）与 STL→three.js 几何压缩管线（397.7 万面压至 71.5 万面、189.6MB → 16.6MB）拓展工程纵深。",
+    "summary": "多年全栈开发经验，深耕数据库高可用架构、数据自动化抓取、AI 应用开发及企业级运维。2026 年主攻 AI 视频与 AI 漫剧全流程生成、LangGraph 多智能体工作流，并以 Vibe Coding 方式主导从需求到上线的完整交付闭环。擅长 MySQL 集群、OceanBase、Python 爬虫、企业微信集成及 AI 视频 / 3D 内容生成。近期主攻 EdgeOne 边缘函数与 Serverless 表单网关、GitHub Pages + EdgeOne 双通道全球交付与访问令牌自动化，以及移动端自适应与离线兜底渲染工程。近期主攻约束求解与多端协同工程（CP-SAT 联合排程、CRDT 冲突分层、事件溯源运行时）、可复现的回合制战棋 Web 应用（React 18 + 种子化 PRNG + 30 项引擎自测），以及基于全球探针的站点可达性实测与网络延迟基线体系。近期主攻前端设计与性能工程（原生 WebGL2 手写液态玻璃折射层、GSAP 四件套动效编排、真实数据驱动的终端档案与 GitHub 仪表盘）、移动端首屏加载性能与滚动可见性根因修复（load 事件 21483ms → 828ms、IntersectionObserver 阈值语义纠偏），以及基于 RunningHub 云端应用编排的 AI 素材流水线与琉璃玻璃拟态设计系统。近期主攻工业机器人软件层工程（纯 Python 内核与 ROS2 解耦、契约层锁定类型语义、Protocol 抽象统一真机与仿真、调度内核与数字孪生面板闭环），以 49 项单元测试与 11/11 端到端取放的成功率作为交付验收口径。近期在物料防错与三维管线方向继续推进：把货架格口的位置、物料与时效编码进单条二维码标签，读码失败或三者任一不符即拒绝生成抓取计划（新增 16 个测试，单元测试总数 49 → 65 全绿）；并以 Go 自研门禁编排运行时（四态决策 PASS / BLOCK / CHALLENGE / ROUTE、三介入位置、审计哈希链、95 项测试）与 STL→three.js 几何压缩管线（397.7 万面压至 71.5 万面、189.6MB → 16.6MB）拓展工程纵深。近期把 Meridian 排程从「打开页面算一次」升级为服务端自动重排闭环（状态变更 → OpLog → CP-SAT 重算 → 写回广播 → 各端甘特图实时刷新），并以固定区间约束表达「已完成任务仍占资源」这类语义（18 任务 / 5 资源实测三阶段全 OPTIMAL，makespan=56，公网 HTTPS 实测 200）。同期完成个人微信群聊接入通道的源码级选型与实测：用自写脚本拉取插件源码逐项比对群聊能力，实测个人微信插件 v2.4.10 的 groupPolicy 默认 disabled 且会话写死 direct、企业微信插件 v2026.10.30 则为 open 且 chatId 命中 169 次，最终确立「LightAgent 承接微信群入口 + OpenClaw 承接执行」的分工架构，并把免费 puppet 的封号风险与专用小号 / 白名单群等对策一并写入方案。",
     "skills": [
       {
         "name": "MySQL MGR",
@@ -223,6 +223,26 @@
       },
       {
         "name": "three.js 场景工程",
+        "category": "开发"
+      },
+      {
+        "name": "固定区间约束求解",
+        "category": "开发"
+      },
+      {
+        "name": "事件溯源广播",
+        "category": "开发"
+      },
+      {
+        "name": "Wechaty 协议接入",
+        "category": "集成"
+      },
+      {
+        "name": "插件能力源码验证",
+        "category": "开发"
+      },
+      {
+        "name": "Node.js sidecar",
         "category": "开发"
       }
     ]
@@ -895,6 +915,58 @@
         "UnrealBloom 后期",
         "CDP 交互验证",
         "资产门禁"
+      ],
+      "screenshot": "",
+      "link": ""
+    },
+    {
+      "id": "proj-029",
+      "title": "Meridian 服务端 CP-SAT 自动重排闭环（状态变更驱动排程重算）",
+      "category": "工程效能 / 约束求解",
+      "public": true,
+      "description": "把 Meridian 排程从「打开页面算一次」升级为「改任务状态就自动重排」的服务端闭环：任务状态经 OpLog 事件流进入服务端，推导当前状态后调用 CP-SAT 重算工期，结果再写回 OpLog 广播，各端甘特图实时刷新。",
+      "highlights": [
+        "完整闭环链路：改任务状态 → OpLog → 服务端推导状态 → CP-SAT 重排 → 写回 OpLog 广播 → 各端甘特图实时更新；三阶段字典序 P1→P2→P3 逐阶段锁定上阶段最优值（非加权求和近似），并用排程指纹去重，指纹不变就不广播，避免无意义刷新",
+        "重排语义用求解器约束表达而非上层过滤：done 任务固定占用资源（进度不能倒退）、doing 任务把当前 start 作为 release_time 保留（最小扰动）、进度到 100 自动置 done（消除「状态 doing 但进度 100」的矛盾态），三条规则直接写进 CP-SAT 模型",
+        "实测语义正确：18 任务 / 5 资源 / horizon 120h 的种子数据下，三阶段全部 OPTIMAL，makespan=56；本地复测三组语义——全 todo 得 49h、T14 置 doing 得 56h（关键路径被正确拉长）、progress 置 100 自动 done 后回到 49h，与设计预期逐条吻合",
+        "性能实测：本地端到端重排 0.040~0.057s、纯求解 0.103~0.174s（5 次采样）；线上 /meridian/api/schedule 实测返回 makespan=56 / status=OPTIMAL / solve_sec=0.023 / pinned=12，/meridian/api/health 的 uptime 持续增长至 171,996 秒且 /meridian/ 公网 HTTPS 实测 200",
+        "真实 bug 的根因与修法：最初把已完成任务从模型里剔除，导致求解器看不见它仍占资源，排出 8 处容量违规（REV cap=1 被排 2 个任务重叠）；修法不是加校验，而是给求解器加 fixed_intervals 支持，用 NewFixedSizeIntervalVar 建常量区间参与同一条 AddCumulative 约束——约束写进模型，才不会漏判",
+        "踩过的三类工程坑都留了痕迹：asyncio.create_task 在 HTTP API 路径没有 event loop 导致 500（改 async def + await broadcast）；Caddy 条件重启失效（比较必须在覆盖前做，临时文件最后清理）；以及一条诊断教训——服务器自己 curl 公网 IP 会因 NAT hairpin 不支持而误报 502，验证站点健康度必须从外部访问，Caddy 日志显示反向隧道失败记录停在 01-22，与本次部署无关"
+      ],
+      "techStack": [
+        "OR-Tools CP-SAT",
+        "OpLog 事件溯源",
+        "固定区间约束 fixed_intervals",
+        "字典序三阶段求解",
+        "Python aiohttp",
+        "Caddy 反向代理",
+        "systemd"
+      ],
+      "screenshot": "",
+      "link": ""
+    },
+    {
+      "id": "proj-030",
+      "title": "个人微信群聊接入通道选型与群聊能力实测（源码级验证）",
+      "category": "AI Agent / 渠道集成",
+      "public": true,
+      "description": "为「老板在个人微信群里 @ 一个能干活的 AI」这条需求做技术选型：不看宣传，实测拉取插件源码逐项比对群聊能力，量化各条 Wechaty puppet 路线在 2026-11 的真实可用性与封号风险，最终定出 LightAgent 承接群入口、OpenClaw 承接执行的分工架构。",
+      "highlights": [
+        "源码级验证群聊能力，不信 README：自写 check_channel_group_support.py 下载插件 tarball 实测比对——个人微信插件 v2.4.10 的 groupPolicy 默认为 ['disabled']、会话类型写死 ['direct']、群相关标识 0 命中、README 与 CHANGELOG 零条群聊记录，确实不支持群聊；企业微信插件 v2026.10.30 则为 ['allowlist','open']、chatId 命中 169 次、README 声明群聊 8 次，支持群聊",
+        "两次自我更正都留了过程：先说「openclaw 只能接个人微信」是错的（接私聊完全没问题，只是那个插件不支持群聊），再说「个人微信已支持群聊」也是错的（源码为证确实不支持）；准确结论是官方微信插件只支持私聊，个人微信群聊必须走 Wechaty 这条路，插件升级后可用同一脚本随时复验",
+        "选型不是纸面比较而是真跑：clone LightAgent（MIT / Python / 23 stars）后实跑 sidecar，wechat4u puppet 在 2026-11 仍能成功输出微信登录二维码；侧车 8 个 .mjs 模块共 2,933 行，node --test 实测 61 项测试全部通过（467ms），Python 侧依赖轻（numpy / aiohttp / requests 等基础库，无重型 ML 框架）",
+        "用可配置项留出风险逃生舱：wechat_group_puppet 默认 wechaty-puppet-wechat4u（免费），一行配置即可换成 wechaty-puppet-padlocal（付费），sidecar 内置 node:22 多阶段构建镜像；实测微信群通道目录下 64 个 Python 模块共 26,778 行，规模足以说明这条路线是工程级而非玩具级",
+        "架构决策是分工而非迁移：LightAgent 管微信群入口 + OpenClaw 管执行，两边互补不迁移（OpenClaw 已有 5 个 agent、飞书 4 个账号、工具链与工厂机器人面板）；企业微信保留为零风险兜底通道（已配 groupPolicy=open、dmPolicy=pairing），任一通道异常不影响整体可用",
+        "风险事实不回避：所有免费 Wechaty puppet 都被官方重点打击，「稳定跑数月」是幸存者偏差，个人微信群聊不存在零风险方案；对策是专用小号 + 只监听白名单群 + 只在被 @ 时回复 + 随机延迟（避免行为熵坍缩），并明确写入方案文档作为上线前置条件而非上线后再说"
+      ],
+      "techStack": [
+        "Wechaty",
+        "wechat4u puppet",
+        "LightAgent",
+        "OpenClaw 渠道插件",
+        "Node.js sidecar",
+        "Python",
+        "插件源码能力比对"
       ],
       "screenshot": "",
       "link": ""
