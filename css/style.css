@@ -451,6 +451,116 @@ body {
   text-transform: uppercase;
   margin-bottom: 12px;
 }
+
+/* ---- 项目状态标记 ---- */
+.card-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.card-topline .card-category { margin-bottom: 0; }
+.card-status {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: .5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.card-status-shipped {
+  color: #34d399;
+  background: rgba(16, 185, 129, .12);
+  border-color: rgba(16, 185, 129, .32);
+}
+.card-status-ongoing {
+  color: #22d3ee;
+  background: rgba(6, 182, 212, .12);
+  border-color: rgba(6, 182, 212, .32);
+}
+.card-status-archived {
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, .05);
+  border-color: var(--border);
+}
+.detail-category-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ---- 历史项目折叠 ---- */
+.archive-block {
+  grid-column: 1 / -1;
+  margin-top: 8px;
+}
+.archive-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, .04);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 9px 18px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.archive-toggle:hover {
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+  background: rgba(255, 255, 255, .07);
+}
+.archive-caret {
+  display: inline-block;
+  font-size: 10px;
+  transition: transform .3s var(--ease-out);
+}
+.archive-toggle.is-open .archive-caret { transform: rotate(180deg); }
+.archive-list {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.archive-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, .025);
+  text-decoration: none;
+  transition: var(--transition);
+}
+.archive-item:hover {
+  border-color: var(--border-hover);
+  background: rgba(255, 255, 255, .05);
+  transform: translateX(3px);
+}
+.archive-title {
+  flex: 1;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+.archive-item:hover .archive-title { color: var(--text-primary); }
+.archive-cat {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+@media (max-width: 640px) {
+  .archive-item { flex-wrap: wrap; gap: 6px; }
+  .archive-cat { width: 100%; }
+}
+
 .card-title {
   font-family: var(--font-display);
   font-size: 20px;

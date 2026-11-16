@@ -267,7 +267,8 @@
         "Linux"
       ],
       "screenshot": "",
-      "link": ""
+      "link": "",
+      "status": "shipped"
     },
     {
       "id": "proj-002",
@@ -289,7 +290,8 @@
         "Python"
       ],
       "screenshot": "",
-      "link": ""
+      "link": "",
+      "status": "shipped"
     },
     {
       "id": "proj-003",
@@ -311,7 +313,8 @@
         "Redis"
       ],
       "screenshot": "",
-      "link": ""
+      "link": "",
+      "status": "shipped"
     },
     {
       "id": "proj-004",
@@ -332,7 +335,8 @@
         "Docker"
       ],
       "screenshot": "",
-      "link": ""
+      "link": "",
+      "status": "shipped"
     },
     {
       "id": "proj-005",
@@ -353,7 +357,8 @@
         "Redis"
       ],
       "screenshot": "",
-      "link": ""
+      "link": "",
+      "status": "shipped"
     },
     {
       "id": "proj-006",
@@ -375,7 +380,8 @@
         "Linux"
       ],
       "screenshot": "",
-      "link": ""
+      "link": "",
+      "status": "shipped"
     },
     {
       "id": "proj-007",
@@ -397,7 +403,8 @@
         "B站 API"
       ],
       "screenshot": "",
-      "link": ""
+      "link": "",
+      "status": "shipped"
     },
     {
       "id": "proj-008",
@@ -419,7 +426,9 @@
         "FFmpeg"
       ],
       "screenshot": "",
-      "link": ""
+      "link": "",
+      "status": "archived",
+      "statusNote": "被 proj-012 AI 视频内容矩阵覆盖"
     },
     {
       "id": "proj-009",
@@ -440,7 +449,8 @@
         "Blender API"
       ],
       "screenshot": "",
-      "link": ""
+      "link": "",
+      "status": "shipped"
     },
     {
       "id": "proj-010",
@@ -462,7 +472,8 @@
         "REST API"
       ],
       "screenshot": "",
-      "link": ""
+      "link": "",
+      "status": "shipped"
     },
     {
       "id": "proj-011",
@@ -489,7 +500,8 @@
         "DAG"
       ],
       "screenshot": "",
-      "link": ""
+      "link": "",
+      "status": "shipped"
     },
     {
       "id": "proj-012",
@@ -512,7 +524,8 @@
         "数字人"
       ],
       "screenshot": "",
-      "link": ""
+      "link": "",
+      "status": "shipped"
     },
     {
       "id": "proj-013",
@@ -535,7 +548,8 @@
         "mihomo"
       ],
       "screenshot": "",
-      "link": ""
+      "link": "",
+      "status": "shipped"
     },
     {
       "id": "proj-014",
@@ -557,7 +571,8 @@
         "DAG"
       ],
       "screenshot": "",
-      "link": ""
+      "link": "",
+      "status": "shipped"
     },
     {
       "id": "proj-015",
@@ -582,7 +597,8 @@
         "自动化流水线"
       ],
       "screenshot": "",
-      "link": ""
+      "link": "",
+      "status": "shipped"
     },
     {
       "id": "proj-016",
@@ -607,7 +623,8 @@
         "企业微信 Webhook"
       ],
       "screenshot": "",
-      "link": ""
+      "link": "",
+      "status": "shipped"
     },
     {
       "id": "proj-017",
@@ -632,7 +649,8 @@
         "CDN / Range"
       ],
       "screenshot": "",
-      "link": ""
+      "link": "",
+      "status": "shipped"
     },
     {
       "id": "proj-018",
@@ -657,7 +675,9 @@
         "移动端适配"
       ],
       "screenshot": "",
-      "link": ""
+      "link": "",
+      "status": "archived",
+      "statusNote": "被 proj-024 首屏性能与滚动可见性修复覆盖"
     },
     {
       "id": "proj-019",
@@ -684,7 +704,9 @@
         "systemd"
       ],
       "screenshot": "",
-      "link": ""
+      "link": "",
+      "status": "ongoing",
+      "statusNote": "Meridian 持续演进中（已进入 proj-029 重排闭环阶段）"
     },
     {
       "id": "proj-020",
@@ -709,7 +731,8 @@
         "Playwright"
       ],
       "screenshot": "",
-      "link": ""
+      "link": "",
+      "status": "shipped"
     },
     {
       "id": "proj-021",
@@ -733,7 +756,9 @@
         "GitHub Pages"
       ],
       "screenshot": "",
-      "link": ""
+      "link": "",
+      "status": "archived",
+      "statusNote": "一次性可达性探测，结论已并入 proj-017 交付体系"
     },
     {
       "id": "proj-022",
@@ -758,7 +783,9 @@
         "FFmpeg"
       ],
       "screenshot": "",
-      "link": ""
+      "link": "",
+      "status": "archived",
+      "statusNote": "琉璃主题为 proj-023 工程感设计系统的前身"
     },
     {
       "id": "proj-023",
@@ -785,7 +812,8 @@
         "Chrome DevTools Protocol"
       ],
       "screenshot": "",
-      "link": ""
+      "link": "",
+      "status": "shipped"
     },
     {
       "id": "proj-024",
@@ -810,7 +838,8 @@
         "移动端适配"
       ],
       "screenshot": "",
-      "link": ""
+      "link": "",
+      "status": "shipped"
     },
     {
       "id": "proj-025",
@@ -838,7 +867,9 @@
         "ECharts 数字孪生面板"
       ],
       "screenshot": "",
-      "link": ""
+      "link": "",
+      "status": "ongoing",
+      "statusNote": "机器人软件层持续迭代（已扩展 proj-026 物料防错）"
     },
     {
       "id": "proj-026",
@@ -864,7 +895,8 @@
         "相机 FOV 几何推导"
       ],
       "screenshot": "",
-      "link": ""
+      "link": "",
+      "status": "shipped"
     },
     {
       "id": "proj-027",
@@ -890,7 +922,8 @@
         "CLI + HTTP API"
       ],
       "screenshot": "",
-      "link": ""
+      "link": "",
+      "status": "shipped"
     },
     {
       "id": "proj-028",
@@ -917,7 +950,8 @@
         "资产门禁"
       ],
       "screenshot": "",
-      "link": ""
+      "link": "",
+      "status": "shipped"
     },
     {
       "id": "proj-029",
@@ -943,7 +977,9 @@
         "systemd"
       ],
       "screenshot": "",
-      "link": ""
+      "link": "",
+      "status": "archived",
+      "statusNote": "proj-019 Meridian 的增量阶段"
     },
     {
       "id": "proj-030",
@@ -969,7 +1005,9 @@
         "插件源码能力比对"
       ],
       "screenshot": "",
-      "link": ""
+      "link": "",
+      "status": "ongoing",
+      "statusNote": "选型实测已完成，微信通道方案待定"
     }
   ],
   "contact": {

@@ -165,6 +165,36 @@ function renderSkills(skills) {
   `).join('');
 }
 
+/* 项目状态标记：shipped 已交付 / ongoing 进行中 / archived 归档（首页折叠） */
+const PROJECT_STATUS_BADGE = { shipped: '已交付', ongoing: '进行中' };
+
+function projectCardHtml(proj, index) {
+  const badge = PROJECT_STATUS_BADGE[proj.status] || '';
+  const statusCls = proj.status === 'ongoing' ? 'card-status-ongoing' : 'card-status-shipped';
+  return `
+    <a class="project-card-link" href="project.html?id=${proj.id}" data-project-id="${proj.id}">
+      <div class="project-card animate-in" data-tilt style="animation-delay: ${index * 0.08}s">
+        ${proj.screenshot ? `<img class="card-screenshot" src="${proj.screenshot}" alt="${proj.title}" loading="lazy">` : ''}
+        <div class="card-topline">
+          <span class="card-category">${proj.category}</span>
+          ${badge ? `<span class="card-status ${statusCls}">${badge}</span>` : ''}
+        </div>
+        <div class="card-title">${proj.title}</div>
+        <div class="card-desc">${proj.description}</div>
+        ${proj.highlights && proj.highlights.length > 0 ? `
+          <ul class="card-highlights">
+            ${proj.highlights.slice(0, 3).map((h) => `<li>${h}</li>`).join('')}
+          </ul>
+        ` : ''}
+        <div class="card-tech">
+          ${(proj.techStack || []).map((tech) => `<span class="tech-badge">${tech}</span>`).join('')}
+          ${(proj.techStack || []).length > 3 ? `<span class="tech-badge tech-more">+${proj.techStack.length - 3}</span>` : ''}
+        </div>
+        <div class="card-more">查看详情 →</div>
+      </div>
+    </a>`;
+}
+
 function renderProjects(projects) {
   const grid = document.getElementById('projects-grid');
   const publicProjects = projects.filter((p) => p.public !== false);
@@ -174,26 +204,37 @@ function renderProjects(projects) {
     return;
   }
 
-  grid.innerHTML = publicProjects.map((proj, index) => `
-    <a class="project-card-link" href="project.html?id=${proj.id}" data-project-id="${proj.id}">
-      <div class="project-card animate-in" data-tilt style="animation-delay: ${index * 0.08}s">
-        ${proj.screenshot ? `<img class="card-screenshot" src="${proj.screenshot}" alt="${proj.title}" loading="lazy">` : ''}
-        <div class="card-category">${proj.category}</div>
-        <div class="card-title">${proj.title}</div>
-        <div class="card-desc">${proj.description}</div>
-        ${proj.highlights && proj.highlights.length > 0 ? `
-          <ul class="card-highlights">
-            ${proj.highlights.slice(0, 4).map((h) => `<li>${h}</li>`).join('')}
-          </ul>
-        ` : ''}
-        <div class="card-tech">
-          ${(proj.techStack || []).map((tech) => `<span class="tech-badge">${tech}</span>`).join('')}
-          ${(proj.techStack || []).length > 3 ? `<span class="tech-badge tech-more">+${proj.techStack.length - 3}</span>` : ''}
-        </div>
-        <div class="card-more">查看详情 →</div>
+  // 归档项不在首页平铺，避免同类主题反复出现；详情页仍可直接访问
+  const active = publicProjects.filter((p) => p.status !== 'archived');
+  const archived = publicProjects.filter((p) => p.status === 'archived');
+
+  const archiveBlock = archived.length ? `
+    <div class="archive-block">
+      <button type="button" class="archive-toggle" id="archive-toggle" aria-expanded="false">
+        历史项目 ${archived.length} 个<span class="archive-caret">▾</span>
+      </button>
+      <div class="archive-list" id="archive-list" hidden>
+        ${archived.map((p) => `
+          <a class="archive-item" href="project.html?id=${p.id}">
+            <span class="archive-title">${p.title}</span>
+            <span class="archive-cat">${p.category}</span>
+          </a>`).join('')}
       </div>
-    </a>
-  `).join('');
+    </div>` : '';
+
+  grid.innerHTML = active.map(projectCardHtml).join('') + archiveBlock;
+
+  const toggle = document.getElementById('archive-toggle');
+  const list = document.getElementById('archive-list');
+  if (toggle && list) {
+    toggle.addEventListener('click', () => {
+      const open = list.hidden;
+      list.hidden = !open;
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.classList.toggle('is-open', open);
+      toggle.firstChild.textContent = open ? '收起历史项目' : `历史项目 ${archived.length} 个`;
+    });
+  }
 
   // 卡片的高光跟随与架构展开由 studio.js 统一处理，
   // 这里不再绑定裸 mousemove 3D 倾斜（无节流会掉帧）。

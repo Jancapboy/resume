@@ -68,7 +68,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 function renderProject(proj) {
-  document.getElementById('detail-category').textContent = proj.category;
+  const catEl = document.getElementById('detail-category');
+  const badgeText = { shipped: '已交付', ongoing: '进行中', archived: '已归档' }[proj.status];
+  catEl.classList.add('detail-category-row');
+  catEl.innerHTML = `<span>${proj.category}</span>` +
+    (badgeText ? `<span class="card-status card-status-${proj.status}">${badgeText}</span>` : '');
   document.getElementById('detail-title').textContent = proj.title;
   document.getElementById('detail-desc').textContent = proj.description;
 
