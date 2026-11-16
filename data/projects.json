@@ -973,8 +973,8 @@
     }
   ],
   "contact": {
-    "api": "https://resume-site-3240dhrv.edgeone.cool/api/contact?eo_token=9205f6ae089458b70d7d57fe42ac7322&eo_time=1794800195",
-    "mirrorUrl": "https://resume-site-3240dhrv.edgeone.cool?eo_token=9205f6ae089458b70d7d57fe42ac7322&eo_time=1794800195",
+    "api": "https://resume-site-3240dhrv.edgeone.cool/api/contact?eo_token=204624392486bf303cadefe6b43f5860&eo_time=1794807673",
+    "mirrorUrl": "https://resume-site-3240dhrv.edgeone.cool?eo_token=204624392486bf303cadefe6b43f5860&eo_time=1794807673",
     "email": "1069007377@qq.com",
     "note": "api 指向 EdgeOne Pages 的 Edge Function（密钥在服务端环境变量，不落前端）；eo_token 由定时任务自动刷新"
   },
