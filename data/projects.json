@@ -3,7 +3,7 @@
     "name": "全栈工程师",
     "title": "高级后端开发 / 数据库 & 自动化专家",
     "location": "中国",
-    "summary": "多年全栈开发经验，深耕数据库高可用架构、数据自动化抓取、AI 应用开发及企业级运维。2026 年主攻 AI 视频与 AI 漫剧全流程生成、LangGraph 多智能体工作流，并以 Vibe Coding 方式主导从需求到上线的完整交付闭环。擅长 MySQL 集群、OceanBase、Python 爬虫、企业微信集成及 AI 视频 / 3D 内容生成。近期主攻 EdgeOne 边缘函数与 Serverless 表单网关、GitHub Pages + EdgeOne 双通道全球交付与访问令牌自动化，以及移动端自适应与离线兜底渲染工程。近期主攻约束求解与多端协同工程（CP-SAT 联合排程、CRDT 冲突分层、事件溯源运行时）、可复现的回合制战棋 Web 应用（React 18 + 种子化 PRNG + 30 项引擎自测），以及基于全球探针的站点可达性实测与网络延迟基线体系。近期主攻前端设计与性能工程（原生 WebGL2 手写液态玻璃折射层、GSAP 四件套动效编排、真实数据驱动的终端档案与 GitHub 仪表盘）、移动端首屏加载性能与滚动可见性根因修复（load 事件 21483ms → 828ms、IntersectionObserver 阈值语义纠偏），以及基于 RunningHub 云端应用编排的 AI 素材流水线与琉璃玻璃拟态设计系统。近期主攻工业机器人软件层工程（纯 Python 内核与 ROS2 解耦、契约层锁定类型语义、Protocol 抽象统一真机与仿真、调度内核与数字孪生面板闭环），以 49 项单元测试与 11/11 端到端取放的成功率作为交付验收口径。近期在物料防错与三维管线方向继续推进：把货架格口的位置、物料与时效编码进单条二维码标签，读码失败或三者任一不符即拒绝生成抓取计划（新增 16 个测试，单元测试总数 49 → 65 全绿）；并以 Go 自研门禁编排运行时（四态决策 PASS / BLOCK / CHALLENGE / ROUTE、三介入位置、审计哈希链、95 项测试）与 STL→three.js 几何压缩管线（397.7 万面压至 71.5 万面、189.6MB → 16.6MB）拓展工程纵深。近期把 Meridian 排程从「打开页面算一次」升级为服务端自动重排闭环（状态变更 → OpLog → CP-SAT 重算 → 写回广播 → 各端甘特图实时刷新），并以固定区间约束表达「已完成任务仍占资源」这类语义（18 任务 / 5 资源实测三阶段全 OPTIMAL，makespan=56，公网 HTTPS 实测 200）。同期完成个人微信群聊接入通道的源码级选型与实测：用自写脚本拉取插件源码逐项比对群聊能力，实测个人微信插件 v2.4.10 的 groupPolicy 默认 disabled 且会话写死 direct、企业微信插件 v2026.10.30 则为 open 且 chatId 命中 169 次，最终确立「LightAgent 承接微信群入口 + OpenClaw 承接执行」的分工架构，并把免费 puppet 的封号风险与专用小号 / 白名单群等对策一并写入方案。",
+    "summary": "多年全栈开发经验，深耕数据库高可用架构、数据自动化抓取、AI 应用开发及企业级运维。2026 年主攻 AI 视频与 AI 漫剧全流程生成、LangGraph 多智能体工作流，并以 Vibe Coding 方式主导从需求到上线的完整交付闭环。擅长 MySQL 集群、OceanBase、Python 爬虫、企业微信集成及 AI 视频 / 3D 内容生成。近期主攻 EdgeOne 边缘函数与 Serverless 表单网关、GitHub Pages + EdgeOne 双通道全球交付与访问令牌自动化，以及移动端自适应与离线兜底渲染工程。近期主攻约束求解与多端协同工程（CP-SAT 联合排程、CRDT 冲突分层、事件溯源运行时）、可复现的回合制战棋 Web 应用（React 18 + 种子化 PRNG + 30 项引擎自测），以及基于全球探针的站点可达性实测与网络延迟基线体系。近期主攻前端设计与性能工程（原生 WebGL2 手写液态玻璃折射层、GSAP 四件套动效编排、真实数据驱动的终端档案与 GitHub 仪表盘）、移动端首屏加载性能与滚动可见性根因修复（load 事件 21483ms → 828ms、IntersectionObserver 阈值语义纠偏），以及基于 RunningHub 云端应用编排的 AI 素材流水线与琉璃玻璃拟态设计系统。近期主攻工业机器人软件层工程（纯 Python 内核与 ROS2 解耦、契约层锁定类型语义、Protocol 抽象统一真机与仿真、调度内核与数字孪生面板闭环），以 49 项单元测试与 11/11 端到端取放的成功率作为交付验收口径。近期在物料防错与三维管线方向继续推进：把货架格口的位置、物料与时效编码进单条二维码标签，读码失败或三者任一不符即拒绝生成抓取计划（新增 16 个测试，单元测试总数 49 → 65 全绿）；并以 Go 自研门禁编排运行时（四态决策 PASS / BLOCK / CHALLENGE / ROUTE、三介入位置、审计哈希链、95 项测试）与 STL→three.js 几何压缩管线（397.7 万面压至 71.5 万面、189.6MB → 16.6MB）拓展工程纵深。近期把 Meridian 排程从「打开页面算一次」升级为服务端自动重排闭环（状态变更 → OpLog → CP-SAT 重算 → 写回广播 → 各端甘特图实时刷新），并以固定区间约束表达「已完成任务仍占资源」这类语义（18 任务 / 5 资源实测三阶段全 OPTIMAL，makespan=56，公网 HTTPS 实测 200）。同期完成个人微信群聊接入通道的源码级选型与实测：用自写脚本拉取插件源码逐项比对群聊能力，实测个人微信插件 v2.4.10 的 groupPolicy 默认 disabled 且会话写死 direct、企业微信插件 v2026.10.30 则为 open 且 chatId 命中 169 次，最终确立「LightAgent 承接微信群入口 + OpenClaw 承接执行」的分工架构，并把免费 puppet 的封号风险与专用小号 / 白名单群等对策一并写入方案。最新把工业仿真做到像素级物理可信：以 Three.js 0.170 单文件复现航母总装 14 件分段从定置堆场到高空过跨、激光对中的六阶段全自动物流链，并用 Edge CDP 无头探针跑通 11 项量化验收。同期把八字排盘、五运六气与人格图谱打磨成 Web + 微信小程序双端产品（前端 22,942 行 / 后端 6,000 行 / 85 张人格卡 / 170 张 Q 版形象），并以 172 文件 42,584 行源程序和 19 项全绿断言完成企业主体软著登记材料工程。",
     "skills": [
       {
         "name": "MySQL MGR",
@@ -244,6 +244,38 @@
       {
         "name": "Node.js sidecar",
         "category": "开发"
+      },
+      {
+        "name": "Three.js 0.170",
+        "category": "开发"
+      },
+      {
+        "name": "物理物流链仿真",
+        "category": "开发"
+      },
+      {
+        "name": "CDP Headless 自检",
+        "category": "开发"
+      },
+      {
+        "name": "五运六气引擎",
+        "category": "开发"
+      },
+      {
+        "name": "八字排盘内核",
+        "category": "开发"
+      },
+      {
+        "name": "微信 AES 消息加解密",
+        "category": "集成"
+      },
+      {
+        "name": "软件著作权材料工程",
+        "category": "交付"
+      },
+      {
+        "name": "人格图谱产品化",
+        "category": "产品"
       }
     ]
   },
@@ -1008,6 +1040,69 @@
       "link": "",
       "status": "ongoing",
       "statusNote": "选型实测已完成，微信通道方案待定"
+    },
+    {
+      "id": "proj-031",
+      "title": "航母总装数字孪生：AI 全自动船厂物流链（Three.js 单文件）",
+      "category": "数字孪生 / 工业仿真",
+      "public": true,
+      "description": "用单个 Three.js 0.170 HTML 文件复现航母总装现场：14 个零件完整几何副本按 2×7 工位定置陈列，由门吊—SPMT—龙门吊—高空过跨—激光对中—机器人焊接的六阶段物理物流链全自动送装，并以 Edge CDP 无头探针完成 11 项量化验收。",
+      "highlights": [
+        "单文件交付 94,396 字节 / 1,960 行，three@0.170.0 由 unpkg ESM 引入，零构建、双击即跑；堆场 YARD={dx:74,dz:70,z0:96,ncol:7} 形成 2 排×7 列共 14 个定置工位（12 分段 + 艉封板 + 动力舱），每工位含定置框 / 液压支墩 / RFID / 状态灯",
+        "零件用完整几何副本陈列（copy.position = -bboxCenter + 材质深拷贝），落位时副本隐藏、正式件原位接管；终态 12 个正式分段全可见、14 件全部安装、堆场副本清零，避免「分段凭空出现」",
+        "六阶段物理吊装链：①门吊挂索脱支墩 → ②SPMT 6 轴线液压鞍座落墩（6 台）→ ③z=70 主干道正交折线运输 → ④坞边龙门吊四点挂索建立刚性连接后再起升脱车 → ⑤高空过跨 SAFE_Y=100、CRANE_TOP=110 保证分段底部始终高于甲板 → ⑥激光对中落位 + 8 台六轴焊接机器人 + 2 台堆垛机",
+        "12 步装配顺序状态机（船坞准备 → 双层底搭载 → 艏部 / 舷侧合拢 → 机库 → 动力舱 → 飞行甲板 → 舰岛 → 精度对中 → 舾装 → 注水 → 交付），phase 显式区分 hoist / convey / landing，供吊装路径自检",
+        "两处物理正确性修复：吊钩必须先写 P.attached={dy,...} 建立连接再抬 hookY，否则分段滞留车上后瞬移；convey 阶段标记须在起升完成后切换，否则探针采到低位分段误报穿船体",
+        "自建 _selftest.mjs：Edge headless + CDP（Node 内置 WebSocket/fetch，无需 playwright），本地 8899 + 调试 9333，__probe/__liftProbe/__craneProbe 探针配合 __setTimeScale(0.05) 与 __forceSettle() 加速；软件渲染下 dt clamp 0.06，最终 11 项断言全 PASS（初始 14 件可见 / 吊索具出现 / 高空底部>甲板 / 轨迹完整 / 终态 14 件安装 / 进度 100% / 船体浮起 / 零 JS 错误）"
+      ],
+      "techStack": [
+        "Three.js 0.170.0",
+        "WebGL",
+        "ES Module / unpkg",
+        "Node.js",
+        "Edge Headless CDP",
+        "本地 HTTP Server"
+      ],
+      "screenshot": "",
+      "link": "",
+      "status": "shipped",
+      "statusNote": "11 项 CDP 无头自检全 PASS，教学 / 演示用单文件交付"
+    },
+    {
+      "id": "proj-032",
+      "title": "五行人格图录（玄机 / 灵弦）：Web + 微信小程序双端命理人格产品与软著材料工程",
+      "category": "AI 产品 / 双端应用",
+      "public": true,
+      "description": "把八字排盘、五运六气与人格图谱做成一套可商用的双端产品：React 18 完整版 Web 与原生微信小程序共用同一 FastAPI 后端，前端 109 个 ts/tsx 文件 22,942 行、后端 34 个 Python 文件 6,000 行，最终按企业主体完成 V1.0 软件著作权登记材料包（172 文件 / 42,584 行，19 项断言全绿）。",
+      "highlights": [
+        "完整版 Web：Vite + React 18 + TypeScript + Tailwind + react-three-fiber/three.js + zustand + react-router + gsap，src 下 109 个 ts/tsx 共 22,942 行、24 个页面；八字内核含 cities.ts 316 个城市真太阳时基准、calculator.ts 32,663 字节、luckerhome.ts 15,040 字节，神煞规则引擎 v2 复现原版 5,940 格 + 120 格零误差",
+        "后端 FastAPI 34 个模块 6,000 行：api / graph / llm / rag / utils 分层，含 SSE 流式 AI 解读、DeepSeek 接入、RAG 检索、persona-cards.json 85 张人格卡、微信 AES 消息加解密（wechat_aes.py 184 行）与 openid 绑定（117 行）",
+        "微信小程序端（灵弦 / 人格图录）原生实现 7 个页面（login / webview / badge / dualbadge / findfriend / match / group）共 14 个 js 5,878 行，把 Web 排盘核心移植为 utils/bazi/ 纯 JS CommonJS（calculator / luckerhome / shensha / palaces / solarTime / solarTermTimes），Node 校验四柱 / 大运 / 神煞 / 真太阳时均正确",
+        "踩坑与修复：微信小程序 require() 不能加载 .json，把 persona-cards.json 转 module.exports 的 .js 后全量 --check 通过；群五行地图占比错乱真根因是「部署只传 JS 没传 index.html」；wuxing 数组顺序错乱导致「火土木显示金 38%」已按元素序重排修正；好友羁绊匹配算法 v2 落地生克矩阵",
+        "170 张 Q 版人物图统一泛洪抠图去背景修复徽章页白块，dist/models 下按五行组合命名 GLB 3D 形象（土_后土娘娘 / 土木_刘邦 / 土木水_吕蒙 等），立体形象 / 画廊支持捏合缩放 minDistance 2.0 ~ maxDistance 6；线上 wanquduo.xyz 实测 HTTP 200",
+        "软著材料工程：以企业主体（宁波三辰阁文化有限公司）生成 V1.0 三件套——源程序 PDF 60 页（50 行/页，172 文件 42,584 行）、软件说明书 PDF 22 页含 15 张截图与页码目录、申请表 2 页；verify_pack.py 19 项断言全绿（每页页眉 / 目录页码一致 / 图号 4-1..4-15 连续 / 每页 ≥50 行实码 / 无越界 / 含五运六气源码 / 申请表行数与信用代码一致），材料包 zip 8.2 MB"
+      ],
+      "techStack": [
+        "Vite",
+        "React 18",
+        "TypeScript",
+        "Tailwind",
+        "react-three-fiber",
+        "zustand",
+        "gsap",
+        "FastAPI",
+        "LangGraph",
+        "DeepSeek",
+        "RAG / SSE",
+        "微信小程序原生",
+        "微信 AES",
+        "五运六气 / 八字内核",
+        "PyMuPDF 材料生成"
+      ],
+      "screenshot": "",
+      "link": "",
+      "status": "shipped",
+      "statusNote": "双端已上线、软著材料 19 项断言全绿；合规整改后以「人格图录」对外"
     }
   ],
   "contact": {

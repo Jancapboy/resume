@@ -1,0 +1,160 @@
+<!-- 航母总装数字孪生：AI 全自动船厂物流链 - 独立内容页 -->
+<div class="detail-content-block">
+  <h2 class="detail-subtitle">🚢 从「零件凭空出现」到「符合装配工艺的全自动物流链」</h2>
+  <p class="detail-lead">最初的版本里，船体分段靠 <code>visible=false → true</code> 凭空出现，用户一眼看穿是动画把戏。三轮追问把它逼成真正的工程问题：<strong>每个零件一开始就得看得见、按工厂标准定置摆放、由设备一步步吊运装配</strong>；零件不能从船底穿上来，必须高空过跨；物流轨迹要符合真实吊装与运输工艺。这个项目把这三轮修正全部固化进一个 Three.js 0.170 单文件，并用无头浏览器探针做了 11 项量化验收。</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">定置</div>
+      <h3 class="arch-card-title">14 件完整几何副本，2×7 工位陈列</h3>
+      <p class="arch-card-desc">堆场参数 <code>YARD={dx:74,dz:70,z0:96,ncol:7}</code> 定义 2 排×7 列共 14 个定置工位（12 分段 + 艉封板 + 动力舱）。每个工位含定置框 / 液压支墩 / RFID / 状态灯；零件以<strong>完整几何副本</strong>陈列，而非简化占位块。</p>
+      <ul class="card-highlights">
+        <li>副本定位 <code>copy.position = -bboxCenter</code>，材质深拷贝，避免共享材质被落位动画污染</li>
+        <li>落位时副本隐藏、正式件原位接管，视觉上「被运走的正是这一件」</li>
+        <li>终态 12 个正式分段全可见、14 件全部安装、堆场副本清零</li>
+        <li>单文件 94,396 字节 / 1,960 行，three@0.170.0 走 unpkg ESM，零构建双击即跑</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">工艺</div>
+      <h3 class="arch-card-title">六阶段物理吊装链</h3>
+      <p class="arch-card-desc">不是「物体沿曲线飞行」，而是每一步都有承载关系与载荷转移：门吊脱支墩 → SPMT 落墩 → 主干道折线运输 → 龙门吊四点挂索 → 高空过跨 → 激光对中落位与机器人焊接。</p>
+      <ul class="card-highlights">
+        <li>① 堆场门吊挂索、脱液压支墩；② SPMT 6 轴线液压鞍座落墩（6 台）；③ 主干道 z=70 正交折线行驶</li>
+        <li>④ 坞边龙门吊四点挂索，<strong>先建刚性连接再起升脱车</strong>；⑤ 高空过跨 SAFE_Y=100，主梁 CRANE_TOP=110 覆盖坞边</li>
+        <li>⑥ 激光对中落位、脱钩，8 台六轴焊接机器人 + 2 台堆垛机接手</li>
+        <li>装配顺序 12 步状态机：船坞准备 → 双层底 → 艏部 / 舷侧 → 机库 → 动力舱 → 甲板 → 舰岛 → 精度对中 → 舾装 → 注水 → 交付</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">设备</div>
+      <h3 class="arch-card-title">按真实船厂配置建模</h3>
+      <p class="arch-card-desc">设备不是装饰模型，各自承担物流链中一个明确的物理动作，数量与作业带尺度相互约束。</p>
+      <ul class="card-highlights">
+        <li>悬臂龙门吊主梁 CRANE_TOP=110，覆盖坞边 z=±63 的 SPMT 作业带</li>
+        <li>SPMT 重型模块运输车 6 台，带液压支承鞍座，符合分段载荷传递</li>
+        <li>四点吊索具 RIG.yard / RIG.gantry：吊梁 + 4 索，挂索后才允许起升</li>
+        <li>8 台六轴焊接机器人 + 2 台每排一台的轨道堆垛机 + AI 调度中枢面板</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 两个物理正确性 bug -->
+  <h2 class="detail-subtitle">🔧 两个「看起来能跑、物理上错的」隐蔽 bug</h2>
+  <p class="detail-lead">这两个问题在静态截图里完全正常，只有把时间轴拉长、用探针逐帧采样才能暴露。它们共同说明：<strong>三维动画的验收判据必须来自状态量，不能来自画面观感</strong>。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">📊 修复前后对照</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>症状</th>
+            <th>根因</th>
+            <th>修复</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>分段滞留平板车上后突然瞬移到吊钩</td>
+            <td>直接更新 hookY，未先建立吊钩—分段连接</td>
+            <td class="best">先写 <code>P.attached={dy,...}</code> 建立连接再起升</td>
+          </tr>
+          <tr class="bench-total">
+            <td>探针误报「分段穿过船体」</td>
+            <td>convey 标记在起升完成前就切换，采到低位分段</td>
+            <td class="best">phase 显式区分 hoist / convey / landing，起升完成后才切阶段</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 阶段字段 <code>phase</code> 从「渲染用的内部变量」升级为<strong>可被自检脚本读取的公开契约</strong>，这是把动画变成可验证仿真的一步。</p>
+  </div>
+
+  <!-- 自检方法 -->
+  <h2 class="detail-subtitle">🧪 Edge CDP 无头自检：11 项断言全 PASS</h2>
+  <p class="detail-lead">playwright-core 未安装，改用系统 Edge + CDP 协议（Node 内置 WebSocket / fetch，零额外依赖）：本地 HTTP 8899 + 调试端口 9333，把页面挂进真实浏览器上下文后逐帧采样探针状态。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">📊 验收项与判据</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>维度</th>
+            <th>判据</th>
+            <th>结果</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>初始状态</td>
+            <td>14 件全部可见且全为堆场待取，全部为几何副本</td>
+            <td class="best">PASS</td>
+          </tr>
+          <tr>
+            <td>吊装过程</td>
+            <td>吊索具出现；高空转运底部 &gt; 甲板；经过出库 / 运输 / 吊装三阶段</td>
+            <td class="best">PASS</td>
+          </tr>
+          <tr>
+            <td>终态</td>
+            <td>14 件安装、副本清空、12 分段全可见、进度 100%、船体浮起</td>
+            <td class="best">PASS</td>
+          </tr>
+          <tr class="bench-total">
+            <td>运行时</td>
+            <td>零 JS 错误；软件渲染帧率低时 dt clamp 0.06</td>
+            <td class="best">11 / 11 全 PASS</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 软件渲染下帧率极低，靠 <code>__setTimeScale(0.05)</code> + <code>__forceSettle()</code> 加速到可验收时间窗；探针 <code>window.__probe()</code> / <code>__liftProbe()</code> / <code>__craneProbe()</code> 分别覆盖总状态、起升轨迹与吊机位置。</p>
+  </div>
+
+  <!-- 技术栈 -->
+  <h2 class="detail-subtitle">🧰 技术栈</h2>
+  <p class="detail-lead">一个 HTML 文件承载的完整三维仿真与自检链路。</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">技术栈</div>
+      <h3 class="arch-card-title">实现用到的技术</h3>
+      <p class="arch-card-desc">
+        <span class="tech-badge">Three.js 0.170.0</span>
+        <span class="tech-badge">ES Module / unpkg</span>
+        <span class="tech-badge">程序化几何 loft / 挤出</span>
+        <span class="tech-badge">状态机</span>
+        <span class="tech-badge">Node.js</span>
+        <span class="tech-badge">Edge Headless CDP</span>
+        <span class="tech-badge">本地 HTTP Server</span>
+      </p>
+      <ul class="card-highlights">
+        <li>零构建：单文件 + ESM CDN 依赖，脱离打包工具链也能演示</li>
+        <li>自检脚本独立存放（_selftest.mjs），与被检页面解耦</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 沉淀 -->
+  <div class="arch-tips">
+    <h3 class="bench-title">📌 三条可迁移的结论</h3>
+    <div class="arch-tips-grid">
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 1</span>
+        <p><strong>可见性不等于真实性</strong><br><span class="arch-tip-note">凭空出现 vs 设备吊运，差别在承载关系而非画面</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 2</span>
+        <p><strong>先建连接，再施力</strong><br><span class="arch-tip-note">挂索 / 落墩这类动作有严格先后，顺序错了就穿模</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 3</span>
+        <p><strong>验收读状态，不读截图</strong><br><span class="arch-tip-note">11 项断言全部来自探针数值，截图只作辅助</span></p>
+      </div>
+    </div>
+  </div>
+</div>
