@@ -3,7 +3,7 @@
     "name": "全栈工程师",
     "title": "高级后端开发 / 数据库 & 自动化专家",
     "location": "中国",
-    "summary": "多年全栈开发经验，深耕数据库高可用架构、数据自动化抓取、AI 应用开发及企业级运维。2026 年主攻 AI 视频与 AI 漫剧全流程生成、LangGraph 多智能体工作流，并以 Vibe Coding 方式主导从需求到上线的完整交付闭环。擅长 MySQL 集群、OceanBase、Python 爬虫、企业微信集成及 AI 视频 / 3D 内容生成。近期主攻 EdgeOne 边缘函数与 Serverless 表单网关、GitHub Pages + EdgeOne 双通道全球交付与访问令牌自动化，以及移动端自适应与离线兜底渲染工程。近期主攻约束求解与多端协同工程（CP-SAT 联合排程、CRDT 冲突分层、事件溯源运行时）、可复现的回合制战棋 Web 应用（React 18 + 种子化 PRNG + 30 项引擎自测），以及基于全球探针的站点可达性实测与网络延迟基线体系。近期主攻前端设计与性能工程（原生 WebGL2 手写液态玻璃折射层、GSAP 四件套动效编排、真实数据驱动的终端档案与 GitHub 仪表盘）、移动端首屏加载性能与滚动可见性根因修复（load 事件 21483ms → 828ms、IntersectionObserver 阈值语义纠偏），以及基于 RunningHub 云端应用编排的 AI 素材流水线与琉璃玻璃拟态设计系统。近期主攻工业机器人软件层工程（纯 Python 内核与 ROS2 解耦、契约层锁定类型语义、Protocol 抽象统一真机与仿真、调度内核与数字孪生面板闭环），以 49 项单元测试与 11/11 端到端取放的成功率作为交付验收口径。近期在物料防错与三维管线方向继续推进：把货架格口的位置、物料与时效编码进单条二维码标签，读码失败或三者任一不符即拒绝生成抓取计划（新增 16 个测试，单元测试总数 49 → 65 全绿）；并以 Go 自研门禁编排运行时（四态决策 PASS / BLOCK / CHALLENGE / ROUTE、三介入位置、审计哈希链、95 项测试）与 STL→three.js 几何压缩管线（397.7 万面压至 71.5 万面、189.6MB → 16.6MB）拓展工程纵深。近期把 Meridian 排程从「打开页面算一次」升级为服务端自动重排闭环（状态变更 → OpLog → CP-SAT 重算 → 写回广播 → 各端甘特图实时刷新），并以固定区间约束表达「已完成任务仍占资源」这类语义（18 任务 / 5 资源实测三阶段全 OPTIMAL，makespan=56，公网 HTTPS 实测 200）。同期完成个人微信群聊接入通道的源码级选型与实测：用自写脚本拉取插件源码逐项比对群聊能力，实测个人微信插件 v2.4.10 的 groupPolicy 默认 disabled 且会话写死 direct、企业微信插件 v2026.10.30 则为 open 且 chatId 命中 169 次，最终确立「LightAgent 承接微信群入口 + OpenClaw 承接执行」的分工架构，并把免费 puppet 的封号风险与专用小号 / 白名单群等对策一并写入方案。最新把工业仿真做到像素级物理可信：以 Three.js 0.170 单文件复现航母总装 14 件分段从定置堆场到高空过跨、激光对中的六阶段全自动物流链，并用 Edge CDP 无头探针跑通 11 项量化验收。",
+    "summary": "多年全栈开发经验，深耕数据库高可用架构、数据自动化抓取、AI 应用开发及企业级运维。2026 年主攻 AI 视频与 AI 漫剧全流程生成、LangGraph 多智能体工作流，并以 Vibe Coding 方式主导从需求到上线的完整交付闭环。擅长 MySQL 集群、OceanBase、Python 爬虫、企业微信集成及 AI 视频 / 3D 内容生成。近期主攻 EdgeOne 边缘函数与 Serverless 表单网关、GitHub Pages + EdgeOne 双通道全球交付与访问令牌自动化，以及移动端自适应与离线兜底渲染工程。近期主攻约束求解与多端协同工程（CP-SAT 联合排程、CRDT 冲突分层、事件溯源运行时）、可复现的回合制战棋 Web 应用（React 18 + 种子化 PRNG + 30 项引擎自测），以及基于全球探针的站点可达性实测与网络延迟基线体系。近期主攻前端设计与性能工程（原生 WebGL2 手写液态玻璃折射层、GSAP 四件套动效编排、真实数据驱动的终端档案与 GitHub 仪表盘）、移动端首屏加载性能与滚动可见性根因修复（load 事件 21483ms → 828ms、IntersectionObserver 阈值语义纠偏），以及基于 RunningHub 云端应用编排的 AI 素材流水线与琉璃玻璃拟态设计系统。近期主攻工业机器人软件层工程（纯 Python 内核与 ROS2 解耦、契约层锁定类型语义、Protocol 抽象统一真机与仿真、调度内核与数字孪生面板闭环），以 49 项单元测试与 11/11 端到端取放的成功率作为交付验收口径。近期在物料防错与三维管线方向继续推进：把货架格口的位置、物料与时效编码进单条二维码标签，读码失败或三者任一不符即拒绝生成抓取计划（新增 16 个测试，单元测试总数 49 → 65 全绿）；并以 Go 自研门禁编排运行时（四态决策 PASS / BLOCK / CHALLENGE / ROUTE、三介入位置、审计哈希链、95 项测试）与 STL→three.js 几何压缩管线（397.7 万面压至 71.5 万面、189.6MB → 16.6MB）拓展工程纵深。近期把 Meridian 排程从「打开页面算一次」升级为服务端自动重排闭环（状态变更 → OpLog → CP-SAT 重算 → 写回广播 → 各端甘特图实时刷新），并以固定区间约束表达「已完成任务仍占资源」这类语义（18 任务 / 5 资源实测三阶段全 OPTIMAL，makespan=56，公网 HTTPS 实测 200）。同期完成个人微信群聊接入通道的源码级选型与实测：用自写脚本拉取插件源码逐项比对群聊能力，实测个人微信插件 v2.4.10 的 groupPolicy 默认 disabled 且会话写死 direct、企业微信插件 v2026.10.30 则为 open 且 chatId 命中 169 次，最终确立「LightAgent 承接微信群入口 + OpenClaw 承接执行」的分工架构，并把免费 puppet 的封号风险与专用小号 / 白名单群等对策一并写入方案。最新把工业仿真做到像素级物理可信：以 Three.js 0.170 单文件复现航母总装 14 件分段从定置堆场到高空过跨、激光对中的六阶段全自动物流链，并用 Edge CDP 无头探针跑通 11 项量化验收。同期把 AI 调度中枢做成可运行看板（派单队列 / AGV 与机器人调度 / 出库进度），实现舰岛对中 8.6mm 超差自动冻结、3 点液压微调后 2.1mm 闭环复测与 NCR 自愈；Demo 已本地化 three.js 依赖，可在简历站直接交互演示。",
     "skills": [
       {
         "name": "MySQL MGR",
@@ -1028,12 +1028,14 @@
       "public": true,
       "description": "用单个 Three.js 0.170 HTML 文件复现航母总装现场：14 个零件完整几何副本按 2×7 工位定置陈列，由门吊—SPMT—龙门吊—高空过跨—激光对中—机器人焊接的六阶段物理物流链全自动送装，并以 Edge CDP 无头探针完成 11 项量化验收。",
       "highlights": [
+        "AI 调度中枢做成可运行的生产看板：实时显示当前决策、任务队列、AGV 重载运输车 0/6 在线、焊接机器人 8/8 作业、堆场自动出库 8/14；舰岛对中偏差 8.6mm 超出 ±3mm 允差时自动冻结舾装派工，根因推理→3 点液压微调→复测 2.1mm→NCR 自动关闭、工单解冻，事件流全程留痕",
         "单文件交付 94,396 字节 / 1,960 行，three@0.170.0 由 unpkg ESM 引入，零构建、双击即跑；堆场 YARD={dx:74,dz:70,z0:96,ncol:7} 形成 2 排×7 列共 14 个定置工位（12 分段 + 艉封板 + 动力舱），每工位含定置框 / 液压支墩 / RFID / 状态灯",
         "零件用完整几何副本陈列（copy.position = -bboxCenter + 材质深拷贝），落位时副本隐藏、正式件原位接管；终态 12 个正式分段全可见、14 件全部安装、堆场副本清零，避免「分段凭空出现」",
         "六阶段物理吊装链：①门吊挂索脱支墩 → ②SPMT 6 轴线液压鞍座落墩（6 台）→ ③z=70 主干道正交折线运输 → ④坞边龙门吊四点挂索建立刚性连接后再起升脱车 → ⑤高空过跨 SAFE_Y=100、CRANE_TOP=110 保证分段底部始终高于甲板 → ⑥激光对中落位 + 8 台六轴焊接机器人 + 2 台堆垛机",
         "12 步装配顺序状态机（船坞准备 → 双层底搭载 → 艏部 / 舷侧合拢 → 机库 → 动力舱 → 飞行甲板 → 舰岛 → 精度对中 → 舾装 → 注水 → 交付），phase 显式区分 hoist / convey / landing，供吊装路径自检",
         "两处物理正确性修复：吊钩必须先写 P.attached={dy,...} 建立连接再抬 hookY，否则分段滞留车上后瞬移；convey 阶段标记须在起升完成后切换，否则探针采到低位分段误报穿船体",
-        "自建 _selftest.mjs：Edge headless + CDP（Node 内置 WebSocket/fetch，无需 playwright），本地 8899 + 调试 9333，__probe/__liftProbe/__craneProbe 探针配合 __setTimeScale(0.05) 与 __forceSettle() 加速；软件渲染下 dt clamp 0.06，最终 11 项断言全 PASS（初始 14 件可见 / 吊索具出现 / 高空底部>甲板 / 轨迹完整 / 终态 14 件安装 / 进度 100% / 船体浮起 / 零 JS 错误）"
+        "自建 _selftest.mjs：Edge headless + CDP（Node 内置 WebSocket/fetch，无需 playwright），本地 8899 + 调试 9333，__probe/__liftProbe/__craneProbe 探针配合 __setTimeScale(0.05) 与 __forceSettle() 加速；软件渲染下 dt clamp 0.06，最终 11 项断言全 PASS（初始 14 件可见 / 吊索具出现 / 高空底部>甲板 / 轨迹完整 / 终态 14 件安装 / 进度 100% / 船体浮起 / 零 JS 错误）",
+        "交互与验收：1~7 机位（7 为智能堆场全景）、空格暂停、C 剖视、L 标注、右上角 1×/2×/4× 倍速切换；Edge 无头 CDP 对建造流程录制 6 张审计截图，11 项断言覆盖初始 14 件可见 / 吊索具出现 / 高空不穿船体 / 物流轨迹完整 / 终态 14 件安装 / 进度 100% / 船体浮起 / 零 JS 错误"
       ],
       "techStack": [
         "Three.js 0.170.0",
@@ -1043,14 +1045,15 @@
         "Edge Headless CDP",
         "本地 HTTP Server"
       ],
-      "screenshot": "",
-      "link": "",
+      "screenshot": "assets/screenshots/proj-031.jpg",
+      "link": "demo/carrier-full-build.html",
       "status": "shipped",
-      "statusNote": "11 项 CDP 无头自检全 PASS，教学 / 演示用单文件交付"
-    }  ],
+      "statusNote": "11 项 CDP 无头自检全 PASS；单文件 Demo 已本地化 three.js 依赖，可在简历站直接运行"
+    }
+  ],
   "contact": {
-    "api": "https://resume-site-3240dhrv.edgeone.cool/api/contact?eo_token=a72a273998ca71b89fc9955f977dab65&eo_time=1794995828",
-    "mirrorUrl": "https://resume-site-3240dhrv.edgeone.cool?eo_token=a72a273998ca71b89fc9955f977dab65&eo_time=1794995828",
+    "api": "https://resume-site-3240dhrv.edgeone.cool/api/contact?eo_token=1794f1e51d235213e561e3704601afca&eo_time=1794996673",
+    "mirrorUrl": "https://resume-site-3240dhrv.edgeone.cool?eo_token=1794f1e51d235213e561e3704601afca&eo_time=1794996673",
     "email": "1069007377@qq.com",
     "note": "api 指向 EdgeOne Pages 的 Edge Function（密钥在服务端环境变量，不落前端）；eo_token 由定时任务自动刷新"
   },

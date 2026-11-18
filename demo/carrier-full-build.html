@@ -1,0 +1,1966 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>航母总装 · 分段建造数字孪生</title>
+<style>
+  :root{
+    --bg:#06101a; --panel:rgba(10,20,30,.82); --line:rgba(120,170,205,.22);
+    --txt:#c6dcec; --dim:#7e9ab0; --cyan:#4dd8ff; --green:#3ddc97;
+    --amber:#ffb648; --red:#ff5a5f; --gold:#d9b45b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;overflow:hidden;background:var(--bg);color:var(--txt);
+    font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif;user-select:none}
+  canvas{display:block}
+  #labels{position:fixed;inset:0;pointer-events:none;z-index:5;overflow:hidden}
+  .tag{font-size:11px;line-height:1.25;padding:4px 8px;border-radius:3px;
+    background:rgba(6,16,26,.82);border:1px solid var(--line);color:var(--txt);
+    white-space:nowrap;transform:translate(-50%,-50%);box-shadow:0 2px 12px rgba(0,0,0,.4)}
+  .tag b{display:block;font-size:11px;font-weight:600;letter-spacing:.3px}
+  .tag span{display:block;font-size:9.5px;color:var(--dim);margin-top:1px}
+  .tag.ghost{opacity:.8}
+  .tag.ok b{color:var(--green)} .tag.warn b{color:var(--amber)} .tag.err b{color:var(--red)}
+  .tag.cyan b{color:var(--cyan)}
+
+  #hud{position:fixed;inset:0;pointer-events:none;z-index:10}
+  .panel{position:absolute;background:var(--panel);border:1px solid var(--line);
+    border-radius:6px;backdrop-filter:blur(9px);pointer-events:auto}
+  .panel h3{margin:0;padding:9px 12px 8px;font-size:10.5px;font-weight:600;
+    letter-spacing:1.4px;color:var(--cyan);border-bottom:1px solid var(--line);
+    text-transform:uppercase;display:flex;justify-content:space-between;align-items:center}
+  .panel h3 em{font-style:normal;font-size:9px;color:var(--dim);letter-spacing:.5px}
+
+  /* 左上：标题 + KPI */
+  #topL{top:14px;left:14px;width:266px}
+  #topL .brand{padding:12px 13px 6px}
+  #topL .brand .t{font-size:15px;font-weight:700;letter-spacing:.5px;color:#e6f3fb}
+  #topL .brand .s{font-size:9px;color:var(--dim);letter-spacing:1.2px;margin-top:3px}
+  #kpis{padding:4px 13px 12px;display:grid;grid-template-columns:1fr 1fr;gap:7px}
+  .kpi{background:rgba(255,255,255,.028);border:1px solid rgba(120,170,205,.1);
+    border-radius:4px;padding:7px 8px}
+  .kpi .k{font-size:9px;color:var(--dim);letter-spacing:.4px}
+  .kpi .v{font-size:16px;font-weight:600;color:#e2f1fa;margin-top:2px;font-variant-numeric:tabular-nums}
+  .kpi .v u{font-size:9px;font-weight:400;color:var(--dim);text-decoration:none;margin-left:2px}
+  .kpi .v.dn{color:var(--amber)}
+
+  /* 右上：分段搭载清单 */
+  #topR{top:14px;right:14px;width:250px;max-height:calc(100vh - 28px);overflow:hidden}
+  #segList{padding:6px 8px 9px}
+  .seg{display:flex;align-items:center;gap:7px;padding:4px 4px;font-size:10px;
+    border-bottom:1px solid rgba(120,170,205,.07)}
+  .seg:last-child{border-bottom:none}
+  .seg .ic{width:16px;height:16px;border-radius:3px;flex:none;display:grid;place-items:center;
+    font-size:9px;background:rgba(255,255,255,.05);color:var(--dim)}
+  .seg .nm{flex:1;min-width:0}
+  .seg .nm b{display:block;font-weight:500;color:var(--txt);font-size:10px}
+  .seg .nm span{font-size:8.5px;color:var(--dim)}
+  .seg .st{font-size:8.5px;flex:none;letter-spacing:.3px}
+  .seg.done .ic{background:rgba(61,220,151,.16);color:var(--green)}
+  .seg.done .st{color:var(--green)}
+  .seg.cur .ic{background:rgba(77,216,255,.18);color:var(--cyan)}
+  .seg.cur .st{color:var(--cyan)}
+  .seg.wait .st{color:var(--dim)}
+
+  /* 左下：工单/质量门 */
+  #botL{bottom:14px;left:14px;width:300px}
+  #wo{padding:9px 12px 11px}
+  #wo .row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+  #wo .id{font-family:ui-monospace,monospace;font-size:11px;color:var(--gold)}
+  #wo .badge{font-size:9px;padding:2px 7px;border-radius:9px;background:rgba(120,170,205,.12);
+    color:var(--dim);letter-spacing:.4px}
+  #wo .badge.err{background:rgba(255,90,95,.16);color:var(--red)}
+  #wo .badge.ok{background:rgba(61,220,151,.16);color:var(--green)}
+  #wo .desc{font-size:10px;color:var(--txt);line-height:1.5;min-height:30px}
+  #wo .meta{display:flex;gap:12px;margin-top:7px;font-size:9px;color:var(--dim)}
+  #wo .meta b{color:var(--txt);font-weight:500}
+
+  /* 中下：建造步骤条 */
+  #botM{bottom:14px;left:50%;transform:translateX(-50%);width:min(620px,calc(100vw - 620px))}
+  #steps{display:flex;padding:7px 8px;gap:2px;overflow:hidden}
+  .step{flex:1;min-width:0;text-align:center;position:relative}
+  .step .n{width:19px;height:19px;border-radius:50%;margin:0 auto 4px;display:grid;place-items:center;
+    font-size:9px;background:rgba(255,255,255,.05);color:var(--dim);border:1px solid var(--line)}
+  .step .t{font-size:8px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .step.done .n{background:rgba(61,220,151,.18);color:var(--green);border-color:rgba(61,220,151,.4)}
+  .step.done .t{color:var(--green)}
+  .step.cur .n{background:rgba(77,216,255,.2);color:var(--cyan);border-color:var(--cyan);
+    box-shadow:0 0 10px rgba(77,216,255,.4)}
+  .step.cur .t{color:var(--cyan)}
+
+  /* 右下：事件日志 */
+  #botR{bottom:14px;right:14px;width:250px}
+  #log{padding:5px 10px 8px;height:158px;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end}
+  .lg{font-size:9.5px;line-height:1.5;padding:2px 0;border-bottom:1px solid rgba(120,170,205,.06);
+    display:flex;gap:6px;animation:fi .3s ease}
+  @keyframes fi{from{opacity:0;transform:translateX(6px)}to{opacity:1;transform:none}}
+  .lg .tm{font-family:ui-monospace,monospace;color:var(--dim);flex:none}
+  .lg .src{font-size:8.5px;flex:none;width:44px;color:var(--cyan)}
+  .lg .ms{color:var(--txt)}
+  .lg.ok .src{color:var(--green)} .lg.ok .ms{color:#a9e8cc}
+  .lg.warn .src{color:var(--amber)} .lg.warn .ms{color:#e8cf9a}
+  .lg.err .src{color:var(--red)} .lg.err .ms{color:#f3adb0}
+
+  /* 控制条 */
+  #ctrls{position:absolute;top:14px;left:50%;transform:translateX(-50%);display:flex;gap:6px;pointer-events:auto}
+  #ctrls button{background:var(--panel);border:1px solid var(--line);color:var(--txt);
+    padding:7px 12px;border-radius:4px;font-size:10.5px;cursor:pointer;letter-spacing:.3px;
+    backdrop-filter:blur(8px)}
+  #ctrls button:hover{border-color:var(--cyan);color:var(--cyan)}
+  #ctrls button.active{background:rgba(77,216,255,.16);border-color:var(--cyan);color:var(--cyan)}
+  #ctrls button.primary{background:rgba(61,220,151,.14);border-color:rgba(61,220,151,.5);color:var(--green)}
+  #hint{position:absolute;bottom:calc(14px + 176px);left:50%;transform:translateX(-50%);
+    font-size:9px;color:var(--dim);letter-spacing:.5px;pointer-events:none}
+  #backLink{position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:99;
+    font:11px/1 ui-monospace,monospace;color:var(--dim);text-decoration:none;
+    padding:6px 12px;border:1px solid rgba(255,255,255,.16);border-radius:6px;
+    background:rgba(9,16,29,.82);backdrop-filter:blur(8px);letter-spacing:.4px}
+  #backLink:hover{color:var(--cyan);border-color:var(--cyan)}
+
+  #legend{position:absolute;left:14px;bottom:calc(14px + 150px);display:flex;gap:12px;
+    font-size:9px;color:var(--dim);pointer-events:none}
+  #legend span{display:flex;align-items:center;gap:4px}
+  #legend i{width:7px;height:7px;border-radius:50%;display:inline-block}
+
+  /* AI 调度中枢（左中） */
+  #aiPanel{top:238px;left:14px;width:266px}
+  #aiBody{padding:7px 11px 10px}
+  .airow{display:flex;justify-content:space-between;align-items:center;font-size:9.5px;
+    padding:3px 0;border-bottom:1px solid rgba(120,170,205,.07)}
+  .airow span{color:var(--dim)}
+  .airow b{font-weight:600;color:var(--txt);font-variant-numeric:tabular-nums}
+  .airow b.hot{color:var(--cyan)} .airow b.ok{color:var(--green)} .airow b.er{color:var(--red)}
+  .aibar{height:4px;margin:9px 0 7px;background:rgba(120,170,205,.12);border-radius:2px;overflow:hidden}
+  .aibar i{display:block;height:100%;width:0%;background:linear-gradient(90deg,#2b8fb4,#4dd8ff);
+    transition:width .3s;box-shadow:0 0 8px rgba(77,216,255,.6)}
+  .ailog{font-size:9px;color:var(--cyan);line-height:1.45;min-height:26px;
+    padding:5px 7px;background:rgba(77,216,255,.06);border-left:2px solid var(--cyan)}
+  #legend2{position:absolute;left:14px;bottom:calc(14px + 168px);display:flex;gap:9px;
+    font-size:8.5px;color:var(--dim);pointer-events:none;flex-wrap:wrap;width:290px}
+  #legend2 span{display:flex;align-items:center;gap:3px}
+  #legend2 i{width:6px;height:6px;border-radius:50%;display:inline-block}
+
+  #boot{position:fixed;inset:0;background:#06101a;z-index:50;display:grid;place-content:center;
+    text-align:center;transition:opacity .6s}
+  #boot.hide{opacity:0;pointer-events:none}
+  #boot .bt{font-size:18px;letter-spacing:3px;color:#dcecf7}
+  #boot .bs{font-size:10px;letter-spacing:2px;color:var(--dim);margin-top:8px}
+  #boot .bl{width:220px;height:2px;margin:18px auto 0;background:rgba(120,170,205,.15);overflow:hidden}
+  #boot .bl::after{content:"";display:block;width:40%;height:100%;background:var(--cyan);
+    animation:ld 1.1s ease-in-out infinite}
+  @keyframes ld{0%{transform:translateX(-100%)}100%{transform:translateX(350%)}}
+</style>
+<script type="importmap">
+{
+  "imports":{
+    "three":"./vendor/three/three.module.js",
+    "three/addons/":"./vendor/three/addons/"
+  }
+}
+</script>
+</head>
+<body>
+<a id="backLink" href="../project.html?id=proj-031">← 返回项目详情</a>
+<div id="labels"></div>
+<div id="hud">
+  <div class="panel" id="topL">
+    <div class="brand"><div class="t">航母总装 · 分段建造</div>
+      <div class="s">CVN BLOCK CONSTRUCTION · DIGITAL TWIN</div></div>
+    <div id="kpis">
+      <div class="kpi"><div class="k">建造进度</div><div class="v" id="kProg">0<u>%</u></div></div>
+      <div class="kpi"><div class="k">已搭载分段</div><div class="v" id="kBlk">0<u>/12</u></div></div>
+      <div class="kpi"><div class="k">总装配吨位</div><div class="v" id="kTon">0<u>t</u></div></div>
+      <div class="kpi"><div class="k">合拢精度</div><div class="v" id="kAcc">—<u>mm</u></div></div>
+      <div class="kpi"><div class="k">焊缝一次合格率</div><div class="v" id="kWeld">—<u>%</u></div></div>
+      <div class="kpi"><div class="k">船坞水位</div><div class="v" id="kWater">0.0<u>m</u></div></div>
+    </div>
+  </div>
+
+  <div class="panel" id="aiPanel">
+    <h3>AI 调度中枢 <em>FLEET ORCHESTRATOR</em></h3>
+    <div id="aiBody">
+      <div class="airow"><span>AI 当前决策</span><b id="aiDecision" class="hot">系统待命</b></div>
+      <div class="airow"><span>调度任务队列</span><b id="aiQueue">0</b></div>
+      <div class="airow"><span>AGV 重载运输车</span><b id="aiAgv">0 / 6 在线</b></div>
+      <div class="airow"><span>焊接机器人</span><b id="aiRobot">0 / 8 作业</b></div>
+      <div class="airow"><span>堆场自动出库</span><b id="aiOut">0 / 12</b></div>
+      <div class="aibar"><i id="aiBar"></i></div>
+      <div class="ailog" id="aiLog">AI 中枢已就绪 · 等待建造指令</div>
+    </div>
+  </div>
+
+  <div class="panel" id="topR">
+    <h3>零件物流状态 <em>PART LOGISTICS</em></h3>
+    <div id="segList"></div>
+  </div>
+
+  <div class="panel" id="botL">
+    <h3>当前作业 / 质量门 <em>WORK PACKAGE</em></h3>
+    <div id="wo">
+      <div class="row"><span class="id" id="woId">WP-000</span><span class="badge" id="woBadge">待命</span></div>
+      <div class="desc" id="woDesc">点击「开始建造」，演示从空船坞到航母出坞的完整分段建造流程。</div>
+      <div class="meta"><span>分段 <b id="woBlock">—</b></span><span>吊装重量 <b id="woTon">—</b></span><span>工位 <b id="woStation">—</b></span></div>
+    </div>
+  </div>
+
+  <div class="panel" id="botM"><div id="steps"></div></div>
+
+  <div class="panel" id="botR">
+    <h3>工程事件流 <em>EVENT LOG</em></h3>
+    <div id="log"></div>
+  </div>
+
+  <div id="ctrls">
+    <button id="btnGo" class="primary">▶ 开始建造</button>
+    <button id="btnPause">暂停</button>
+    <button id="btnSpeed">1×</button>
+    <button id="btnCut">剖视</button>
+    <button id="btnLabel" class="active">标注</button>
+    <button id="btnReset">复位</button>
+  </div>
+  <div id="legend2">
+    <span><i style="background:#f0b429;box-shadow:0 0 5px #f0b429"></i>堆场待取</span>
+    <span><i style="background:#ff8c42;box-shadow:0 0 5px #ff8c42"></i>AGV运输</span>
+    <span><i style="background:#4dd8ff;box-shadow:0 0 5px #4dd8ff"></i>龙门吊吊装</span>
+    <span><i style="background:#3ddc97;box-shadow:0 0 5px #3ddc97"></i>已合拢</span>
+  </div>
+  <div id="legend">
+    <span><i style="background:#3ddc97;box-shadow:0 0 6px #3ddc97"></i>已搭载</span>
+    <span><i style="background:#4dd8ff;box-shadow:0 0 6px #4dd8ff"></i>吊装中</span>
+    <span><i style="background:#ffb648;box-shadow:0 0 6px #ffb648"></i>待搭载</span>
+  </div>
+  <div id="hint">空格 暂停 · L 标注 · C 剖视 · 1-7 机位（7=智能堆场） · AI 全自动物流演算</div>
+</div>
+<div id="boot"><div class="bt">航母总装数字孪生</div><div class="bs">INITIALIZING BLOCK CONSTRUCTION ···</div><div class="bl"></div></div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+/* =========================================================
+   1. 尺度与工程常量（1 单位 = 2 米）
+   ========================================================= */
+const D = {
+  gnd:0, dockFloor:-3, dockWallTop:6,
+  dockX0:-112, dockX1:112, dockZ:36,
+  halfLen:86, halfBeam:19,          // 舰体水线半宽
+  keelY:1.6,                        // 龙骨基线
+  innerBottom:7.4,                  // 内底板
+  hangarDeck:18.6, hangarCeil:26.4,
+  deckY:29.6,                       // 飞行甲板面
+  islandX:24,
+};
+// 全程 12 个分段（真实航母分段划分思路）
+const BLOCKS = [
+  { key:'db1', code:'DB-01', name:'双层底 艉段',   ton:9800,  st:'A1' },
+  { key:'db2', code:'DB-02', name:'双层底 中段',   ton:12400, st:'A2' },
+  { key:'db3', code:'DB-03', name:'双层底 艏段',   ton:9200,  st:'A3' },
+  { key:'bow', code:'BOW-01',name:'艏部 + 球鼻艏',  ton:7600,  st:'B1' },
+  { key:'sideP',code:'SID-P', name:'舷侧分段 左',   ton:6800,  st:'B2' },
+  { key:'sideS',code:'SID-S', name:'舷侧分段 右',   ton:6800,  st:'B2' },
+  { key:'hangar',code:'HGR-01',name:'机库结构分段', ton:11500, st:'C1' },
+  { key:'deckA',code:'FLT-A', name:'飞行甲板 艉段', ton:5400,  st:'C2' },
+  { key:'deckB',code:'FLT-B', name:'飞行甲板 中段', ton:6100,  st:'C2' },
+  { key:'deckC',code:'FLT-C', name:'飞行甲板 艏段', ton:4900,  st:'C2' },
+  { key:'island',code:'ISL-01',name:'舰岛上层建筑', ton:4200,  st:'D1' },
+  { key:'fitout',code:'FIT-01',name:'舾装 / 舰载机', ton:3100,  st:'D2' },
+];
+
+/* =========================================================
+   2. 材质库
+   ========================================================= */
+const MAT = {
+  ground:new THREE.MeshStandardMaterial({color:0x1c242d,metalness:.14,roughness:.95}),
+  dock:new THREE.MeshStandardMaterial({color:0x39424c,metalness:.08,roughness:.96}),
+  dockDark:new THREE.MeshStandardMaterial({color:0x222a33,metalness:.1,roughness:.94}),
+  crane:new THREE.MeshStandardMaterial({color:0xc9a63f,metalness:.72,roughness:.42}),
+  craneDk:new THREE.MeshStandardMaterial({color:0x8a6f28,metalness:.7,roughness:.5}),
+  steel:new THREE.MeshStandardMaterial({color:0xa7bac9,metalness:.86,roughness:.36}),
+  steelDk:new THREE.MeshStandardMaterial({color:0x3a4753,metalness:.8,roughness:.5}),
+  hull:new THREE.MeshStandardMaterial({color:0x45505c,metalness:.8,roughness:.5,side:THREE.DoubleSide}),
+  island:new THREE.MeshStandardMaterial({color:0x45505c,metalness:.8,roughness:.5}),
+  hullPrimer:new THREE.MeshStandardMaterial({color:0x8a4a36,metalness:.32,roughness:.76,side:THREE.DoubleSide}),
+  hullDk:new THREE.MeshStandardMaterial({color:0x232b35,metalness:.74,roughness:.58,side:THREE.DoubleSide}),
+  deck:new THREE.MeshStandardMaterial({color:0x1a222b,metalness:.2,roughness:.94,side:THREE.DoubleSide}),
+  hangar:new THREE.MeshStandardMaterial({color:0x354250,metalness:.55,roughness:.66}),
+  mach:new THREE.MeshStandardMaterial({color:0x2c3c4b,metalness:.75,roughness:.48}),
+  fuel:new THREE.MeshStandardMaterial({color:0x6d5a30,metalness:.4,roughness:.72}),
+  ballast:new THREE.MeshStandardMaterial({color:0x2c5c6c,metalness:.4,roughness:.7}),
+  ammo:new THREE.MeshStandardMaterial({color:0x843838,metalness:.45,roughness:.65}),
+  living:new THREE.MeshStandardMaterial({color:0x456475,metalness:.3,roughness:.75}),
+  glass:new THREE.MeshStandardMaterial({color:0x24465e,metalness:.6,roughness:.18,transparent:true,opacity:.55}),
+  radar:new THREE.MeshStandardMaterial({color:0x6a7f90,metalness:.7,roughness:.5,emissive:0x0a1c2a,emissiveIntensity:.15}),
+  water:new THREE.MeshStandardMaterial({color:0x0d2b3c,metalness:.28,roughness:.72,transparent:true,opacity:.88}),
+  white:new THREE.MeshStandardMaterial({color:0xcdd8e0,metalness:.3,roughness:.6}),
+  yellow:new THREE.MeshStandardMaterial({color:0xd8b23c,metalness:.3,roughness:.6}),
+  red:new THREE.MeshStandardMaterial({color:0xb5453c,metalness:.3,roughness:.6}),
+};
+// 剖视半透明外壳（只读时切换）
+MAT.shell = new THREE.MeshStandardMaterial({color:0x5a7086,metalness:.76,roughness:.5,
+  transparent:true,opacity:.14,depthWrite:false,side:THREE.DoubleSide});
+
+/* =========================================================
+   3. 工具函数
+   ========================================================= */
+const box=(w,h,d,m)=>new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);
+const cyl=(rt,rb,h,s,m)=>new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,s),m);
+const sph=(r,m,w=14,h=10)=>new THREE.Mesh(new THREE.SphereGeometry(r,w,h),m);
+const glow=(c,i=1)=>new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:i,roughness:.3});
+const lerp=(a,b,t)=>a+(b-a)*Math.min(1,Math.max(0,t));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const approach=(a,b,sp,dt)=>Math.abs(b-a)<1e-4?b:a+Math.sign(b-a)*Math.min(Math.abs(b-a),sp*dt);
+function seg(parent,a,b,m,r=.3){
+  const A=new THREE.Vector3(...a),B=new THREE.Vector3(...b);
+  const c=new THREE.Mesh(new THREE.CylinderGeometry(r,r,A.distanceTo(B),6),m);
+  c.position.copy(A).add(B).multiplyScalar(.5);
+  c.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),B.clone().sub(A).normalize());
+  parent.add(c);return c;
+}
+function makeLabel(parent,pos,title,sub,cls=''){
+  const el=document.createElement('div');
+  el.className='tag '+cls;
+  el.innerHTML=`<b>${title}</b><span>${sub||''}</span>`;
+  const o=new CSS2DObject(el);o.position.copy(pos);parent.add(o);
+  return {obj:o,el,setSub:s=>{const x=el.querySelector('span');if(x)x.textContent=s;},
+    setTitle:s=>{const x=el.querySelector('b');if(x)x.textContent=s;}};
+}
+
+/* =========================================================
+   4. 场景 / 相机 / 渲染器 / 灯光
+   ========================================================= */
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x081420);
+scene.fog=new THREE.FogExp2(0x081420,.0017);
+
+const camera=new THREE.PerspectiveCamera(42,innerWidth/innerHeight,.5,1400);
+camera.position.set(210,168,300);
+
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.0;
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+document.body.insertBefore(renderer.domElement,document.getElementById('labels'));
+
+const labelRenderer=new CSS2DRenderer();
+labelRenderer.setSize(innerWidth,innerHeight);
+labelRenderer.domElement.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:5';
+document.body.insertBefore(labelRenderer.domElement,document.getElementById('labels'));
+document.getElementById('labels').remove();
+labelRenderer.domElement.id='labels';
+
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;controls.dampingFactor=.06;
+controls.target.set(0,18,68);
+controls.minDistance=60;controls.maxDistance=460;
+controls.maxPolarAngle=Math.PI*.495;
+
+const composer=new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene,camera));
+const bloom=new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),.38,.62,.9);
+composer.addPass(bloom);
+composer.addPass(new OutputPass());
+
+const pmrem=new THREE.PMREMGenerator(renderer);
+scene.environment=pmrem.fromScene(new RoomEnvironment(),.05).texture;
+scene.environmentIntensity=.6;
+
+scene.add(new THREE.HemisphereLight(0x4a7396,0x070b11,.78));
+const key=new THREE.DirectionalLight(0xbcd8ee,1.7);
+key.position.set(90,190,130);key.castShadow=true;
+key.shadow.mapSize.set(1536,1536);
+key.shadow.camera.near=40;key.shadow.camera.far=560;
+const SH=170;key.shadow.camera.left=-SH;key.shadow.camera.right=SH;
+key.shadow.camera.top=SH;key.shadow.camera.bottom=-SH;
+key.shadow.bias=-.0011;key.shadow.normalBias=.08;
+scene.add(key);
+const rim=new THREE.DirectionalLight(0x4a8fc4,1.0);rim.position.set(-130,80,-150);scene.add(rim);
+const fill=new THREE.DirectionalLight(0x8fb6d2,.32);fill.position.set(-30,40,180);scene.add(fill);
+const bounce=new THREE.DirectionalLight(0x6f93b4,.34);bounce.position.set(0,-50,20);scene.add(bounce);
+
+/* =========================================================
+   5. 船体线型（放样核心）—— 船壳与龙骨墩共用，保证精确贴合
+   ========================================================= */
+const L=D.halfLen;
+const smooth=t=>{t=clamp(t,0,1);return t*t*(3-2*t);};
+// 水线半宽随船长变化：艏尖、方艉、舯部满宽
+function beamAt(x){
+  if(x> L*.5){ const u=(x-L*.5)/(L*.5); return D.halfBeam*(1-.94*Math.pow(u,1.5)); }
+  if(x<-L*.72){const u=(-x-L*.72)/(L*.28);return D.halfBeam*(1-.22*u*u);}
+  return D.halfBeam;
+}
+// 船底外板高度：舯部平底，艏艉起翘，两舷舭部抬升
+function bottomY(x,z){
+  const b=beamAt(x);
+  const rise=3.4*Math.pow(Math.max(0,(Math.abs(x)-L*.5)/(L*.5)),2);
+  const roll=1.15*Math.pow(clamp(Math.abs(z)/b,0,1),3);
+  return D.keelY+rise+roll;
+}
+// 舷侧外板顶（甲板边）高度
+function deckEdgeY(x){return D.deckY + 1.6*Math.pow(clamp(Math.abs(x)/L,0,1),3);}
+
+/* =========================================================
+   6. 干船坞 + 龙骨墩 + 注水系统
+   ========================================================= */
+const yard=new THREE.Group();scene.add(yard);
+const dock=new THREE.Group();yard.add(dock);
+{
+  // 坞底
+  const floor=box(D.dockX1-D.dockX0,1.2,D.dockZ*2,MAT.dock);
+  floor.position.set(0,D.dockFloor-.6,0);floor.receiveShadow=true;dock.add(floor);
+  // 两侧坞壁（阶梯）
+  for(const s of [-1,1]){
+    for(let t=0;t<3;t++){
+      const w=box(D.dockX1-D.dockX0,3,2.2,MAT.dock);
+      w.position.set(0,D.dockFloor+1.5+t*2.6, s*(D.dockZ+1.1+t*2.2));
+      w.receiveShadow=true;dock.add(w);
+    }
+    // 坞壁顶部走道 + 灯带
+    const walk=box(D.dockX1-D.dockX0,.4,3.2,MAT.dockDark);
+    walk.position.set(0,D.dockWallTop,s*(D.dockZ+7));dock.add(walk);
+    const strip=box(D.dockX1-D.dockX0-.6,.16,.22,glow(0xffd6a0,.7));
+    strip.position.set(0,D.dockWallTop+.3,s*(D.dockZ+.2));dock.add(strip);
+  }
+  // 坞门（一端）
+  const gate=box(3,D.dockWallTop-D.dockFloor,D.dockZ*2,MAT.dockDark);
+  gate.position.set(D.dockX0,D.dockWallTop/2+D.dockFloor/2,0);dock.add(gate);
+  // 龙门吊轨道（沿 x）
+  for(const s of [-1,1]){
+    const rail=box(D.dockX1-D.dockX0,.5,.8,MAT.steelDk);
+    rail.position.set(0,D.dockWallTop+.5,s*(D.dockZ+7));dock.add(rail);
+  }
+}
+// 龙骨墩阵列：墩顶 = 船底外板底面，逐点贴合
+const keelBlocks=new THREE.Group();dock.add(keelBlocks);
+let keelCount=0;
+{
+  const pierMat=MAT.dockDark;
+  for(let x=-L*.94;x<=L*.94;x+=4){
+    // 中线墩
+    for(const z of [-3,0,3]){
+      const top=bottomY(x,z);
+      const h=top-D.dockFloor;
+      if(h<=0)continue;
+      const b=box(2.2,h,2.0,pierMat);
+      b.position.set(x,D.dockFloor+h/2,z);b.castShadow=true;
+      keelBlocks.add(b);keelCount++;
+    }
+    // 两舷边墩
+    const b0=beamAt(x)*.72;
+    for(const s of [-1,1]){
+      const z=s*b0, top=bottomY(x,z), h=top-D.dockFloor;
+      if(h<=0)continue;
+      const b=box(2.0,h,2.2,pierMat);
+      b.position.set(x,D.dockFloor+h/2,z);b.castShadow=true;
+      keelBlocks.add(b);keelCount++;
+    }
+  }
+}
+// 注水水位面（出坞时上升）——贴合坞内轮廓，避免硬边方盒感
+const waterMesh=new THREE.Mesh(
+  new THREE.PlaneGeometry(D.dockX1-D.dockX0-2,D.dockZ*2-2,1,1),MAT.water);
+waterMesh.rotation.x=-Math.PI/2;
+waterMesh.position.set(0,D.dockFloor+.1,0);
+waterMesh.visible=false;dock.add(waterMesh);
+// 港池外海面（远景水域，压暗处理避免发亮）
+const sea=new THREE.Mesh(new THREE.PlaneGeometry(1200,1200),
+  new THREE.MeshStandardMaterial({color:0x0a1b28,metalness:.35,roughness:.85,
+    transparent:true,opacity:.95}));
+sea.rotation.x=-Math.PI/2;sea.position.set(0,D.dockFloor+.15,0);
+sea.visible=false;yard.add(sea);
+
+// 预装场地（船坞两侧的分段堆放区）—— 分段从这里起吊
+const STAGE=[];
+for(let i=0;i<BLOCKS.length;i++){
+  const side=i%2?1:-1;
+  const row=Math.floor(i/2);
+  STAGE.push({x:-70+row*26, z:side*(D.dockZ+30)});
+}
+
+/* =========================================================
+   7. 起重机（运动学修正：底座恒固定，仅上部回转/整机平移）
+   ========================================================= */
+/* 7.1 干船坞龙门吊 —— 1200t 级，整机仅沿 x 轨道平移 */
+const GAN={x:-78,xTarget:-78, hookY:70,hookYTarget:70, trolleyZ:0,trolleyZTarget:0};
+const CRANE_TOP=110;  // 主梁高度：确保最大分段(舰岛高≈45)吊起后底部仍高于飞行甲板(≈31)
+const gantry=new THREE.Group();yard.add(gantry);
+const gantryBase=new THREE.Group();      // 固定门架（四脚 + 主梁）——永不回转
+gantry.add(gantryBase);
+{
+  const LEGZ=D.dockZ+7, LEGH=CRANE_TOP-2, SPAN=LEGZ*2;
+  // 四条支腿（前后各两条，落在轨道上）
+  for(const sx of [-1,1]) for(const sz of [-1,1]){
+    const leg=new THREE.Group();
+    leg.position.set(sx*13,0,sz*LEGZ);
+    // 双柱
+    for(const dx of [-2,2]){
+      const col=box(2.4,LEGH,2.4,MAT.crane);
+      col.position.set(dx,LEGH/2,0);col.castShadow=true;leg.add(col);
+    }
+    // 横撑
+    for(let k=1;k<6;k++){
+      const br=box(6.6,.7,1.2,MAT.craneDk);
+      br.position.set(0,k*(LEGH/6),0);leg.add(br);
+    }
+    // 底部台车 + 车轮
+    const bg=box(11,2.4,3.6,MAT.steelDk);bg.position.set(0,1.2,0);leg.add(bg);
+    for(let w=0;w<4;w++){
+      const wh=cyl(1.1,1.1,1.0,12,MAT.steelDk);
+      wh.rotation.x=Math.PI/2;wh.position.set(-3.9+w*2.6,1.1,sz*1.9);leg.add(wh);
+    }
+    gantryBase.add(leg);
+  }
+  // 双主梁（沿 z 跨坞）
+  for(const dx of [-1,1]){
+    const beam=box(3.6,5.0,SPAN+40,MAT.crane);   // 悬臂主梁：覆盖坞边 SPMT 作业带 z=±50
+    beam.position.set(dx*5,D.LEG_H??LEGH+2,0);beam.position.y=LEGH+2;
+    beam.castShadow=true;gantryBase.add(beam);
+    const rail=box(.6,.4,SPAN+40,MAT.steelDk);
+    rail.position.set(dx*5,LEGH+4.8,0);gantryBase.add(rail);
+  }
+  // 主梁间横撑
+  for(let z=-LEGZ-12;z<=LEGZ+12;z+=10){
+    const c=box(11,.7,.7,MAT.craneDk);
+    c.position.set(0,LEGH+3,z);gantryBase.add(c);
+  }
+  // 端部横梁
+  for(const sz of [-1,1]){
+    const e=box(34,3.4,2.8,MAT.crane);
+    e.position.set(0,LEGH+2,sz*LEGZ);gantryBase.add(e);
+  }
+  // 顶部航空障碍灯
+  GAN.beacons=[];
+  for(const sx of [-1,1]) for(const sz of [-1,1]){
+    const b=sph(.6,glow(0xff2a2f,1.3),8,6);
+    b.position.set(sx*15,LEGH+2,sz*LEGZ);gantryBase.add(b);GAN.beacons.push(b);
+  }
+}
+// 小车（沿主梁 z 方向移动）+ 双吊钩 —— 唯一运动部件
+const trolley=new THREE.Group();gantryBase.add(trolley);
+{
+  const car=box(12,2.4,10,MAT.crane);
+  car.position.y=CRANE_TOP;
+  trolley.add(car);
+  const house=box(6,3,6,MAT.craneDk);house.position.set(0,CRANE_TOP+2,0);trolley.add(house);
+}
+const hookGrp=new THREE.Group();gantryBase.add(hookGrp);
+{
+  // 钢缆（4 根，随吊钩升降动态更新长度）
+  GAN.cables=[];
+  for(const dx of [-3,3]) for(const dz of [-2.5,2.5]){
+    const c=seg(hookGrp,[dx,CRANE_TOP,dz],[dx,0,dz],MAT.steelDk,.16);
+    GAN.cables.push({m:c,dx,dz});
+  }
+  const block=box(7,2.4,6,MAT.crane);
+  block.position.y=0;hookGrp.add(block);
+  const hook=cyl(1.6,1.6,1.2,12,MAT.steel);hook.position.y=-2;hookGrp.add(hook);
+}
+gantry.position.x=GAN.x;
+
+/* 7.2 门座吊（辅助）—— 底座固定，仅转台 slew 回转 */
+function buildPortalCrane(x,z,h){
+  const root=new THREE.Group();root.position.set(x,0,z);yard.add(root);
+  const base=new THREE.Group();root.add(base);           // 固定：门框 + 支腿
+  for(const s of [-1,1]){
+    const leg=box(2,h*.5,2,MAT.crane);
+    leg.position.set(s*4,h*.25,0);base.add(leg);
+    const foot=box(5,1,4,MAT.steelDk);foot.position.set(s*4,.5,0);base.add(foot);
+  }
+  const cross=box(12,1.6,2,MAT.crane);cross.position.y=h*.5;base.add(cross);
+  const slew=new THREE.Group();slew.position.y=h*.5+1;root.add(slew); // 回转上部
+  const house=box(6,4,5,MAT.crane);slew.add(house);
+  const cab=box(3,2.4,3,MAT.glass);cab.position.set(2.5,-.5,0);slew.add(cab);
+  // 臂架：一根向前的水平臂 + 斜拉
+  const jib=box(h*.9,1.2,1.6,MAT.crane);jib.position.set(h*.45,4,0);slew.add(jib);
+  const tie=seg(slew,[0,10,0],[h*.85,4.6,0],MAT.craneDk,.3);
+  const counter=box(6,3,4,MAT.craneDk);counter.position.set(-4,3,0);slew.add(counter);
+  return {root,base,slew};
+}
+const portalA=buildPortalCrane(-96,-58,22);
+const portalB=buildPortalCrane(96,58,22);
+
+/* 7.3 塔吊（车间旁）—— 底座固定，仅上部回转 */
+function buildTowerCrane(x,z,h){
+  const root=new THREE.Group();root.position.set(x,0,z);yard.add(root);
+  const base=new THREE.Group();root.add(base);
+  const mast=box(2.6,h,2.6,MAT.crane);mast.position.y=h/2;base.add(mast);
+  for(let k=1;k<8;k++){
+    const r=box(3.6,.3,3.6,MAT.craneDk);r.position.y=k*h/8;base.add(r);
+  }
+  const slew=new THREE.Group();slew.position.y=h;root.add(slew);
+  const jib=box(46,1.2,1.6,MAT.crane);jib.position.x=18;slew.add(jib);
+  const cjib=box(14,1.2,1.6,MAT.crane);cjib.position.x=-7;slew.add(cjib);
+  const tower=box(3,6,3,MAT.crane);tower.position.y=3;slew.add(tower);
+  const tip=seg(slew,[0,15,0],[40,.8,0],MAT.craneDk,.25);
+  return {root,base,slew};
+}
+const towerA=buildTowerCrane(-118,58,40);
+
+// 运动学自检探针
+window.__craneProbe=()=>({
+  gantryRot:+gantry.rotation.y.toFixed(6),
+  gantryX:+gantry.position.x.toFixed(2),
+  portalBaseYaw:+portalA.base.rotation.y.toFixed(6),
+  portalSlewYaw:+portalA.slew.rotation.y.toFixed(6),
+  towerBaseYaw:+towerA.base.rotation.y.toFixed(6),
+  towerSlewYaw:+towerA.slew.rotation.y.toFixed(6),
+  legPositions:gantryBase.children.filter(c=>c.position.y===0&&Math.abs(c.position.z)>40)
+    .map(c=>[+c.position.x.toFixed(1),+c.position.z.toFixed(1)]),
+});
+
+/* =========================================================
+   8. 放样工具：由线型函数生成连续曲面（船壳 / 甲板 / 舱壁）
+   ========================================================= */
+// 通用放样：u 沿船长 x，v 为横向参数，fn(u,v)->[x,y,z]
+// uvFn 可选：把 (u,v) 映射到纹理 UV（甲板标线需要）
+function loft(nu,nv,fn,mat,uvFn){
+  const pos=[],idx=[],uvs=[];
+  for(let i=0;i<=nu;i++)for(let j=0;j<=nv;j++){
+    const u=i/nu,v=j/nv;
+    const p=fn(u,v);pos.push(p[0],p[1],p[2]);
+    if(uvFn){const t=uvFn(u,v);uvs.push(t[0],t[1]);}
+  }
+  for(let i=0;i<nu;i++)for(let j=0;j<nv;j++){
+    const a=i*(nv+1)+j,b=a+1,c=a+nv+1,d=c+1;
+    idx.push(a,c,b,b,c,d);
+  }
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+  if(uvFn)g.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
+  g.setIndex(idx);g.computeVertexNormals();
+  return new THREE.Mesh(g,mat);
+}
+// 船底外板曲面（x0..x1，横向 -1..1 → ±beam）
+function bottomSurface(x0,x1,nx,mat){
+  return loft(nx,16,(u,v)=>{
+    const x=x0+(x1-x0)*u, z=(v*2-1)*beamAt(x)*.98;
+    return [x,bottomY(x,z),z];
+  },mat);
+}
+// 舷侧外板（从船底边到甲板边）
+function sideSurface(x0,x1,nx,side,mat){
+  return loft(nx,8,(u,v)=>{
+    const x=x0+(x1-x0)*u, b=beamAt(x);
+    const z=(.94+v*.06)*b*side;
+    const yBottom=bottomY(x,z);
+    const yTop=deckEdgeY(x);
+    return [x,lerp(yBottom,yTop,v),z];
+  },mat);
+}
+
+const ship=new THREE.Group();yard.add(ship);
+const PARTS={};  // 分段注册表
+
+/* 8.1 双层底三段：外板 + 内底 + 中内龙骨 + 水密舱壁 + 液舱 */
+function buildDoubleBottom(x0,x1,key){
+  const g=new THREE.Group();ship.add(g);PARTS[key]=g;
+  // 船底外板
+  const outer=bottomSurface(x0,x1,22,MAT.hullPrimer);
+  outer.castShadow=true;outer.receiveShadow=true;g.add(outer);
+  // 内底板
+  const inner=loft(22,14,(u,v)=>{
+    const x=x0+(x1-x0)*u, z=(v*2-1)*beamAt(x)*.88;
+    return [x,D.innerBottom,z];
+  },MAT.steelDk);
+  inner.receiveShadow=true;g.add(inner);
+  // 中内龙骨
+  const kl=box(x1-x0, D.innerBottom-D.keelY, 1.6, MAT.steelDk);
+  kl.position.set((x0+x1)/2,(D.innerBottom+D.keelY)/2,0);g.add(kl);
+  // 旁桁材（纵向）
+  for(const z of [-10,-5,5,10]){
+    if(Math.abs(z)>beamAt((x0+x1)/2)*.85)continue;
+    const g2=box(x1-x0,(D.innerBottom-D.keelY)*.7,.7,MAT.steelDk);
+    g2.position.set((x0+x1)/2,(D.innerBottom+D.keelY)/2,z);g.add(g2);
+  }
+  // 水密舱壁（每 8 单位一道）
+  for(let x=x0+4;x<x1-2;x+=8){
+    const b=beamAt(x)*.86;
+    const h=D.innerBottom-bottomY(x,0);
+    const w=box(.5,h,b*2,MAT.steelDk);
+    w.position.set(x,bottomY(x,0)+h/2,0);g.add(w);
+  }
+  // 液舱（燃油/压载/淡水）——按横向分区，用半透明色块置于双层底内
+  const tanks=[
+    {z0:-15,z1:-9,m:MAT.fuel},{z0:-8,z1:-2,m:MAT.ballast},
+    {z0:2,z1:8,m:MAT.hullDk},{z0:9,z1:15,m:MAT.fuel},
+  ];
+  for(let x=x0+3;x<x1-3;x+=9){
+    for(const tk of tanks){
+      const b=beamAt(x)*.85;
+      const zA=Math.max(tk.z0,-b),zB=Math.min(tk.z1,b);
+      if(zB-zA<1.5)continue;
+      const y0=bottomY(x,(zA+zB)/2)+.5, y1=D.innerBottom-.5;
+      if(y1-y0<1)continue;
+      const t=box(7.5,y1-y0,zB-zA,tk.m);
+      t.position.set(x,(y0+y1)/2,(zA+zB)/2);g.add(t);
+    }
+  }
+  return g;
+}
+buildDoubleBottom(-L, -L*.24,'db1');
+buildDoubleBottom(-L*.24, L*.30,'db2');
+buildDoubleBottom( L*.30, L*.62,'db3');
+
+/* 8.3 方艉封板（transom）—— 封闭艉端，消除红色断面 */
+{
+  const t=new THREE.Group();ship.add(t);PARTS.transom=t;
+  const x=-L, b=beamAt(x)*.98;
+  const yb=bottomY(x,0), yt=deckEdgeY(x);
+  // 艉封板（近似矩形方艉）
+  const transom=box(.9,yt-yb,b*2,MAT.hullPrimer);
+  transom.position.set(x,(yb+yt)/2,0);transom.castShadow=true;t.add(transom);
+  // 艉部两侧舷侧板（从 -L 到舯部，连接方艉）
+  for(const s of [-1,1]){
+    const seg=sideSurface(-L,-L*.70,8,s,MAT.hull);
+    seg.castShadow=true;t.add(seg);
+  }
+  // 艉部作业平台（方艉甲板）
+  const apron=box(L*.30,.5,b*1.9,MAT.deck);
+  apron.position.set(-L+L*.15,yt+.4,0);t.add(apron);
+}
+
+/* 8.2 艏部 + 球鼻艏：连续放样到尖艏 */
+{
+  const g=new THREE.Group();ship.add(g);PARTS.bow=g;
+  const x0=L*.62,x1=L;
+  const outer=bottomSurface(x0,x1,16,MAT.hullPrimer);
+  outer.castShadow=true;g.add(outer);
+  for(const s of [-1,1])g.add(sideSurface(x0,x1,12,s,MAT.hullPrimer));
+  // 球鼻艏（艏部水线下椭球）
+  const bulb=sph(4.6,MAT.hullDk,18,12);
+  bulb.scale.set(1.9,.85,.9);
+  bulb.position.set(L*.93,D.keelY+1.2,0);g.add(bulb);
+  // 艏部内底延伸
+  const inner=loft(12,10,(u,v)=>{
+    const x=x0+(x1-x0)*u,z=(v*2-1)*beamAt(x)*.7;
+    return [x,D.innerBottom,z];
+  },MAT.steelDk);g.add(inner);
+}
+
+/* =========================================================
+   9. 上部结构分段：舷侧 / 机库 / 动力 / 甲板 / 舰岛
+   ========================================================= */
+/* 9.1 舷侧分段（左右）—— 从内底到机库甲板的外板 + 舷侧纵桁 + 骨架 */
+function buildSide(side,key){
+  const g=new THREE.Group();ship.add(g);PARTS[key]=g;
+  const x0=-L*.72,x1=L*.62;
+  const outer=sideSurface(x0,x1,26,side,MAT.hull);
+  outer.castShadow=true;outer.receiveShadow=true;g.add(outer);
+  // 舷侧纵桁（水平加强筋）
+  for(const yy of [D.innerBottom+2,D.hangarDeck-3,D.hangarDeck]){
+    const z=beamAt(0)*.97*side;
+    const beam=box(x1-x0,.6,.9,MAT.steelDk);
+    beam.position.set((x0+x1)/2,yy,z);g.add(beam);
+  }
+  // 肋骨（竖向，每 6 单位）
+  for(let x=x0+3;x<x1;x+=6){
+    const b=beamAt(x)*.96*side;
+    const ribs=seg(g,[x,D.innerBottom,b],[x,D.hangarDeck,b*.99],MAT.steelDk,.32);
+  }
+  // —— 工程细节：吃水线漆带 / 舷号 / 舷窗 / 分段接缝 ——
+  // 水线漆带（红色防锈，沿舷侧纵向）
+  const wl=loft(26,1,(u,v)=>{
+    const x=x0+(x1-x0)*u,b=beamAt(x)*.985*side;
+    return [x,D.keelY+2.6+v*.7,b];
+  },new THREE.MeshStandardMaterial({color:0x7a3b32,metalness:.35,roughness:.75,side:THREE.DoubleSide}));
+  g.add(wl);
+  // 舷号（舰艏两侧大字 78）
+  const hullNum=new THREE.Group();g.add(hullNum);
+  const numMat=new THREE.MeshStandardMaterial({color:0xd8d2bd,metalness:.2,roughness:.7,side:THREE.DoubleSide});
+  const nx=side>0?L*.52:L*.52;
+  const nb=beamAt(nx)*.99*side;
+  for(const [dx,char] of [[-1.6,'7'],[1.6,'8']]){
+    // 用细条拼数字（7 = 上横+竖钩简化；8 = 双环简化为方框）
+    if(char==='7'){
+      const top=box(3.2,.5,.2,numMat);top.position.set(nx,(D.hangarDeck-3.4),nb);hullNum.add(top);
+      const stem=box(.5,3.2,.2,numMat);stem.position.set(nx+1.3,(D.hangarDeck-5),nb);hullNum.add(stem);
+    }else{
+      for(const dy of [-1.6,0,1.6]){
+        const bar=box(3.0,.42,.2,numMat);bar.position.set(nx,(D.hangarDeck-5)+dy,nb);hullNum.add(bar);
+      }
+      for(const dx of [-1.4,1.4]){
+        const bar=box(.42,3.4,.2,numMat);bar.position.set(nx+dx,(D.hangarDeck-5),nb);hullNum.add(bar);
+      }
+    }
+  }
+  // 舷窗（机库甲板下方一排小方窗）
+  for(let x=x0+8;x<x1-4;x+=7){
+    const b=beamAt(x)*.99*side;
+    const win=box(1.0,.7,.2,MAT.glass);
+    win.position.set(x,D.hangarDeck-2,b);g.add(win);
+  }
+  return g;
+}
+buildSide(-1,'sideP');buildSide(1,'sideS');
+
+/* 9.2 机库分段 —— 机库甲板 + 顶棚桁架 + 防火卷帘 + 升降机井 */
+{
+  const g=new THREE.Group();ship.add(g);PARTS.hangar=g;
+  const x0=-L*.66,x1=L*.60;
+  // 机库甲板
+  const hf=loft(24,12,(u,v)=>{
+    const x=x0+(x1-x0)*u,z=(v*2-1)*beamAt(x)*.86;
+    return [x,D.hangarDeck,z];
+  },MAT.hangar);
+  hf.receiveShadow=true;g.add(hf);
+  // 机库顶棚
+  const hc=loft(24,12,(u,v)=>{
+    const x=x0+(x1-x0)*u,z=(v*2-1)*beamAt(x)*.84;
+    return [x,D.hangarCeil,z];
+  },MAT.hullDk);g.add(hc);
+  // 顶棚桁架（横向）
+  for(let x=x0+4;x<x1;x+=10){
+    const b=beamAt(x)*.84;
+    const tr=box(.8,.8,b*2,MAT.steelDk);
+    tr.position.set(x,D.hangarCeil-.6,0);g.add(tr);
+  }
+  // 防火卷帘（横向分隔，半透明）
+  for(const x of [-30,6,42]){
+    const b=beamAt(x)*.8;
+    const sh=box(.3,D.hangarCeil-D.hangarDeck-1,b*2,
+      new THREE.MeshStandardMaterial({color:0x6a7b88,metalness:.6,roughness:.5,
+        transparent:true,opacity:.35,side:THREE.DoubleSide}));
+    sh.position.set(x,(D.hangarDeck+D.hangarCeil)/2,0);g.add(sh);
+  }
+  // 3 台舷侧升降机井（右侧 2，左侧 1）——甲板开口
+  const lifts=[[-34,14],[10,14],[52,-14]];
+  // 升降机卷帘门材质（成品态为关闭的灰色卷帘，非黑洞）
+  const curtainMat=new THREE.MeshStandardMaterial({color:0x4a5865,metalness:.6,roughness:.6});
+  for(const [lx,lz] of lifts){
+    const well=box(13,D.hangarCeil-D.hangarDeck,10,MAT.hullDk);
+    well.position.set(lx,(D.hangarDeck+D.hangarCeil)/2,lz);g.add(well);
+    // 舷侧一面的关闭卷帘门（覆盖 well 深色端面，带横向条纹）
+    const doorZ=lz+(lz>0?5.2:-5.2);
+    const door=box(13.6,D.hangarCeil-D.hangarDeck-.2,.6,curtainMat);
+    door.position.set(lx,(D.hangarDeck+D.hangarCeil)/2,doorZ);
+    g.add(door);
+    for(let k=1;k<9;k++){
+      const stripe=box(13.6,.16,.7,MAT.steelDk);
+      stripe.position.set(lx,D.hangarDeck+k*(D.hangarCeil-D.hangarDeck)/9,doorZ+(lz>0?.1:-.1));
+      g.add(stripe);
+    }
+    const platform=box(12,.6,9,MAT.steel);
+    platform.position.set(lx,D.hangarDeck+.4,lz);g.add(platform);
+  }
+  // 机库照明灯带
+  for(const z of [-9,0,9]){
+    const strip=box(x1-x0-.6,.18,.3,glow(0xcfe6ff,.5));
+    strip.position.set((x0+x1)/2,D.hangarCeil-.4,z);g.add(strip);
+  }
+}
+
+/* 9.3 舱室层（动力 / 弹药 / 生活）—— 置于机库甲板之下、内底之上 */
+{
+  const g=new THREE.Group();ship.add(g);PARTS.hold=g;  // 随 db2 阶段出现
+  const floorY=D.innerBottom+.4, ceilY=D.hangarDeck-.6, h=ceilY-floorY;
+  // 动力舱（舯部）
+  const mach=new THREE.Group();g.add(mach);
+  const bay=box(48,h,30,MAT.mach);
+  bay.position.set(-6,floorY+h/2,0);mach.add(bay);
+  for(let i=0;i<4;i++){
+    const boiler=cyl(2.8,2.8,7,14,MAT.steelDk);
+    boiler.position.set(-24+i*11,floorY+3.8,-8);mach.add(boiler);
+    const turb=cyl(1.8,1.8,8,12,MAT.steel);turb.rotation.z=Math.PI/2;
+    turb.position.set(-20+i*10,floorY+3.6,8);mach.add(turb);
+  }
+  // 轴系 + 螺旋桨
+  for(const sz of [-1,1]){
+    const shaft=cyl(.8,.8,66,10,MAT.steel);shaft.rotation.z=Math.PI/2;
+    shaft.position.set(-56,floorY+2.6,sz*4);mach.add(shaft);
+    const prop=cyl(.4,3.2,1.2,12,MAT.steelDk);prop.rotation.z=Math.PI/2;
+    prop.position.set(-88,floorY+2.6,sz*4);mach.add(prop);
+  }
+  // 弹药库（艏艉）+ 提升机
+  for(const ax of [-58,54]){
+    const mag=box(16,h*.8,20,MAT.ammo);
+    mag.position.set(ax,floorY+h*.45,0);g.add(mag);
+    const lift=box(2.8,h*.9,2.8,MAT.steelDk);
+    lift.position.set(ax,floorY+h*.5,7);g.add(lift);
+  }
+  // 生活舱 / 医疗区（艏部）
+  const living=box(18,h*.7,26,MAT.living);
+  living.position.set(62,floorY+h*.4,0);g.add(living);
+  // 纵向通道
+  const corr=box(140,2.2,3,new THREE.MeshStandardMaterial({color:0x5c6b76,metalness:.3,roughness:.7}));
+  corr.position.set(0,ceilY-1.6,11);g.add(corr);
+}
+
+/* 9.4 飞行甲板三段 —— 用放样生成连续甲板面，Canvas 绘制工程标线 */
+function deckTexture(){
+  const W=2400,H=620;
+  const c=document.createElement('canvas');c.width=W;c.height=H;
+  const g=c.getContext('2d');
+  // 甲板底：深灰沥青质感
+  g.fillStyle='#2b3339';g.fillRect(0,0,W,H);
+  // 钢板分块缝
+  g.strokeStyle='rgba(0,0,0,.3)';g.lineWidth=2;
+  for(let x=0;x<W;x+=72){g.beginPath();g.moveTo(x,0);g.lineTo(x,H);g.stroke();}
+  for(let y=0;y<H;y+=72){g.beginPath();g.moveTo(0,y);g.lineTo(W,y);g.stroke();}
+  // 磨损斑
+  g.fillStyle='rgba(0,0,0,.07)';
+  for(let i=0;i<220;i++){
+    const x=Math.random()*W,y=Math.random()*H,r=10+Math.random()*50;
+    g.beginPath();g.ellipse(x,y,r,r*.35,Math.random()*3,0,7);g.fill();
+  }
+  const LINE='#f0ead2', YEL='#e8c24a';
+  // —— 舰体边缘白色实线 ——
+  g.strokeStyle='rgba(240,234,210,.55)';g.lineWidth=5;
+  g.strokeRect(30,26,W-60,H-52);
+  // —— 纵向跑道中线（虚线）——
+  g.strokeStyle=YEL;g.lineWidth=7;g.setLineDash([60,44]);
+  g.beginPath();g.moveTo(120,H/2);g.lineTo(W-140,H/2);g.stroke();
+  g.setLineDash([]);
+  // —— 斜角着舰区（偏向一侧，白框 + 中心线 + 大数字）——
+  const ax=W*.30,aw=W*.42,ay=H*.24,ah=H*.52;
+  g.strokeStyle=LINE;g.lineWidth=9;
+  g.strokeRect(ax,ay,aw,ah);
+  g.beginPath();g.moveTo(ax+aw*.5,ay);g.lineTo(ax+aw*.5,ay+ah);g.stroke();
+  // 着舰区横向阈值线
+  g.lineWidth=5;
+  for(let i=1;i<4;i++){
+    const yy=ay+ah*i/4;
+    g.beginPath();g.moveTo(ax,yy);g.lineTo(ax+aw,yy);g.stroke();
+  }
+  // 着舰区大数字 "63"
+  g.fillStyle=LINE;g.font='bold 130px monospace';g.textAlign='center';
+  g.fillText('63',ax+aw*.5,ay+ah*.5+45);
+  // —— 4 道拦阻索（横跨着舰区）——
+  g.strokeStyle='rgba(250,246,225,.9)';g.lineWidth=4;
+  for(let i=0;i<4;i++){
+    const xx=ax+aw*.18+i*(aw*.16);
+    g.beginPath();g.moveTo(xx,ay+10);g.lineTo(xx,ay+ah-10);g.stroke();
+  }
+  // —— 弹射器轨道（舰艏两条粗黑线 + 端头白标记）——
+  g.strokeStyle='rgba(12,16,20,.9)';g.lineWidth=12;
+  for(const off of [-58,58]){
+    g.beginPath();g.moveTo(W*.66,H/2+off);
+    g.lineTo(W*.96,H/2+off*.5);g.stroke();
+  }
+  // —— 停机位编号（左侧一排）——
+  g.fillStyle='rgba(240,234,210,.8)';g.font='bold 34px monospace';g.textAlign='left';
+  for(let i=0;i<8;i++)g.fillText(String(i+1).padStart(2,'0'),W*.10+i*W*.055,H*.84);
+  // —— 舰艏黄黑斜纹警示 ——
+  g.strokeStyle=YEL;g.lineWidth=8;
+  g.beginPath();g.moveTo(W*.93,H*.5);g.lineTo(W*.99,H*.16);g.stroke();
+  g.beginPath();g.moveTo(W*.95,H*.5);g.lineTo(W*.995,H*.22);g.stroke();
+  // —— 舰号 "CVN-78"（舰艉）——
+  g.fillStyle=LINE;g.font='bold 76px monospace';g.textAlign='center';
+  g.fillText('CVN 78',W*.09,H*.30);
+  const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;
+  t.anisotropy=8;return t;
+}
+const deckMat=new THREE.MeshStandardMaterial({map:deckTexture(),color:0xffffff,
+  metalness:.2,roughness:.9,side:THREE.DoubleSide});
+function buildDeck(x0,x1,key){
+  const g=new THREE.Group();ship.add(g);PARTS[key]=g;
+  // 甲板板（略带舰艏外飘收窄）
+  // UV：u 用全舰坐标归一化，使三段纹理连续；v 横向 0..1
+  const nx=24;
+  const surf=loft(nx,10,(u,v)=>{
+    const x=x0+(x1-x0)*u;
+    const bw=beamAt(x)*1.16;             // 甲板比船体略宽（外飘）
+    const z=(v*2-1)*bw;
+    return [x,deckEdgeY(x)+.4,z];
+  },deckMat,(u,v)=>[(x0+(x1-x0)*u+L)/(2*L),v]);
+  surf.receiveShadow=true;g.add(surf);
+  // 甲板边缘护栏（细线）
+  for(const s of [-1,1]){
+    const pts=[];
+    for(let i=0;i<=20;i++){
+      const x=x0+(x1-x0)*i/20,bw=beamAt(x)*1.16;
+      pts.push(new THREE.Vector3(x,deckEdgeY(x)+1.6,bw*s));
+    }
+    const rail=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),
+      new THREE.LineBasicMaterial({color:0x8ba3b5}));g.add(rail);
+  }
+  return g;
+}
+buildDeck(-L,-L*.18,'deckA');
+buildDeck(-L*.18, L*.34,'deckB');
+buildDeck( L*.34, L,'deckC');
+
+/* 9.5 舰岛 —— 分层建筑 + 相控阵 + 桅杆 + 烟囱，独立分段 */
+{
+  const g=new THREE.Group();ship.add(g);PARTS.island=g;
+  const ix=D.islandX, iz=10, yb=deckEdgeY(ix)+1;
+  // 下层塔体（含舰桥玻璃）
+  const b0=box(13,9,11,MAT.island);b0.position.set(ix,yb+4.5,iz);g.add(b0);
+  const bridge=box(13.4,3,11.4,MAT.glass);bridge.position.set(ix,yb+7,iz);g.add(bridge);
+  // 中层
+  const b1=box(10,6,9,MAT.island);b1.position.set(ix,yb+12,iz);g.add(b1);
+  // 上层桅杆塔
+  const b2=box(7,8,7,MAT.island);b2.position.set(ix,yb+19,iz);g.add(b2);
+  // 四面相控阵雷达（倾斜面板）
+  for(let k=0;k<4;k++){
+    const a=k*Math.PI/2;
+    const panel=box(5.5,6.5,.6,MAT.radar);
+    panel.position.set(ix+Math.sin(a)*4.2, yb+19, iz+Math.cos(a)*4.2);
+    panel.rotation.y=a;panel.rotation.x=-.18;g.add(panel);
+  }
+  // 主桅 + 天线
+  const mast=box(.7,12,.7,MAT.steel);mast.position.set(ix,yb+29,iz);g.add(mast);
+  const radarDish=cyl(3.4,.4,1.2,16,MAT.radar);radarDish.rotation.x=Math.PI/2;
+  radarDish.position.set(ix,yb+34,iz);g.add(radarDish);
+  // 烟囱
+  const stack=box(3.6,7,3,MAT.hullDk);stack.position.set(ix-3,yb+13,iz-3);g.add(stack);
+  makeLabel(g,new THREE.Vector3(ix,yb+42,iz),'舰岛','相控阵 · 桅杆 · 指挥塔','cyan');
+}
+
+/* =========================================================
+   10. 舾装：舰载机 / 弹射器 / 拦阻索 / 甲板设备 / 工人
+   ========================================================= */
+const FIT={};
+{
+  const g=new THREE.Group();ship.add(g);PARTS.fitout=g;
+  const dy=x=>deckEdgeY(x)+1.0;
+
+  // 10.1 舰载机（可辨识外形：机身 + 三角翼 + 尾翼 + 座舱）
+  function jet(color){
+    const j=new THREE.Group();
+    const body=box(1.5,1.1,7.2,MAT.white);body.position.y=.9;j.add(body);
+    const nose=cyl(.2,.9,2.2,10,MAT.white);nose.rotation.x=Math.PI/2;
+    nose.position.set(0,.9,4.6);j.add(nose);
+    // 主翼（三角）
+    const wing=box(9.4,.18,2.6,new THREE.MeshStandardMaterial({color,metalness:.5,roughness:.5}));
+    wing.position.set(0,.7,-.2);j.add(wing);
+    // 平尾
+    const tail=box(4.2,.16,1.4,MAT.white);tail.position.set(0,.8,-3.2);j.add(tail);
+    // 垂尾
+    const fin=box(.16,1.9,1.8,new THREE.MeshStandardMaterial({color,metalness:.5,roughness:.5}));
+    fin.position.set(0,1.7,-3.0);j.add(fin);
+    // 座舱
+    const canopy=sph(.75,MAT.glass,10,8);canopy.scale.set(.8,.6,1.6);
+    canopy.position.set(0,1.5,1.4);j.add(canopy);
+    // 尾钩
+    const hook=box(.12,.9,.12,MAT.steelDk);hook.position.set(0,.3,-3.8);j.add(hook);
+    return j;
+  }
+  const jetSpots=[[-58,-8,0],[-44,9,0],[-20,-9,0],[46,10,0],[62,-8,0],[70,7,0]];
+  FIT.jets=[];
+  jetSpots.forEach((p,i)=>{
+    const j=jet(i%2?0x9aa8b4:0x7f8d99);
+    j.position.set(p[0],dy(p[0]),p[1]);
+    j.rotation.y=p[2]+(i%2?-.12:.12);
+    g.add(j);FIT.jets.push(j);
+  });
+
+  // 10.2 弹射器轨道（舰艏，立体凹槽）
+  for(const off of [-9.5,9.5]){
+    const track=box(L*.42,.3,1.4,MAT.steelDk);
+    track.position.set(L*.70,dy(L*.70)+.1,off);g.add(track);
+    const slot=box(L*.42,.12,.5,MAT.hullDk);
+    slot.position.set(L*.70,dy(L*.70)+.26,off);g.add(slot);
+  }
+  // 10.3 拦阻索（斜角甲板，立体细索）
+  for(let i=0;i<4;i++){
+    const x=-4+i*4;
+    const cable=box(.18,.18,26,MAT.steel);
+    cable.position.set(x,dy(x)+.3,2);g.add(cable);
+  }
+  // 10.4 甲板地勤设备（牵引车 +  APA 电源车）
+  function tug(c){
+    const t=new THREE.Group();
+    const b=box(2.4,1.2,4,MAT.white);
+    b.position.y=.8;t.add(b);
+    const cab=box(2,1.2,1.6,new THREE.MeshStandardMaterial({color:c,metalness:.3,roughness:.6}));
+    cab.position.set(0,1.7,1);t.add(cab);
+    for(const sx of [-1,1])for(const sz of [-1,1]){
+      const w=cyl(.6,.6,.4,10,MAT.hullDk);w.rotation.z=Math.PI/2;
+      w.position.set(sx*1.3,.5,sz*1.4);t.add(w);
+    }
+    return t;
+  }
+  [[-30,-12,0xd8b23c],[8,-13,0xb5453c],[36,11,0xd8b23c]].forEach(p=>{
+    const t=tug(p[2]);t.position.set(p[0],dy(p[0]),p[1]);g.add(t);
+  });
+  // 10.5 升降机平台（3 台，从机库升到甲板位）
+  [[-34,16],[10,16],[52,-16]].forEach((p,i)=>{
+    const pl=box(12,.5,9,MAT.steelDk);
+    pl.position.set(p[0],dy(p[0])+.1,p[1]);g.add(pl);
+    for(const sx of [-1,1])for(const sz of [-1,1]){
+      const lamp=sph(.3,glow(i===2?0x3ddc97:0xffb648,.9),8,6);
+      lamp.position.set(p[0]+sx*5.4,dy(p[0])+.5,p[1]+sz*4);g.add(lamp);
+    }
+  });
+  // 10.6 甲板作业人员（高可视背心）
+  function deckWorker(){
+    const w=new THREE.Group();
+    const body=cyl(.35,.42,1.4,8,new THREE.MeshStandardMaterial({color:0xd8b23c,metalness:.1,roughness:.8}));
+    body.position.y=1.0;w.add(body);
+    const head=sph(.32,MAT.white,8,6);head.position.y=1.95;w.add(head);
+    const helm=sph(.36,MAT.yellow,8,6);helm.scale.y=.6;helm.position.y=2.1;w.add(helm);
+    return w;
+  }
+  FIT.workers=[];
+  for(let i=0;i<8;i++){
+    const wx=-52+i*14, wz=(i%2?1:-1)*13;
+    const w=deckWorker();w.position.set(wx,dy(wx),wz);g.add(w);FIT.workers.push(w);
+  }
+  makeLabel(g,new THREE.Vector3(46,dy(46)+8,10),'飞行甲板','3 弹射位 · 4 拦阻索 · 3 升降机','ok');
+}
+
+/* =========================================================
+   10.6 AI 全自动化工厂：智能定置堆场 · AGV 物流 · 机器人作业
+   —— 每个零件以完整几何陈列在堆场，经自动化物流链搬运安装，全程可见
+   ========================================================= */
+const AUTO={parts:{},slots:[],agvs:[],robots:[],stackers:[],anims:new Set(),
+  outCount:0,welding:false,timeScale:1};
+window.__setTimeScale=s=>{AUTO.timeScale=clamp(s,.02,5);};
+
+/* --- 轻量补间引擎：驱动物流动画（dt 已含 sim.speed） --- */
+function anim(dur,update,ease){
+  return new Promise(res=>{
+    AUTO.anims.add({t:0,dur:Math.max(.02,dur*AUTO.timeScale),update,ease,res});
+  });
+}
+function updateAnims(dt){
+  if(!AUTO.anims.size)return;
+  for(const a of [...AUTO.anims]){
+    a.t=Math.min(1,a.t+dt/a.dur);
+    const e=a.ease?a.ease(a.t):(a.t<.5?2*a.t*a.t:1-Math.pow(-2*a.t+2,2)/2);
+    if(a.update)a.update(e,a.t);
+    if(a.t>=1){AUTO.anims.delete(a);a.res();}
+  }
+}
+const YARD={dx:74,dz:70,z0:96,ncol:7};
+const yardPad=new THREE.Group();yard.add(yardPad);
+
+/* --- 堆场场地 + 主物流通道导引线 --- */
+{
+  const w=YARD.ncol*YARD.dx+40,d=YARD.dz+90;
+  const pad=box(w,.5,d,MAT.dockDark);
+  pad.position.set(0,.25,YARD.z0+YARD.dz/2-8);
+  pad.receiveShadow=true;yardPad.add(pad);
+  const laneMat=new THREE.MeshStandardMaterial({color:0xe8b93a,emissive:0x7a5c12,emissiveIntensity:.45});
+  for(let x=-230;x<=230;x+=16){
+    const dash=box(8,.07,.34,laneMat);dash.position.set(x,.56,70);yardPad.add(dash);
+  }
+  for(const z of [78,YARD.z0+YARD.dz-10]){
+    const edge=box(w-22,.06,.22,laneMat);edge.position.set(0,.56,z);yardPad.add(edge);
+  }
+}
+function partMeta(key){
+  const b=BLOCKS.find(x=>x.key===key);if(b)return b;
+  if(key==='transom')return {code:'TRN-01',name:'艉封板结构',ton:2600,st:'A1'};
+  if(key==='hold')return {code:'HLD-01',name:'动力舱室模块',ton:8400,st:'C1'};
+  return {code:key.toUpperCase(),name:key,ton:0,st:'—'};
+}
+const lineMat=new THREE.MeshStandardMaterial({color:0xe8b93a,emissive:0x7a5c12,emissiveIntensity:.45});
+
+/* --- 定置工位 + 零件完整几何副本（本地化后摆放，材质独立） --- */
+function buildSlot(i,key){
+  const meta=partMeta(key),src=PARTS[key];
+  const col=i%YARD.ncol,row=Math.floor(i/YARD.ncol);
+  const x=(col-(YARD.ncol-1)/2)*YARD.dx, z=YARD.z0+row*YARD.dz;
+  const bb=new THREE.Box3().setFromObject(src);
+  const ctr=bb.getCenter(new THREE.Vector3()), size=bb.getSize(new THREE.Vector3());
+
+  const holder=new THREE.Group();
+  const copy=src.clone(true);                       // 完整几何克隆（含内部细节）
+  const det=[];copy.traverse(o=>{if(o.isCSS2DObject)det.push(o);});
+  det.forEach(o=>o.removeFromParent());             // 清除克隆出的重复标签
+  copy.position.set(-ctr.x,-ctr.y,-ctr.z);          // 本地化：几何中心归零
+  copy.visible=true;holder.add(copy);
+  holder.traverse(o=>{                              // 材质独立，避免影响正式件
+    if(o.isMesh&&o.material)
+      o.material=Array.isArray(o.material)?o.material.map(m=>m.clone()):o.material.clone();
+  });
+  holder.userData={center:ctr,size};
+  holder.position.set(x,1.8+size.y/2,z);
+  yardPad.add(holder);
+
+  // 工位定置框 / 液压支承墩 / 状态灯 / RFID 地标 —— 自动化工厂定置管理
+  const fx=Math.min(size.x+9,YARD.dx-8),fz=Math.min(size.z+8,YARD.dz-8);
+  for(const s of [-1,1]){
+    const a=box(fx,.08,.22,lineMat);a.position.set(x,.58,z+s*fz/2);yardPad.add(a);
+    const b=box(.22,.08,fz,lineMat);b.position.set(x+s*fx/2,.58,z);yardPad.add(b);
+  }
+  for(const sx of [-1,1])for(const sz of [-1,1]){
+    const ped=box(3.4,1.8,3.4,MAT.steelDk);
+    ped.position.set(x+sx*fx*.34,.9,z+sz*fz*.34);yardPad.add(ped);
+  }
+  const pole=cyl(.16,.16,4.4,8,MAT.steelDk);pole.position.set(x+fx/2-2,2.2,z-fz/2+2);yardPad.add(pole);
+  const lamp=sph(.5,glow(0xf0b429,1.2),10,8);lamp.position.set(x+fx/2-2,4.6,z-fz/2+2);yardPad.add(lamp);
+  const rfid=cyl(.55,.55,.12,12,glow(0x4dd8ff,.9));rfid.position.set(x-fx/2+2,.64,z-fz/2+2);yardPad.add(rfid);
+
+  const label=makeLabel(holder,new THREE.Vector3(0,size.y/2+5,0),
+    meta.code+' '+meta.name,`${meta.st} · ${meta.ton.toLocaleString()}t · 堆场待取`,'warn');
+  AUTO.slots[i]={x,z,key,lamp,rfid,state:'stored'};
+  AUTO.parts[key]={mesh:holder,slot:i,state:'stored',meta,label,size,center:ctr,agv:null,attached:null};
+}
+Object.keys(PARTS).forEach((k,i)=>buildSlot(i,k));
+
+/* --- 自动化堆垛机：每排一台，沿 x 轨道运行 + 升降吊具 --- */
+for(let row=0;row<2;row++){
+  const z=YARD.z0+row*YARD.dz;
+  const g=new THREE.Group();g.position.set(-230,0,z);yardPad.add(g);
+  const H=38,SPAN=YARD.dz*.84;
+  for(const s of [-1,1]){
+    const col=box(2.2,H,2.2,MAT.crane);col.position.set(0,H/2,s*SPAN/2);g.add(col);
+    const foot=box(6,1.2,4,MAT.steelDk);foot.position.set(0,.6,s*SPAN/2);g.add(foot);
+  }
+  const beam=box(3.4,2.8,SPAN+10,MAT.crane);beam.position.set(0,H,0);g.add(beam);
+  const hoist=new THREE.Group();hoist.position.set(0,H-9,0);g.add(hoist);
+  const hb=box(9,2.6,10,MAT.craneDk);hoist.add(hb);
+  for(const s of [-1,1]){
+    const cable=cyl(.13,.13,9,6,MAT.steelDk);cable.position.set(s*3.4,4.5,0);hoist.add(cable);
+  }
+  const beacon=sph(.5,glow(0x4dd8ff,1.2),8,6);beacon.position.set(0,H+2.2,0);g.add(beacon);
+  AUTO.stackers.push({mesh:g,hoist,row,z});
+}
+
+/* --- SPMT 重型模块运输车（6 组，带液压支承鞍座，符合分段载荷传递） --- */
+const SADDLE_Y=3.2;   // 鞍座顶面高度：分段落在此支撑面上，载荷经鞍座传至车架
+for(let i=0;i<6;i++){
+  const g=new THREE.Group();
+  // 多轴线平板车架（SPMT：液压悬挂 + 多轴轮组）
+  const chassis=box(24,1.1,11,MAT.steelDk);chassis.position.y=1.35;g.add(chassis);
+  const deck=box(23.4,.35,10.4,new THREE.MeshStandardMaterial({color:0x2e7d64,metalness:.4,roughness:.7}));
+  deck.position.y=2.05;g.add(deck);
+  // 6 轴线轮组（每侧 6 组双轮）——重型分段运输的物理支撑
+  for(let k=0;k<6;k++){
+    const wx=-9.5+k*3.8;
+    for(const sz of [-1,1]){
+      const w=cyl(.82,.82,.5,12,MAT.hullDk);w.rotation.z=Math.PI/2;
+      w.position.set(wx,.85,sz*5.1);g.add(w);
+    }
+  }
+  // 四个液压支承鞍座（分段落墩点）——载荷经此传递，非悬空吸附
+  const saddles=[];
+  for(const sx of [-1,1])for(const sz of [-1,1]){
+    const ped=box(3.4,SADDLE_Y-2.2,2.6,MAT.steel);
+    ped.position.set(sx*7.5,(SADDLE_Y+2.2)/2,sz*3.4);g.add(ped);
+    const cap=box(3.8,.4,3.0,MAT.craneDk);cap.position.set(sx*7.5,SADDLE_Y,sz*3.4);g.add(cap);
+    saddles.push(cap);
+  }
+  const beacon=sph(.35,glow(0x4dd8ff,1.3),8,6);beacon.position.set(10.6,2.6,4.4);g.add(beacon);
+  const stripe=box(24.1,.16,.2,glow(0xf0b429,.5));stripe.position.set(0,1.45,5.55);g.add(stripe);
+  g.position.set(-190+i*76,0,70);yardPad.add(g);
+  const label=makeLabel(g,new THREE.Vector3(0,5,0),'SPMT-0'+(i+1),'空载 · 6轴线','ok');
+  AUTO.agvs.push({mesh:g,beacon,label,active:false,idx:i,saddles});
+}
+
+/* --- 四点吊索具：门吊/龙门吊与分段之间的物理连接（吊梁 + 4 根吊索） --- */
+const RIG={};
+function makeRig(color){
+  const grp=new THREE.Group();scene.add(grp);
+  const beam=box(26,1.0,1.0,MAT.craneDk);grp.add(beam);
+  const lines=[];
+  for(let k=0;k<4;k++){
+    const c=seg(grp,[0,0,0],[0,-1,0],new THREE.MeshStandardMaterial({color,metalness:.8,roughness:.35}),.14);
+    lines.push(c);
+  }
+  grp.visible=false;
+  return {grp,beam,lines,
+    place(from,part){
+      // 吊梁位于挂点下方 2m；四索从吊梁四角连到分段顶面四角
+      const sz=part.userData.size;
+      grp.position.set(from.x,from.y-2,from.z);
+      const hx=Math.min(sz.x*.42,12),hz=Math.min(sz.z*.42,9);
+      const top=part.position.y+sz.y/2;
+      const corners=[[-hx,-hz],[hx,-hz],[-hx,hz],[hx,hz]];
+      lines.forEach((c,i)=>{
+        const a=new THREE.Vector3(corners[i][0],0,corners[i][1]);
+        const b=new THREE.Vector3(part.position.x+corners[i][0],top,part.position.z+corners[i][1]);
+        const dir=b.clone().sub(a),len=dir.length();
+        // 用 scale 拉伸预建的 1 单位长圆柱
+        c.scale.set(1,len,1);
+        c.position.copy(a).add(b).multiplyScalar(.5).sub(grp.position);
+        c.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.clone().normalize());
+      });
+      grp.visible=true;
+    },
+    hide(){grp.visible=false;}
+  };
+}
+RIG.yard=makeRig(0xe8b93a);
+RIG.gantry=makeRig(0xd8d2bd);
+
+/* --- 六轴焊接机器人（坞壁两侧，作业火花可视化） --- */
+function buildWeldRobot(x,z,flip){
+  const root=new THREE.Group();root.position.set(x,D.dockWallTop,z);yard.add(root);
+  const base=cyl(1.5,1.8,1.2,12,MAT.crane);base.position.y=.6;root.add(base);
+  const a1g=new THREE.Group();a1g.position.y=1.2;root.add(a1g);
+  const a1=box(1.4,6,1.4,MAT.crane);a1.position.y=3;a1g.add(a1);
+  const a2g=new THREE.Group();a2g.position.y=6;a1g.add(a2g);
+  const a2=box(1.2,5,1.2,MAT.crane);a2.position.y=2.5;a2g.add(a2);
+  const torch=cyl(.18,.35,2.2,8,MAT.steel);torch.position.y=5.8;a2g.add(torch);
+  const spark=sph(.6,glow(0xa6e9ff,2.2),10,8);spark.position.y=7;spark.visible=false;a2g.add(spark);
+  a1g.rotation.z=flip*.42;a2g.rotation.z=-flip*.72;
+  AUTO.robots.push({root,a1g,a2g,spark,phase:Math.random()*6,flip});
+}
+for(const x of [-66,-24,24,66])for(const s of [-1,1])buildWeldRobot(x,s*(D.dockZ+1.6),s);
+
+/* --- AI 调度中心塔 --- */
+{
+  const t=new THREE.Group();t.position.set(0,0,YARD.z0+2*YARD.dz+30);yard.add(t);
+  const tw=box(15,32,12,MAT.steelDk);tw.position.y=16;t.add(tw);
+  const screen=box(14,9,.6,glow(0x16637d,.55));screen.position.set(0,25,6.3);t.add(screen);
+  for(let i=0;i<5;i++){
+    const bar=box(9.5-i*1.1,.34,.22,glow(i%2?0x3ddc97:0x4dd8ff,1));
+    bar.position.set(-1.1,28-i*1.4,6.7);t.add(bar);
+  }
+  makeLabel(t,new THREE.Vector3(0,34,0),'AI 中枢','全自动调度','cyan');
+}
+
+/* --- AI 调度面板刷新 --- */
+function aiSay(txt,kind){
+  const el=document.getElementById('aiDecision');
+  el.textContent=txt;el.className=kind||'hot';
+  document.getElementById('aiLog').textContent='› '+txt;
+}
+function updateAI(){
+  const total=Object.keys(PARTS).length;
+  document.getElementById('aiQueue').textContent=String(Math.max(0,total-AUTO.outCount)).padStart(2,'0');
+  document.getElementById('aiAgv').textContent=AUTO.agvs.filter(a=>a.active).length+' / 6 在线';
+  document.getElementById('aiRobot').textContent=(AUTO.welding?8:0)+' / 8 作业';
+  document.getElementById('aiOut').textContent=AUTO.outCount+' / '+total;
+  document.getElementById('aiBar').style.width=(AUTO.outCount/total*100).toFixed(1)+'%';
+}
+function setSlotState(i,state,color,txt){
+  const s=AUTO.slots[i];if(!s)return;
+  s.state=state;
+  if(s.lamp)s.lamp.material.color.setHex(color);
+  const P=AUTO.parts[s.key];
+  if(P&&P.label)P.label.setSub(txt);
+}
+function installPart(key){
+  const P=AUTO.parts[key];if(!P)return;
+  P.mesh.visible=false;                    // 堆场副本退场
+  if(PARTS[key])PARTS[key].visible=true;    // 正式分段原位接管（几何/位置完全一致）
+  P.state='done';P.attached=null;
+  setSlotState(P.slot,'done',0x3ddc97,'已合拢 · 工位释放');
+  AUTO.outCount++;updateAI();
+}
+window.__installPart=installPart;
+
+/* --- 完整自动化物流链：堆垛机出库 → AGV 运输 → 龙门吊吊装 → 精确对位 --- */
+async function deliverPart(key){
+  const P=AUTO.parts[key];
+  if(!P){if(PARTS[key])PARTS[key].visible=true;return;}
+  const meta=P.meta,s=AUTO.slots[P.slot],sz=P.size,ctr=P.center;
+  const spmt=AUTO.agvs[P.slot%AUTO.agvs.length];
+  const gantryCrane=AUTO.stackers[s.z>YARD.z0?1:0];
+
+  // ========== 阶段 1：堆场门吊挂索起吊，脱离存放支墩 ==========
+  setSlotState(P.slot,'outbound',0xff8c42,'门吊挂索 · 脱离支墩');
+  P.state='outbound';spmt.active=true;updateAI();
+  aiSay('AI 派单 '+meta.code+' → 门吊四点挂索');
+  const gx0=gantryCrane.mesh.position.x,hy0=gantryCrane.hoist.position.y;
+  await anim(.7,e=>{
+    gantryCrane.mesh.position.x=lerp(gx0,s.x,e);
+    gantryCrane.hoist.position.y=lerp(hy0,18,e);
+  });
+  // 吊梁+四索连接（门吊吊钩 → 分段顶面）
+  const yardHook=new THREE.Vector3(s.x,18-4,s.z);
+  RIG.yard.place(yardHook,P.mesh);
+  await anim(.45,e=>{P.mesh.position.y=lerp(P.mesh.position.y,18+sz.y/2+2,e);});
+  log('info','RIGGING',meta.code+' 门吊四点挂索完成 · 脱离存放支墩');
+
+  // ========== 阶段 2：SPMT 就位，分段落墩至液压鞍座 ==========
+  const a0=spmt.mesh.position.clone(),pickup=new THREE.Vector3(s.x,0,s.z-30);
+  await anim(.85,e=>{spmt.mesh.position.lerpVectors(a0,pickup,e);});
+  // 分段从吊装高度缓降到 SPMT 鞍座顶面（载荷由吊索转移到鞍座）
+  await anim(.7,e=>{P.mesh.position.y=lerp(18+sz.y/2+2,SADDLE_Y+sz.y/2,e);});
+  RIG.yard.hide();
+  spmt.label.setSub('载荷 '+meta.ton.toLocaleString()+'t');
+  log('ok','SPMT',meta.code+' 落墩至液压鞍座 · 载荷转移完成');
+  setSlotState(P.slot,'transit',0xff8c42,'SPMT 转运中 · '+meta.st);
+  P.state='transit';
+
+  // ========== 阶段 3：SPMT 沿厂区物流通道行驶至坞边接驳点 ==========
+  // 工艺路线：工位接驳点 → 厂区主干道(z=70) → 沿主干道行驶 → 坞边吊点(z=48)
+  // 运动学约束：SPMT 只沿正交厂区道路行驶，不穿越船坞坞壁、不斜穿堆场
+  const MAIN_Z=70;
+  const route=[pickup, new THREE.Vector3(s.x,0,MAIN_Z)];
+  const dockX=clamp(ctr.x,-96,96);
+  // 沿主干道 x 方向行驶到目标 x（再折向坞边，两段正交不斜穿）
+  route.push(new THREE.Vector3(dockX,0,MAIN_Z));
+  // 抵达坞边（坞壁外侧 z=48；悬臂龙门吊覆盖到 z=±63）
+  route.push(new THREE.Vector3(dockX,0,48));
+  // 分段点插值沿折线路径行进（分段随车同步）
+  const segLens=[];
+  for(let k=1;k<route.length;k++)segLens.push(route[k].distanceTo(route[k-1]));
+  const totalLen=segLens.reduce((a,b)=>a+b,0);
+  await anim(2.0,e=>{
+    let d=e*totalLen,k=0;
+    while(k<segLens.length-1&&d>segLens[k]){d-=segLens[k];k++;}
+    const t=segLens[k]>0?d/segLens[k]:1;
+    spmt.mesh.position.lerpVectors(route[k],route[k+1],clamp(t,0,1));
+    P.mesh.position.set(spmt.mesh.position.x,SADDLE_Y+sz.y/2,spmt.mesh.position.z);
+  });
+  log('info','SPMT',meta.code+' 抵达坞边吊点 · SPMT 制动驻车');
+
+  // ========== 阶段 4：坞边龙门吊四点挂索 → 起升脱离鞍座 ==========
+  setSlotState(P.slot,'lifting',0x4dd8ff,'龙门吊挂索 · 起升脱车');
+  P.state='lifting';
+  aiSay('龙门吊四点挂索 '+meta.code+' → 起升脱离 SPMT');
+  const gx1=GAN.xTarget,tz1=GAN.trolleyZTarget,hz1=GAN.hookYTarget;
+  const hookAtGrab=SADDLE_Y+sz.y+5;      // 吊钩降至分段顶面（含吊梁空间）
+  const SAFE_Y=100;                       // 安全转运高度：最大分段底部>船体最高点
+  // 龙门吊整机+小车移动到坞边吊点正上方，吊钩下降
+  await anim(.9,e=>{
+    GAN.x=GAN.xTarget=lerp(gx1,dockX,e);
+    GAN.trolleyZ=GAN.trolleyZTarget=lerp(tz1,48,e);
+    GAN.hookY=GAN.hookYTarget=lerp(hz1,hookAtGrab,e);
+  });
+  // 挂索：吊梁+四索连接，张紧后起升，分段脱离 SPMT 鞍座
+  RIG.gantry.place(new THREE.Vector3(GAN.x,GAN.hookY,GAN.trolleyZ),P.mesh);
+  await anim(.4,e=>{P.mesh.position.y=lerp(SADDLE_Y+sz.y/2,SADDLE_Y+sz.y/2+.6,e);}); // 吊索张紧微起
+  // 物理关键：先建立吊钩↔分段刚性连接，再起升——分段全程随吊钩同步上升，不滞留运输车
+  P.attached={dy:GAN.hookY-P.mesh.position.y,phase:'hoist'};
+  await anim(.9,e=>{GAN.hookY=GAN.hookYTarget=lerp(hookAtGrab,SAFE_Y,e);});
+  // SPMT 卸载后驶离吊点（运输车不得停留在吊装区）
+  spmt.active=false;
+  const depart=spmt.mesh.position.clone();
+  await anim(.9,e=>{spmt.mesh.position.z=lerp(depart.z,52,e);});
+  spmt.label.setSub('空载 · 6轴线');updateAI();
+  log('ok','GANTRY',meta.code+' 脱离鞍座 · SPMT 驶离吊装区');
+
+  // ========== 阶段 5：高空过跨平移至安装位正上方 ==========
+  // 严禁低位穿越已建船体：全程保持 SAFE_Y（分段底部高于船体最高点）
+  if(P.attached)P.attached.phase='convey';
+  await anim(1.6,e=>{
+    GAN.x=GAN.xTarget=lerp(dockX,ctr.x,e);
+    GAN.trolleyZ=GAN.trolleyZTarget=lerp(48,ctr.z,e);
+  });
+
+  // ========== 阶段 6：缓缓下降 → 激光对中 → 落位 → 脱钩 ==========
+  if(P.attached)P.attached.phase='landing';
+  const landHook=ctr.y+P.attached.dy;
+  await anim(1.3,e=>{GAN.hookY=GAN.hookYTarget=lerp(SAFE_Y,landHook,e);});
+  // 落位前对中暂停：微调精度显示
+  setSlotState(P.slot,'lifting',0x4dd8ff,'激光对中 · 精度复核');
+  aiSay(meta.code+' 激光对中 · 偏差 0.8mm < 3mm 允差');
+  await anim(.6,e=>{});
+  // 脱钩：吊索松弛，吊钩回升，分段由正式结构承担
+  RIG.gantry.hide();
+  await anim(.5,e=>{GAN.hookY=GAN.hookYTarget=lerp(landHook,landHook+6,e);});
+  P.attached=null;
+  installPart(key);
+  log('ok','ERECTION',meta.code+' 落位完成 · 脱钩 · 转入焊接工序');
+  updateAI();
+}
+window.__deliverPart=deliverPart;
+
+/* =========================================================
+   11. 建造流程状态机（12 步）—— 空船坞 → 分段搭载 → 舾装 → 注水出坞
+   ========================================================= */
+const STEPS=[
+  {t:'船坞准备',s:'DOCK'},      {t:'双层底搭载',s:'DB'},
+  {t:'艏部合拢',s:'BOW'},       {t:'舷侧合拢',s:'SIDE'},
+  {t:'机库结构',s:'HANGAR'},    {t:'动力舱室',s:'HOLD'},
+  {t:'飞行甲板',s:'DECK'},      {t:'舰岛吊装',s:'ISLAND'},
+  {t:'精度对中',s:'QC'},        {t:'舾装舰载机',s:'FIT'},
+  {t:'船坞注水',s:'FLOOD'},     {t:'出坞交付',s:'DELIVER'},
+];
+const CASE={active:false,started:false,step:-1,autoAt:40};
+const sim={t:0,speed:1,paused:false,cut:false,labels:true,
+  prog:0,progT:0,blk:0,ton:0,tonT:0,acc:0,accT:0,weld:0,weldT:0,water:0,waterT:0,shipX:0,shipXT:0};
+const WO={id:'WP-000',badge:'待命',cls:'',desc:'',block:'—',ton:'—',station:'—'};
+let logs=[];
+function log(cls,src,ms){
+  const tm=`${String(Math.floor(sim.t/60)).padStart(2,'0')}:${String(Math.floor(sim.t%60)).padStart(2,'0')}`;
+  logs.push({cls,src,ms,tm});
+  if(logs.length>9)logs.shift();
+  const el=document.getElementById('log');
+  el.innerHTML=logs.map(l=>`<div class="lg ${l.cls}"><span class="tm">${l.tm}</span>`+
+    `<span class="src">${l.src}</span><span class="ms">${l.ms}</span></div>`).join('');
+}
+function setWO(o){Object.assign(WO,o);
+  document.getElementById('woId').textContent=WO.id;
+  const b=document.getElementById('woBadge');b.textContent=WO.badge;b.className='badge '+WO.cls;
+  document.getElementById('woDesc').textContent=WO.desc;
+  document.getElementById('woBlock').textContent=WO.block;
+  document.getElementById('woTon').textContent=WO.ton;
+  document.getElementById('woStation').textContent=WO.station;
+}
+const ST_LABEL={stored:'堆场待取',outbound:'堆垛出库',transit:'AGV运输',lifting:'吊装对位',done:'已合拢'};
+const ST_ICON={stored:'·',outbound:'↗',transit:'▤',lifting:'▸',done:'✓'};
+function renderSeg(){
+  const el=document.getElementById('segList');
+  el.innerHTML=BLOCKS.map(b=>{
+    const P=AUTO.parts[b.key];
+    const state=P?P.state:(b._state==='done'?'done':'wait');
+    const ic=ST_ICON[state]||'·', st=ST_LABEL[state]||'待搭载';
+    const cls=state==='done'?'done':(state==='stored'||state==='wait'?'wait':'cur');
+    return `<div class="seg ${cls}"><div class="ic">${ic}</div>`+
+      `<div class="nm"><b>${b.code} ${b.name}</b><span>${b.ton.toLocaleString()} t · 工位 ${b.st} · ${P?('库位 '+String(P.slot+1).padStart(2,'0')):'—'}</span></div>`+
+      `<div class="st">${st}</div></div>`;
+  }).join('');
+}
+function renderSteps(){
+  document.getElementById('steps').innerHTML=STEPS.map((s,i)=>
+    `<div class="step ${i<CASE.step?'done':i===CASE.step?'cur':''}">`+
+    `<div class="n">${i<CASE.step?'✓':String(i+1).padStart(2,'0')}</div>`+
+    `<div class="t">${s.t}</div></div>`).join('');
+}
+const wait=ms=>new Promise(r=>setTimeout(r,ms*AUTO.timeScale));
+function markDone(keys){keys.forEach(k=>{const b=BLOCKS.find(x=>x.key===k);if(b)b._state='done';});
+  sim.blk=BLOCKS.filter(b=>b._state==='done').length;}
+function markCur(key){BLOCKS.forEach(b=>b._state='wait');
+  const b=BLOCKS.find(x=>x.key===key);if(b)b._state='cur';renderSeg();}
+
+// 镜位
+const CAMS=[
+  {p:[210,168,300],t:[0,18,68]},   // 0 全景（堆场 + 船坞）
+  {p:[20,58,130],t:[0,26,0]},      // 1 侧视船体
+  {p:[0,230,90],t:[0,10,0]},       // 2 俯视甲板
+  {p:[-30,44,66],t:[-30,14,0]},    // 3 船坞近景
+  {p:[96,48,44],t:[24,34,10]},     // 4 舰岛
+  {p:[-140,74,-120],t:[0,20,0]},   // 5 艉部动力
+  {p:[0,108,258],t:[0,10,132]},    // 6 智能堆场全景
+];
+let fly=null;
+function flyTo(i){
+  const c=CAMS[i];
+  fly={p0:camera.position.clone(),p1:new THREE.Vector3(...c.p),
+    t0:controls.target.clone(),t1:new THREE.Vector3(...c.t),k:0};
+}
+
+// 分段显隐（最终交接用）
+function showParts(keys,on){keys.forEach(k=>{if(PARTS[k])PARTS[k].visible=on;});}
+// 复位：正式分段隐藏，所有零件副本回到定置工位（完整可见）
+function initHidden(){
+  AUTO.anims.forEach(a=>a.res());AUTO.anims.clear();
+  Object.keys(PARTS).forEach(k=>PARTS[k].visible=false);
+  Object.values(AUTO.parts).forEach(P=>{
+    const s=AUTO.slots[P.slot];
+    P.mesh.visible=true;
+    P.mesh.position.set(s.x,1.8+P.size.y/2,s.z);
+    P.state='stored';P.attached=null;
+    P.label.el.className='tag warn';
+    setSlotState(P.slot,'stored',0xf0b429,'堆场待取');
+  });
+  AUTO.agvs.forEach((a,i)=>{
+    a.mesh.position.set(-190+i*76,0,70);a.active=false;
+    a.label.setSub('空载 · 6轴线');
+    a.beacon.material.color.setHex(0x4dd8ff);
+  });
+  if(RIG.yard)RIG.yard.hide();
+  if(RIG.gantry)RIG.gantry.hide();
+  AUTO.stackers.forEach(st=>{st.mesh.position.x=-230;st.hoist.position.y=29;});
+  AUTO.outCount=0;AUTO.welding=false;
+  waterMesh.visible=false;sea.visible=false;
+  sim.water=0;sim.waterT=0;ship.position.set(0,0,0);
+  renderSeg();updateAI();aiSay('AI 中枢就绪 · 堆场零件全部定置就位');
+}
+initHidden();
+window.__sparkRate=()=>'0/0';
+
+async function runFlow(){
+  if(CASE.active)return;
+  if(CASE.started){resetAll();await wait(500);}
+  CASE.active=true;CASE.started=true;
+  initHidden();
+  sim.prog=0;sim.progT=4;sim.ton=0;sim.tonT=0;
+  logs=[];document.getElementById('log').innerHTML='';
+
+  /* 1 船坞准备 —— AI 全场盘点 */
+  CASE.step=0;renderSteps();flyTo(0);
+  setWO({id:'WP-001',badge:'盘点中',cls:'',desc:'AI 中枢完成全场盘点：14 个零件在定置工位就位，RFID 全检通过，物流设备自检完成，等待派工。',
+    block:'—',ton:'—',station:'DOCK'});
+  log('info','AI','堆场盘点完成 · 14 件定置就位 · RFID 全检通过');
+  log('ok','SAFETY','干船坞排水完成 · 龙骨墩 '+keelCount+' 组就位 · 吊轨自检通过');
+  await wait(2600);
+
+  /* 2-3 双层底三段 —— AI 调度全链搬运 */
+  CASE.step=1;renderSteps();markCur('db1');
+  setWO({id:'WP-002',badge:'自动出库',cls:'',desc:'AI 调度堆垛机取料→AGV 沿磁导航通道运输→龙门吊吊装对位，双层底与龙骨墩精确贴合。',
+    block:'DB-01~03',ton:'29,400 t',station:'A1-A3'});
+  AUTO.welding=true;updateAI();
+  log('info','AI','派发 DB-01 / TRN-01 / DB-02 / DB-03 / HLD-01 出库工单');
+  await deliverPart('db1');sim.tonT=9800;
+  log('ok','ERECTION','DB-01 落位 · 与龙骨墩贴合偏差 0.8mm');
+  await deliverPart('transom');
+  await deliverPart('db2');sim.tonT=22200;
+  log('ok','ERECTION','DB-02 中段合拢 · 基准段形成');
+  await deliverPart('db3');await deliverPart('hold');sim.tonT=31400;
+  log('ok','ROBOT','8 台六轴机器人完成环缝焊接 · 一次合格率 98.2%');
+  markDone(['db1','db2','db3']);sim.progT=22;
+  await wait(1000);
+
+  /* 4 艏部 */
+  CASE.step=2;renderSteps();markCur('bow');
+  setWO({id:'WP-003',badge:'自动出库',cls:'',desc:'AI 重规划物流路径：艏部分段（含球鼻艏）由堆场出库，经 AGV 转运后吊装合拢，控制艏部线型顺直度。',
+    block:'BOW-01',ton:'7,600 t',station:'B1'});
+  log('info','AI','路径重规划 · BOW-01 避开占用工位 · 优先出库');
+  await deliverPart('bow');sim.tonT=39000;sim.progT=31;
+  log('ok','QUALITY','艏部线型顺直度合格 · 球鼻艏中心线偏差 1.2mm');
+  markDone(['bow']);
+  await wait(900);
+
+  /* 5 舷侧 */
+  CASE.step=3;renderSteps();markCur('sideP');
+  setWO({id:'WP-004',badge:'自动出库',cls:'',desc:'左右舷侧分段由双 AGV 并行转运，对称吊装与内底板及舱壁焊接，形成完整船体横截面。',
+    block:'SID-P/S',ton:'13,600 t',station:'B2'});
+  log('info','AI','双车并行调度 · SID-P / SID-S 对称同步出库');
+  await deliverPart('sideP');
+  await deliverPart('sideS');sim.tonT=52600;sim.progT=44;
+  log('ok','WELD','舷侧纵桁焊接完成 · 船体主尺度复测合格');
+  markDone(['sideP','sideS']);
+  await wait(900);
+
+  /* 6 机库 */
+  CASE.step=4;renderSteps();markCur('hangar');
+  setWO({id:'WP-005',badge:'自动出库',cls:'',desc:'机库结构分段（机库甲板、顶棚桁架、防火卷帘与 3 台升降机井）堆场出库、龙门吊整体吊装。',
+    block:'HGR-01',ton:'11,500 t',station:'C1'});
+  log('info','AI','HGR-01 出库 · 载荷校核 11,500t < 1200t×4 吊点');
+  await deliverPart('hangar');sim.tonT=64100;sim.progT=55;
+  log('ok','STRUCT','机库净高复测 7.8m · 桁架安装到位');
+  markDone(['hangar']);
+  await wait(900);
+
+  /* 7 飞行甲板 */
+  CASE.step=5;renderSteps();markCur('deckA');
+  setWO({id:'WP-006',badge:'自动出库',cls:'',desc:'飞行甲板三段依次从堆场出库、AGV 转运、龙门吊贯通吊装，形成完整飞行甲板与斜角甲板作业区。',
+    block:'FLT-A/B/C',ton:'16,400 t',station:'C2'});
+  log('info','AI','甲板三段按艉→中→艏顺序派工 · 甲板纹理 UV 全舰连续');
+  await deliverPart('deckA');sim.tonT=70500;
+  log('ok','ERECTION','FLT-A 甲板艉段落位');
+  await deliverPart('deckB');sim.tonT=76600;
+  log('ok','ERECTION','FLT-B 甲板中段落位 · 斜角甲板区');
+  await deliverPart('deckC');sim.tonT=81500;sim.progT=68;
+  log('ok','ERECTION','FLT-C 甲板艏段落位 · 飞行甲板全线贯通');
+  markDone(['deckA','deckB','deckC']);
+  await wait(1000);
+
+  /* 8 舰岛 */
+  CASE.step=6;renderSteps();markCur('island');
+  setWO({id:'WP-007',badge:'自动出库',cls:'',desc:'舰岛上层建筑（指挥塔、相控阵雷达、桅杆与烟囱）整体从 D1 工位出库吊装。',
+    block:'ISL-01',ton:'4,200 t',station:'D1'});
+  log('info','AI','ISL-01 整体式上层建筑出库 · 雷达阵面保护确认');
+  await deliverPart('island');sim.tonT=85700;sim.progT=76;
+  flyTo(4);
+  log('ok','EQUIP','相控阵雷达阵面安装 · 舰岛轴线对齐');
+  markDone(['island']);
+  await wait(1200);
+
+  /* 9 精度对中（质量门拦截）*/
+  CASE.step=7;renderSteps();flyTo(4);
+  setWO({id:'WP-008',badge:'AI质量拦截',cls:'err',
+    desc:'AI 视觉质检 + Laser 跟踪仪复测：舰岛与甲板基准对中偏差 8.6 mm，超出 ±3 mm 允差，AI 自动冻结舾装派工。',
+    block:'ISL-01',ton:'—',station:'QC'});
+  sim.acc=8.6;sim.accT=8.6;
+  log('err','AI-QC','对中偏差 8.6mm > 3.0mm · 自动冻结后续工单 NCR-2218');
+  aiSay('异常检出 · 自动冻结舾装派工','er');
+  log('warn','AI','根因推理：3 点支撑受力不均 · 生成液压微调方案');
+  await wait(2400);
+  setWO({id:'WP-008',badge:'AI自愈中',cls:'',desc:'AI 自主决策：液压千斤顶分 3 点微调舰岛基座，同步监测应力与水平度，闭环复测。',
+    block:'ISL-01',ton:'—',station:'QC'});
+  aiSay('执行 3 点液压微调 · 闭环复测','hot');
+  log('ok','AI','微调完成 · 复测偏差 2.1mm · NCR 自动关闭 · 工单解冻');
+  sim.acc=2.1;sim.accT=2.1;sim.weldT=98.2;
+  await wait(2000);
+
+  /* 10 舾装 + 舰载机 */
+  CASE.step=8;renderSteps();markCur('fitout');
+  setWO({id:'WP-009',badge:'自动出库',cls:'',desc:'舾装模块（弹射器轨道、拦阻索、升降机平台、舰载机与地勤设备）从 D2 工位出库、AGV 转运安装。',
+    block:'FIT-01',ton:'3,100 t',station:'D2'});
+  log('info','AI','FIT-01 复合舾装模块出库 · 弹射器轨道 / 拦阻索 / 舰载机');
+  AUTO.welding=false;updateAI();
+  await deliverPart('fitout');sim.tonT=88800;sim.progT=92;
+  flyTo(2);
+  log('ok','FITOUT','6 架舰载机系留就位 · 甲板作业区清理完成');
+  markDone(['fitout']);
+  await wait(1400);
+
+  /* 11 船坞注水 */
+  CASE.step=9;renderSteps();flyTo(0);
+  setWO({id:'WP-010',badge:'注水中',cls:'',desc:'船坞注水，监测浮力与坐墩载荷转移，验证水密性与稳性。',
+    block:'全舰',ton:'—',station:'DOCK'});
+  log('info','DOCK','船坞注水阀开启 · 水位上升');
+  waterMesh.visible=true;sim.waterT=9.0;
+  await wait(3600);
+  log('ok','SAFETY','水密性检查合格 · 浮力建立 · 坐墩载荷解除');
+  // 出坞前整体涂装：防锈底漆统一覆盖为舰体灰
+  MAT.hullPrimer.color.set(0x45505c);
+  MAT.hullPrimer.metalness=.8;MAT.hullPrimer.roughness=.5;
+  log('info','PAINT','全舰外板统一涂装 · 防锈底漆覆盖为舰体灰');
+  await wait(1800);
+
+  /* 12 出坞交付 —— 船驶出船坞，龙门吊让位，海面显现 */
+  CASE.step=10;renderSteps();
+  setWO({id:'WP-011',badge:'已交付',cls:'ok',
+    desc:'航母完整建成出坞：12 个分段全部合拢，飞行甲板贯通，舾装完成，系泊试验通过。',
+    block:'全舰',ton:'88,800 t',station:'DELIVER'});
+  sim.progT=100;sim.weld=98.2;sim.weldT=98.2;
+  log('info','DOCK','开启坞门 · 拖轮就位');
+  sea.visible=true;                      // 远景水域显现
+  GAN.xTarget=104;                       // 龙门吊移至坞端让出视野
+  flyTo(0);
+  await wait(2600);
+  log('ok','DELIVER','航母浮起 · 拖轮协助出坞 · 完整交付');
+  log('ok','DELIVER','建造总周期达成 · 全舰状态 NORMAL');
+  markDone(BLOCKS.map(b=>b.key));
+  CASE.active=false;
+}
+
+function resetAll(){
+  CASE.active=false;CASE.step=-1;renderSteps();
+  initHidden();
+  BLOCKS.forEach(b=>b._state='wait');renderSeg();
+  sim.prog=0;sim.progT=0;sim.blk=0;sim.ton=0;sim.tonT=0;
+  sim.acc=0;sim.accT=0;sim.weld=0;sim.weldT=0;sim.water=0;sim.waterT=0;
+  sim.shipX=0;sim.shipXT=0;sim.t=0;
+  MAT.hullPrimer.color.set(0x8a4a36);MAT.hullPrimer.metalness=.32;MAT.hullPrimer.roughness=.76;
+  GAN.x=GAN.xTarget=-78;GAN.hookY=GAN.hookYTarget=70;
+  GAN.trolleyZ=GAN.trolleyZTarget=0;
+  flyTo(0);
+  setWO({id:'WP-000',badge:'待命',cls:'',desc:'点击「开始建造」，演示从空船坞到航母出坞的完整分段建造流程。',
+    block:'—',ton:'—',station:'—'});
+  logs=[];document.getElementById('log').innerHTML='';
+}
+
+/* =========================================================
+   12. 主循环 / 交互 / 自检接口
+   ========================================================= */
+const clock=new THREE.Clock();
+let lowPerf=false,frameN=0;
+
+function updateKPIHUD(){
+  document.getElementById('kProg').innerHTML=sim.prog.toFixed(0)+'<u>%</u>';
+  document.getElementById('kBlk').innerHTML=sim.blk+'<u>/12</u>';
+  document.getElementById('kTon').innerHTML=Math.round(sim.ton).toLocaleString()+'<u>t</u>';
+  const acc=document.getElementById('kAcc');
+  acc.innerHTML=(sim.acc?sim.acc.toFixed(1):'—')+'<u>mm</u>';
+  acc.className='v'+(sim.acc>3?' dn':'');
+  document.getElementById('kWeld').innerHTML=(sim.weld?sim.weld.toFixed(1):'—')+'<u>%</u>';
+  document.getElementById('kWater').innerHTML=sim.water.toFixed(1)+'<u>m</u>';
+}
+function updateCables(){
+  for(const c of GAN.cables){
+    const top=CRANE_TOP, len=top-GAN.hookY;
+    // 重新构造钢缆几何（简洁：缩放 y）
+    c.m.scale.y=Math.max(.01,len/CRANE_TOP);
+    c.m.position.y=(GAN.hookY+top)/2;
+  }
+}
+function animate(){
+  requestAnimationFrame(animate);
+  const rawDt=Math.min(clock.getDelta(),.06);
+  const dt=sim.paused?0:rawDt*sim.speed;
+  sim.t+=dt;
+  frameN++;
+
+  // 相机补间
+  if(fly){
+    fly.k=Math.min(1,fly.k+rawDt*.62);
+    const e=fly.k<.5?2*fly.k*fly.k:1-Math.pow(-2*fly.k+2,2)/2;
+    camera.position.lerpVectors(fly.p0,fly.p1,e);
+    controls.target.lerpVectors(fly.t0,fly.t1,e);
+    if(fly.k>=1)fly=null;
+  }
+
+  // 起重机运动（底座恒定，仅小车/吊钩/整机平移）
+  GAN.x=lerp(GAN.x,GAN.xTarget,dt*1.2);
+  GAN.hookY=lerp(GAN.hookY,GAN.hookYTarget,dt*1.4);
+  GAN.trolleyZ=lerp(GAN.trolleyZ,GAN.trolleyZTarget,dt*1.4);
+  gantry.position.x=GAN.x;
+  trolley.position.z=GAN.trolleyZ;
+  hookGrp.position.y=GAN.hookY;
+  hookGrp.position.z=GAN.trolleyZ;
+  updateCables();
+
+  // === AI 全自动化工厂：物流补间 / 吊钩挂接 / 机器人焊接 / 设备状态灯 ===
+  updateAnims(dt);
+  let lifted=null;
+  for(const P of Object.values(AUTO.parts)){
+    if(P.attached){
+      P.mesh.position.set(GAN.x,GAN.hookY-P.attached.dy,GAN.trolleyZ);
+      lifted=P;
+    }
+  }
+  // 吊索具实时跟随：吊梁随小车，四索随分段位置更新
+  if(lifted)RIG.gantry.place(new THREE.Vector3(GAN.x,GAN.hookY,GAN.trolleyZ),lifted.mesh);
+  if(!sim.paused){
+    AUTO.robots.forEach(r=>{
+      r.a1g.rotation.z=r.flip*(.42+Math.sin(sim.t*1.4+r.phase)*.05);
+      r.a2g.rotation.z=-r.flip*(.72+Math.sin(sim.t*1.9+r.phase)*.08);
+      r.spark.visible=AUTO.welding&&Math.sin(sim.t*14+r.phase)>.35;
+    });
+  }
+  AUTO.slots.forEach((s,i)=>{
+    if(s.lamp&&s.state==='stored')
+      s.lamp.material.emissiveIntensity=.75+Math.sin(sim.t*2+i*.7)*.3;
+  });
+  AUTO.agvs.forEach((a,i)=>{
+    a.beacon.material.emissiveIntensity=a.active?
+      1.2+Math.sin(sim.t*9+i)*.6:.45+Math.sin(sim.t*2+i)*.2;
+  });
+  if(frameN%10===0)renderSeg();
+
+  // 门座吊 / 塔吊：仅回转上部缓慢转动，底座不动
+  if(!sim.paused){
+    portalA.slew.rotation.y+=dt*.06;
+    portalB.slew.rotation.y-=dt*.05;
+    towerA.slew.rotation.y+=dt*.04;
+  }
+  // 障碍灯闪烁
+  if(!sim.paused){
+    const on=Math.sin(sim.t*3)>0;
+    GAN.beacons.forEach(b=>b.material.emissiveIntensity=on?1.6:.15);
+  }
+
+  // 数值平滑
+  sim.prog=lerp(sim.prog,sim.progT,rawDt*.9);
+  sim.ton=lerp(sim.ton,sim.tonT,rawDt*1.1);
+  sim.acc=lerp(sim.acc,sim.accT,rawDt*1.6);
+  sim.weld=lerp(sim.weld,sim.weldT,rawDt*.8);
+  sim.water=lerp(sim.water,sim.waterT,rawDt*.7);
+  waterMesh.position.y=D.dockFloor+sim.water;
+  // 浮力：船体随水位浮起，出坞后驶出船坞
+  const float=Math.max(0,(sim.water-4)/4.5)*3.4;
+  ship.position.y=lerp(ship.position.y,float,rawDt*.8);
+  ship.position.x=lerp(ship.position.x,sim.shipXT,rawDt*.4);
+  updateKPIHUD();
+
+  // 工人轻微动作
+  if(FIT.workers&&!sim.paused){
+    FIT.workers.forEach((w,i)=>{w.rotation.y=Math.sin(sim.t*.7+i)*.25;});
+  }
+
+  // 自动触发
+  if(!CASE.started&&sim.t>CASE.autoAt&&!sim.paused)runFlow();
+
+  // 自适应降级
+  if(!lowPerf&&frameN===90){
+    const fps=frameN/(clock.elapsedTime||1);
+    if(fps<18){lowPerf=true;renderer.setPixelRatio(1);
+      bloom.strength=.12;key.shadow.mapSize.set(512,512);key.shadow.mapSize.needsUpdate=true;}
+  }
+
+  controls.update();
+  composer.render();
+  if(sim.labels)labelRenderer.render(scene,camera);
+}
+animate();
+
+/* --- 剖视切换：外壳半透明，露出内部结构 --- */
+const shellMats=[MAT.hull,MAT.hullPrimer];
+const shellOrig=shellMats.map(m=>({t:m.transparent,o:m.opacity,dw:m.depthWrite}));
+window.__setCut=on=>{
+  sim.cut=on;
+  shellMats.forEach((m,i)=>{
+    m.transparent=on?true:shellOrig[i].t;
+    m.opacity=on?.16:shellOrig[i].o;
+    m.depthWrite=on?false:shellOrig[i].dw;
+    m.needsUpdate=true;
+  });
+  // 甲板在剖视时也半透明，便于看进机库
+  deckMat.transparent=on;deckMat.opacity=on?.28:1;deckMat.depthWrite=!on;deckMat.needsUpdate=true;
+};
+window.__setCut(false);
+
+/* --- 交互 --- */
+const btnGo=document.getElementById('btnGo');
+btnGo.onclick=()=>{runFlow();btnGo.textContent='▶ 重新建造';};
+const btnPause=document.getElementById('btnPause');
+btnPause.onclick=()=>{sim.paused=!sim.paused;
+  btnPause.textContent=sim.paused?'继续':'暂停';btnPause.classList.toggle('active',sim.paused);};
+const btnSpeed=document.getElementById('btnSpeed');
+let spIdx=0;const SPEEDS=[1,2,4];
+btnSpeed.onclick=()=>{spIdx=(spIdx+1)%SPEEDS.length;sim.speed=SPEEDS[spIdx];
+  btnSpeed.textContent=sim.speed+'×';};
+const btnCut=document.getElementById('btnCut');
+btnCut.onclick=()=>{window.__setCut(!sim.cut);btnCut.classList.toggle('active',sim.cut);};
+const btnLabel=document.getElementById('btnLabel');
+btnLabel.onclick=()=>{sim.labels=!sim.labels;
+  labelRenderer.domElement.style.display=sim.labels?'':'none';
+  btnLabel.classList.toggle('active',sim.labels);};
+document.getElementById('btnReset').onclick=()=>{resetAll();btnGo.textContent='▶ 开始建造';};
+document.querySelectorAll('[data-cam]').forEach(b=>b.onclick=()=>flyTo(+b.dataset.cam));
+window.addEventListener('keydown',e=>{
+  if(e.code==='Space'){e.preventDefault();btnPause.onclick();}
+  if(e.key==='l'||e.key==='L')btnLabel.onclick();
+  if(e.key==='c'||e.key==='C')btnCut.onclick();
+  if(e.key>='1'&&e.key<='7')flyTo(+e.key-1);
+});
+window.addEventListener('resize',()=>{
+  camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+  composer.setSize(innerWidth,innerHeight);
+  labelRenderer.setSize(innerWidth,innerHeight);
+});
+renderSeg();renderSteps();setWO({});
+
+/* --- 自检探针（供截图脚本调用） --- */
+window.__probe=()=>({
+  step:CASE.step, active:CASE.active, started:CASE.started,
+  prog:+sim.prog.toFixed(1), blk:sim.blk, ton:Math.round(sim.ton),
+  water:+sim.water.toFixed(2), shipY:+ship.position.y.toFixed(2),
+  blocks:BLOCKS.map(b=>({code:b.code,state:b._state||'wait',
+    visible:!!(PARTS[b.key]&&PARTS[b.key].visible)})),
+  crane:window.__craneProbe(),
+  keelCount,
+  staging:{
+    total:Object.keys(PARTS).length,
+    visible:Object.values(AUTO.parts).filter(P=>P.mesh.visible).length,
+    installed:Object.values(AUTO.parts).filter(P=>P.state==='done').length,
+    outCount:AUTO.outCount,
+    agvActive:AUTO.agvs.filter(a=>a.active).length,
+    anims:AUTO.anims.size,
+    states:Object.fromEntries(Object.entries(AUTO.parts).map(([k,P])=>[k,P.state])),
+    positions:Object.fromEntries(Object.entries(AUTO.parts).map(([k,P])=>
+      [k,P.mesh.position.toArray().map(v=>+v.toFixed(1))])),
+  },
+  hullBB:(()=>{const b=new THREE.Box3().setFromObject(ship);
+    return {min:b.min.toArray().map(v=>+v.toFixed(1)),max:b.max.toArray().map(v=>+v.toFixed(1))};})(),
+  camPos:camera.position.toArray().map(v=>+v.toFixed(1)),
+});
+// 吊装路径自检：实时读取吊钩与挂载零件的空间位置
+window.__liftProbe=()=>({
+  hookY:+GAN.hookY.toFixed(1), gantryX:+GAN.x.toFixed(1), trolleyZ:+GAN.trolleyZ.toFixed(1),
+  mainBeamY:CRANE_TOP,
+  rig:{yard:RIG.yard.grp.visible,gantry:RIG.gantry.grp.visible},
+  spmt:AUTO.agvs.map(a=>({active:a.active,y:+a.mesh.position.y.toFixed(1),z:+a.mesh.position.z.toFixed(1)})),
+  loads:Object.entries(AUTO.parts).filter(([k,P])=>P.attached).map(([k,P])=>({
+    key:k, phase:P.attached.phase||'', x:+P.mesh.position.x.toFixed(1), y:+P.mesh.position.y.toFixed(1),
+    z:+P.mesh.position.z.toFixed(1),
+    bottom:+(P.mesh.position.y-P.size.y/2).toFixed(1),
+    top:+(P.mesh.position.y+P.size.y/2).toFixed(1),
+  })),
+});
+window.__setCam=(p,t)=>{fly=null;camera.position.set(...p);
+  controls.target.set(...t);controls.update();};
+// 验证用：把所有平滑数值瞬间对齐到目标（消除软件渲染低帧率影响）
+window.__forceSettle=()=>{
+  AUTO.anims.forEach(a=>a.res());AUTO.anims.clear();
+  Object.entries(AUTO.parts).forEach(([k,P])=>{
+    P.mesh.visible=false;P.state='done';P.attached=null;
+    if(PARTS[k])PARTS[k].visible=true;
+    setSlotState(P.slot,'done',0x3ddc97,'已合拢');
+  });
+  AUTO.outCount=Object.keys(PARTS).length;AUTO.welding=false;updateAI();
+  // 终态对齐（供低帧率无头环境验收截图）
+  sim.progT=100;sim.tonT=88800;sim.accT=2.1;sim.weldT=98.2;sim.waterT=9;sim.shipXT=0;
+  sim.prog=100;sim.ton=88800;sim.acc=2.1;sim.weld=98.2;sim.water=9;sim.shipX=0;
+  waterMesh.visible=true;sea.visible=true;
+  waterMesh.position.y=D.dockFloor+sim.water;
+  MAT.hullPrimer.color.set(0x45505c);MAT.hullPrimer.metalness=.8;MAT.hullPrimer.roughness=.5;
+  const fl=Math.max(0,(sim.water-4)/4.5)*3.4;
+  ship.position.y=fl;ship.position.x=sim.shipXT;
+  GAN.xTarget=104;GAN.x=104;gantry.position.x=GAN.x;
+  updateKPIHUD();
+};
+
+/* --- 首帧后撤遮罩 --- */
+let bootHidden=false;
+function hideBoot(){if(bootHidden)return;bootHidden=true;
+  document.getElementById('boot').classList.add('hide');}
+requestAnimationFrame(()=>requestAnimationFrame(()=>setTimeout(hideBoot,240)));
+setTimeout(hideBoot,6000);
+
+</script>
+</body>
+</html>

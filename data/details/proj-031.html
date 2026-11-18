@@ -1,5 +1,13 @@
 <!-- 航母总装数字孪生：AI 全自动船厂物流链 - 独立内容页 -->
 <div class="detail-content-block">
+  <a class="demo-launch" href="demo/carrier-full-build.html" target="_blank" rel="noopener">▶ 打开交互演示 · 航母总装数字孪生</a>
+  <p class="demo-launch-note">单文件 Three.js 0.170 Demo，依赖已本地化，无需联网即可运行。1~7 切换机位（7 为智能堆场全景），空格暂停，C 剖视，L 标注，右上角 1×/2×/4× 倍速。</p>
+  <div class="demo-gallery">
+    <img src="assets/screenshots/proj-031-01_initial_overview.jpg" alt="初始堆场全景：14 件分段定置陈列" loading="lazy">
+    <img src="assets/screenshots/proj-031-02_yard_slots.jpg" alt="智能堆场工位与设备" loading="lazy">
+    <img src="assets/screenshots/proj-031-06_rigging_convey.jpg" alt="吊装与 SPMT 运输阶段" loading="lazy">
+    <img src="assets/screenshots/proj-031-05_cutaway.jpg" alt="舰体剖视与内部分段" loading="lazy">
+  </div>
   <h2 class="detail-subtitle">🚢 从「零件凭空出现」到「符合装配工艺的全自动物流链」</h2>
   <p class="detail-lead">最初的版本里，船体分段靠 <code>visible=false → true</code> 凭空出现，用户一眼看穿是动画把戏。三轮追问把它逼成真正的工程问题：<strong>每个零件一开始就得看得见、按工厂标准定置摆放、由设备一步步吊运装配</strong>；零件不能从船底穿上来，必须高空过跨；物流轨迹要符合真实吊装与运输工艺。这个项目把这三轮修正全部固化进一个 Three.js 0.170 单文件，并用无头浏览器探针做了 11 项量化验收。</p>
 
@@ -38,6 +46,55 @@
         <li>四点吊索具 RIG.yard / RIG.gantry：吊梁 + 4 索，挂索后才允许起升</li>
         <li>8 台六轴焊接机器人 + 2 台每排一台的轨道堆垛机 + AI 调度中枢面板</li>
       </ul>
+    </div>
+  </div>
+
+  <!-- AI 调度中枢与异常自愈 -->
+  <h2 class="detail-subtitle">🤖 AI 调度中枢：从「动画」到「可观测的生产看板」</h2>
+  <p class="detail-lead">看板不是装饰性 HUD，而是与仿真状态机同源的实时面板：<strong>当前决策、任务队列、AGV / 机器人占用、堆场出库进度</strong>都由同一份 <code>sim</code> 状态驱动，因此事件流与三维画面严格同步。</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">调度</div>
+      <h3 class="arch-card-title">六项实时指标，全部来自仿真状态</h3>
+      <p class="arch-card-desc">AI 调度中枢（FLEET ORCHESTRATOR）把「谁在干什么、干到哪一步」显式暴露，而不是藏在动画里。</p>
+      <ul class="card-highlights">
+        <li>AI 当前决策：随阶段切换为门吊挂索 / SPMT 落墩 / 龙门吊四点挂索等</li>
+        <li>调度任务队列：展示当前排队工单数量</li>
+        <li>AGV 重载运输车：6 台在线状态实时更新</li>
+        <li>焊接机器人 8/8 作业、堆场自动出库 8/14，与终态 14 件安装对齐</li>
+      </ul>
+    </div>
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">自愈</div>
+      <h3 class="arch-card-title">8.6mm 超差 → 2.1mm 闭环的质量门</h3>
+      <p class="arch-card-desc">精度对中阶段主动注入一次真实异常，验证 AI 不是只会「播报进度」，而是能拦截、推理、处置、闭环。</p>
+      <ul class="card-highlights">
+        <li>AI 视觉质检 + Laser 跟踪仪复测：舰岛与甲板基准偏差 <strong>8.6mm</strong>，超出 ±3mm 允差</li>
+        <li>自动冻结后续舾装派工，开出 NCR-2218 不合格报告，事件流记 error</li>
+        <li>根因推理「3 点支撑受力不均」→ 生成液压微调方案 → 三点同步微调并监测应力与水平度</li>
+        <li>闭环复测偏差 <strong>2.1mm</strong>，NCR 自动关闭、工单解冻，进度继续推进</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 交互说明 -->
+  <h2 class="detail-subtitle">🎮 交互与验收</h2>
+  <p class="detail-lead">演示不设「只能看」的闸门：机位、剖视、标注、倍速全部开放，便于按讲解节奏逐帧核对物理正确性。</p>
+  <div class="arch-tips">
+    <div class="arch-tips-grid">
+      <div class="arch-tip">
+        <span class="arch-tip-tag">机位</span>
+        <p><strong>1-7 切换</strong><br><span class="arch-tip-note">7 为智能堆场全景，其余为总装关键机位</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">控制</span>
+        <p><strong>空格 / C / L</strong><br><span class="arch-tip-note">暂停、剖视、标注；右上角 1×/2×/4× 倍速</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">验收</span>
+        <p><strong>6 张审计截图</strong><br><span class="arch-tip-note">Edge 无头浏览器录制，覆盖初始 / 堆场 / 终态 / 剖视 / 吊装</span></p>
+      </div>
     </div>
   </div>
 
