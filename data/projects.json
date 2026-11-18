@@ -1049,8 +1049,8 @@
       "statusNote": "11 项 CDP 无头自检全 PASS，教学 / 演示用单文件交付"
     }  ],
   "contact": {
-    "api": "https://resume-site-3240dhrv.edgeone.cool/api/contact?eo_token=5ead5161594f565e06e7db2d5f52360c&eo_time=1794988421",
-    "mirrorUrl": "https://resume-site-3240dhrv.edgeone.cool?eo_token=5ead5161594f565e06e7db2d5f52360c&eo_time=1794988421",
+    "api": "https://resume-site-3240dhrv.edgeone.cool/api/contact?eo_token=a72a273998ca71b89fc9955f977dab65&eo_time=1794995828",
+    "mirrorUrl": "https://resume-site-3240dhrv.edgeone.cool?eo_token=a72a273998ca71b89fc9955f977dab65&eo_time=1794995828",
     "email": "1069007377@qq.com",
     "note": "api 指向 EdgeOne Pages 的 Edge Function（密钥在服务端环境变量，不落前端）；eo_token 由定时任务自动刷新"
   },
