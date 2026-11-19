@@ -1,0 +1,211 @@
+<!-- 静态站令牌一致性保障体系 - 独立内容页 -->
+<div class="detail-content-block">
+  <h2 class="detail-subtitle">🔑 比报告更严重：三个令牌全是失效值</h2>
+  <p class="detail-lead">用户报告「令牌刷新任务只改 projects.json、不重新注入三处内联兜底块，导致 index.html 里的令牌停留在旧值」。实测后发现问题<strong>比报告更严重</strong>：不是简单的不一致，而是三处令牌<strong>全部 401 失效</strong>。主站 GitHub Pages 免令牌不受影响，只有 EdgeOne 镜像被鉴权拦住——这正是国内访客走兜底渲染时表单静默失败的根因。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">📊 修复前三处令牌实测</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>令牌来源</th>
+            <th>eo_token / eo_time</th>
+            <th>状态</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>SITE projects.json</td>
+            <td>8ee46167 / 1794279945</td>
+            <td>401 失效</td>
+          </tr>
+          <tr>
+            <td>SITE 三个 HTML 内联块</td>
+            <td>c716e270 / 1794188955</td>
+            <td>401（过期 27 小时）</td>
+          </tr>
+          <tr>
+            <td>MIRROR projects.json</td>
+            <td>859a7e8a / 1794271985</td>
+            <td>401 失效</td>
+          </tr>
+          <tr class="bench-total">
+            <td>GitHub Pages 主站</td>
+            <td>免令牌</td>
+            <td class="best">200 正常</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>关键：</strong>令牌散落成三个不同值，只读第一个文件根本发现不了——必须把 10 个令牌来源逐处列出来比对，才能看到全貌。</p>
+  </div>
+
+  <!-- 三层根因 -->
+  <h2 class="detail-subtitle">🧨 三层根因，不是一层</h2>
+  <p class="detail-lead">表面是「忘了注入」，往下挖还有时序陷阱和镜像快照两层。只补注入仍会在部署后再次失效。</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">根因 1</div>
+      <h3 class="arch-card-title">缺注入步骤</h3>
+      <p class="arch-card-desc"><code>refresh_contact_token.py</code> 第 3 步只用正则替换改 projects.json，从头到尾没调用 <code>inject_inline_data.py</code>——造成慢性漂移，内联块永远停在旧值。</p>
+      <ul class="card-highlights">
+        <li>症状：index.html 内联块令牌过期 27 小时</li>
+        <li>本质：写路径只覆盖一个文件，漏了三个</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">根因 2</div>
+      <h3 class="arch-card-title">注入时序陷阱</h3>
+      <p class="arch-card-desc">注入必须排在<strong>部署之后</strong>。部署会作废旧令牌并签发新令牌，新令牌只有部署完成才存在——注入在部署前等于注入一个即将作废的旧令牌，比不同步更糟。</p>
+      <ul class="card-highlights">
+        <li>结论：内联块永远只能持有「上一次部署」的令牌</li>
+        <li>自洽性：令牌有效期 3h &lt; 刷新间隔，设计上成立</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">根因 3</div>
+      <h3 class="arch-card-title">镜像令牌是部署快照</h3>
+      <p class="arch-card-desc">镜像目录的令牌是部署时快照，SITE 改完不同步到 MIRROR，导致镜像的 json 与 HTML 也各自为政。</p>
+      <ul class="card-highlights">
+        <li>修复：把「同步镜像」移到注入之后</li>
+        <li>末尾另加一次新令牌实测</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 鉴权机制 -->
+  <h2 class="detail-subtitle">🍪 逆向 EdgeOne 鉴权机制</h2>
+  <p class="detail-lead">调试中反复踩到 401 / 405，根因是没搞清 EdgeOne 的鉴权链路。查证后确认：<strong>靠带 token 预热 → 下发 HttpOnly cookie → 后续带 cookie 访问</strong>，token 本身不直接放行请求。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">🔧 现象 → 根因 → 正确做法</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>现象</th>
+            <th>根因</th>
+            <th>正确做法</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>裸访问带 token 的 URL → 401</td>
+            <td>没有 cookie，token 不直接放行</td>
+            <td>先带 token 预热种 HttpOnly cookie</td>
+          </tr>
+          <tr>
+            <td>带 token 的 POST → 405 仅支持 POST</td>
+            <td>302 重定向下 Fetch 把 POST 改成 GET 并丢 body</td>
+            <td>同源直 POST 相对路径</td>
+          </tr>
+          <tr>
+            <td>跨源表单提交被拦</td>
+            <td>预热与正式请求需分离地址</td>
+            <td>先预热拿 cookie，再用不带 token 地址 POST</td>
+          </tr>
+          <tr class="bench-total">
+            <td>误报 405 是前端缺陷？</td>
+            <td>测试脚本没复刻预热步骤</td>
+            <td class="best">js/ai.js 的 postToApi() 本就实现正确</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>别冤枉前端：</strong>真实缺陷在测试脚本没走预热流程，而 <code>js/ai.js</code> 的 <code>postToApi()</code> 早已正确实现了「预热拿 cookie → 不带 token 地址正式 POST」，无需改动。</p>
+  </div>
+
+  <!-- 工具链 -->
+  <h2 class="detail-subtitle">🛠️ 工具链补强与闭环</h2>
+  <p class="detail-lead">修复不是补一次值，而是把「写入→注入→断言→同步→实测」做成不可跳过的闭环，让同类漂移在提交前就被拦住。</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">工具 1</div>
+      <h3 class="arch-card-title">inject_inline_data.py</h3>
+      <p class="arch-card-desc">加 <code>--check</code> 模式 + 注入后自动一致性自检，不一致立即退出，避免错误值落盘。</p>
+      <ul class="card-highlights">
+        <li>注入 index / project / admin 三处</li>
+        <li>自检不通过 → 退出码非 0</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">工具 2</div>
+      <h3 class="arch-card-title">check_token_consistency.py</h3>
+      <p class="arch-card-desc">新增：逐处列出 10 个令牌来源 + 比对 + <code>--live</code> 实测，一眼看散落全貌。</p>
+      <ul class="card-highlights">
+        <li>覆盖 SITE / MIRROR 各来源</li>
+        <li>--live 直接打真实端点验活</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">工具 3</div>
+      <h3 class="arch-card-title">refresh_contact_token.py</h3>
+      <p class="arch-card-desc">插入第 3.5 步注入 + 第 3.6 步一致性断言（不一致拒绝提交），第 4 步同步镜像移到注入之后。</p>
+      <ul class="card-highlights">
+        <li>断言失败即中止，不带病提交</li>
+        <li>末尾对新令牌做一次实测</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 验收 -->
+  <h2 class="detail-subtitle">✅ 端到端验收</h2>
+  <div class="bench-wrap">
+    <h3 class="bench-title">📊 修复后实测</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>验证项</th>
+            <th>结果</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>令牌一致性来源数</td>
+            <td class="best">10 处全部一致</td>
+          </tr>
+          <tr>
+            <td>线上 GitHub Pages 主站</td>
+            <td class="best">HTTP 200，内联块与 json 对齐</td>
+          </tr>
+          <tr>
+            <td>真实表单提交</td>
+            <td class="best">200 {"ok":true,"channels":[{"channel":"serverchan","ok":true}]}</td>
+          </tr>
+          <tr class="bench-total">
+            <td>提交路径</td>
+            <td class="best">同源 / 跨源两条均通过</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 注意令牌时序的自洽性：内联块持有的是「上一次部署」的令牌，只要刷新间隔短于令牌 3h 有效期，这条链路就始终可用。</p>
+  </div>
+
+  <!-- 沉淀 -->
+  <div class="arch-tips">
+    <h3 class="bench-title">📌 三条可迁移的结论</h3>
+    <div class="arch-tips-grid">
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 1</span>
+        <p><strong>写路径覆盖几个文件，就要校验几个</strong><br><span class="arch-tip-note">只改一处 = 慢性漂移的起点</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 2</span>
+        <p><strong>注入时序要跟着「令牌何时才存在」走</strong><br><span class="arch-tip-note">部署后才签发新令牌，注入必须排其后</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 3</span>
+        <p><strong>先复刻鉴权链路再判定前端缺陷</strong><br><span class="arch-tip-note">405 是测试脚本漏预热，不是 code bug</span></p>
+      </div>
+    </div>
+  </div>
+</div>
