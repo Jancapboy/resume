@@ -3,7 +3,7 @@
     "name": "全栈工程师",
     "title": "高级后端开发 / 数据库 & 自动化专家",
     "location": "中国",
-    "summary": "多年全栈开发经验，深耕数据库高可用架构、数据自动化抓取、AI 应用开发及企业级运维。2026 年主攻 AI 视频与 AI 漫剧全流程生成、LangGraph 多智能体工作流，并以 Vibe Coding 方式主导从需求到上线的完整交付闭环。擅长 MySQL 集群、OceanBase、Python 爬虫、企业微信集成及 AI 视频 / 3D 内容生成。近期主攻 EdgeOne 边缘函数与 Serverless 表单网关、GitHub Pages + EdgeOne 双通道全球交付与访问令牌自动化，以及移动端自适应与离线兜底渲染工程。近期主攻约束求解与多端协同工程（CP-SAT 联合排程、CRDT 冲突分层、事件溯源运行时）、可复现的回合制战棋 Web 应用（React 18 + 种子化 PRNG + 30 项引擎自测），以及基于全球探针的站点可达性实测与网络延迟基线体系。近期主攻前端设计与性能工程（原生 WebGL2 手写液态玻璃折射层、GSAP 四件套动效编排、真实数据驱动的终端档案与 GitHub 仪表盘）、移动端首屏加载性能与滚动可见性根因修复（load 事件 21483ms → 828ms、IntersectionObserver 阈值语义纠偏），以及基于 RunningHub 云端应用编排的 AI 素材流水线与琉璃玻璃拟态设计系统。近期主攻工业机器人软件层工程（纯 Python 内核与 ROS2 解耦、契约层锁定类型语义、Protocol 抽象统一真机与仿真、调度内核与数字孪生面板闭环），以 49 项单元测试与 11/11 端到端取放的成功率作为交付验收口径。近期在物料防错与三维管线方向继续推进：把货架格口的位置、物料与时效编码进单条二维码标签，读码失败或三者任一不符即拒绝生成抓取计划（新增 16 个测试，单元测试总数 49 → 65 全绿）；并以 Go 自研门禁编排运行时（四态决策 PASS / BLOCK / CHALLENGE / ROUTE、三介入位置、审计哈希链、95 项测试）与 STL→three.js 几何压缩管线（397.7 万面压至 71.5 万面、189.6MB → 16.6MB）拓展工程纵深。近期把 Meridian 排程从「打开页面算一次」升级为服务端自动重排闭环（状态变更 → OpLog → CP-SAT 重算 → 写回广播 → 各端甘特图实时刷新），并以固定区间约束表达「已完成任务仍占资源」这类语义（18 任务 / 5 资源实测三阶段全 OPTIMAL，makespan=56，公网 HTTPS 实测 200）。同期完成个人微信群聊接入通道的源码级选型与实测：用自写脚本拉取插件源码逐项比对群聊能力，实测个人微信插件 v2.4.10 的 groupPolicy 默认 disabled 且会话写死 direct、企业微信插件 v2026.10.30 则为 open 且 chatId 命中 169 次，最终确立「LightAgent 承接微信群入口 + OpenClaw 承接执行」的分工架构，并把免费 puppet 的封号风险与专用小号 / 白名单群等对策一并写入方案。最新把工业仿真做到像素级物理可信：以 Three.js 0.170 单文件复现航母总装 14 件分段从定置堆场到高空过跨、激光对中的六阶段全自动物流链，并用 Edge CDP 无头探针跑通 11 项量化验收。同期把 AI 调度中枢做成可运行看板（派单队列 / AGV 与机器人调度 / 出库进度），实现舰岛对中 8.6mm 超差自动冻结、3 点液压微调后 2.1mm 闭环复测与 NCR 自愈；Demo 已本地化 three.js 依赖，可在简历站直接交互演示。最新把静态站交付保障延伸到令牌一致性治理：实测定位内联兜底块令牌散落成三个失效值、逆向出 EdgeOne 的 token 预热→HttpOnly cookie 鉴权链与「注入必须排在部署之后」的时序陷阱，补齐注入+自检+断言闭环并新增 10 处令牌来源比对工具，同源与跨源真实表单提交实测 200。",
+    "summary": "多年全栈开发经验，深耕数据库高可用架构、数据自动化抓取、AI 应用开发及企业级运维。2026 年主攻 AI 视频与 AI 漫剧全流程生成、LangGraph 多智能体工作流，并以 Vibe Coding 方式主导从需求到上线的完整交付闭环。擅长 MySQL 集群、OceanBase、Python 爬虫、企业微信集成及 AI 视频 / 3D 内容生成。近期主攻 EdgeOne 边缘函数与 Serverless 表单网关、GitHub Pages + EdgeOne 双通道全球交付与访问令牌自动化，以及移动端自适应与离线兜底渲染工程。近期主攻约束求解与多端协同工程（CP-SAT 联合排程、CRDT 冲突分层、事件溯源运行时）、可复现的回合制战棋 Web 应用（React 18 + 种子化 PRNG + 30 项引擎自测），以及基于全球探针的站点可达性实测与网络延迟基线体系。近期主攻前端设计与性能工程（原生 WebGL2 手写液态玻璃折射层、GSAP 四件套动效编排、真实数据驱动的终端档案与 GitHub 仪表盘）、移动端首屏加载性能与滚动可见性根因修复（load 事件 21483ms → 828ms、IntersectionObserver 阈值语义纠偏），以及基于 RunningHub 云端应用编排的 AI 素材流水线与琉璃玻璃拟态设计系统。近期主攻工业机器人软件层工程（纯 Python 内核与 ROS2 解耦、契约层锁定类型语义、Protocol 抽象统一真机与仿真、调度内核与数字孪生面板闭环），以 49 项单元测试与 11/11 端到端取放的成功率作为交付验收口径。近期在物料防错与三维管线方向继续推进：把货架格口的位置、物料与时效编码进单条二维码标签，读码失败或三者任一不符即拒绝生成抓取计划（新增 16 个测试，单元测试总数 49 → 65 全绿）；并以 Go 自研门禁编排运行时（四态决策 PASS / BLOCK / CHALLENGE / ROUTE、三介入位置、审计哈希链、95 项测试）与 STL→three.js 几何压缩管线（397.7 万面压至 71.5 万面、189.6MB → 16.6MB）拓展工程纵深。近期把 Meridian 排程从「打开页面算一次」升级为服务端自动重排闭环（状态变更 → OpLog → CP-SAT 重算 → 写回广播 → 各端甘特图实时刷新），并以固定区间约束表达「已完成任务仍占资源」这类语义（18 任务 / 5 资源实测三阶段全 OPTIMAL，makespan=56，公网 HTTPS 实测 200）。同期完成个人微信群聊接入通道的源码级选型与实测：用自写脚本拉取插件源码逐项比对群聊能力，实测个人微信插件 v2.4.10 的 groupPolicy 默认 disabled 且会话写死 direct、企业微信插件 v2026.10.30 则为 open 且 chatId 命中 169 次，最终确立「LightAgent 承接微信群入口 + OpenClaw 承接执行」的分工架构，并把免费 puppet 的封号风险与专用小号 / 白名单群等对策一并写入方案。最新把工业仿真做到像素级物理可信：以 Three.js 0.170 单文件复现航母总装 14 件分段从定置堆场到高空过跨、激光对中的六阶段全自动物流链，并用 Edge CDP 无头探针跑通 11 项量化验收。同期把 AI 调度中枢做成可运行看板（派单队列 / AGV 与机器人调度 / 出库进度），实现舰岛对中 8.6mm 超差自动冻结、3 点液压微调后 2.1mm 闭环复测与 NCR 自愈；Demo 已本地化 three.js 依赖，可在简历站直接交互演示。最新把静态站交付保障延伸到令牌一致性治理：实测定位内联兜底块令牌散落成三个失效值、逆向出 EdgeOne 的 token 预热→HttpOnly cookie 鉴权链与「注入必须排在部署之后」的时序陷阱，补齐注入+自检+断言闭环并新增 10 处令牌来源比对工具，同源与跨源真实表单提交实测 200。最新把交付面从「浏览器里的静态站」推向两端：一是独立出 Attention（鲸迹）AI 陪伴 App——Android 自研原生壳承担网络桥、加密存储与挂件，内核是零第三方依赖的 ES Module + IndexedDB Web 应用，并配一套自建安全红队工具链（36 条 XSS payload 在真 Blink 下 0 执行，同时实测挖出 debuggable 包与 WebView 远程调试可读出明文 API Key 的高危面）；二是把 Dify 1.19 私有化跑进本机与服务器，agent 集群从一堆单节点 chatflow 重构为单应用多节点并行扇出（4 个 LLM 节点各带独立 model 与专属判据），审计集群以 A1~A4 四域 16 条判据守门，实测 E1 一次审出 16/16 判据、2 条 FAIL、31s、21971 tokens，任务随即判 blocked；三是把「写得好」这种没法验收的要求拆成 34 条声明式闸门（G0–G22），四档体裁只改阈值不改判据，21 条 pytest 全部配反例，让小说质量第一次变成能跑测试、能回归的工程问题。",
     "skills": [
       {
         "name": "MySQL MGR",
@@ -264,6 +264,38 @@
       {
         "name": "EdgeOne Cookie 鉴权时序",
         "category": "运维"
+      },
+      {
+        "name": "Android 原生壳",
+        "category": "开发"
+      },
+      {
+        "name": "WebView 混合架构",
+        "category": "开发"
+      },
+      {
+        "name": "Android Keystore 加密",
+        "category": "开发"
+      },
+      {
+        "name": "本地倒排索引",
+        "category": "开发"
+      },
+      {
+        "name": "Dify 私有化部署",
+        "category": "运维"
+      },
+      {
+        "name": "多节点 Agent 编排",
+        "category": "AI Agent"
+      },
+      {
+        "name": "声明式质量闸门",
+        "category": "开发"
+      },
+      {
+        "name": "pytest 测试体系",
+        "category": "开发"
       }
     ]
   },
@@ -401,7 +433,8 @@
       ],
       "screenshot": "",
       "link": "",
-      "status": "shipped"
+      "status": "archived",
+      "statusNote": "被 proj-030（微信群聊通道源码级实测，含 OpenClaw 承接执行与企微兜底通道）与 proj-016（企微 Webhook 推送通道）覆盖"
     },
     {
       "id": "proj-007",
@@ -1083,11 +1116,90 @@
       "screenshot": "",
       "link": "",
       "status": "shipped"
+    },
+    {
+      "id": "proj-033",
+      "title": "Attention（鲸迹）AI 陪伴 App：Android 原生壳 + 零依赖 Web 内核",
+      "category": "全栈开发 / 移动端",
+      "public": true,
+      "description": "把 DeepSeek 对话装进口袋的独立 App：Android 自研原生壳负责网络桥、加密存储、文件与挂件，内核是零第三方依赖的 ES Module + IndexedDB Web 应用；配套自建语音情绪引擎与可复跑的安全红队工具链。",
+      "highlights": [
+        "原生壳 + Web 内核双层架构：原生侧 14 个 Java 文件共 2512 行（OverlayService 636 行、MainActivity 493 行、Bridge 509 行），Web 侧 39 个 JS 模块共 15402 行；产出 dist/android/whaletrail.apk 实测 7052777 字节（Android 14 模拟器 1080×1920 冷启动 5.6s）",
+        "桥接口设计成可审计的窄接口：Bridge.java 用 17 个 @JavascriptInterface 方法承载网络、加密存储、文件、分享与挂件，敏感串一律走 AndroidKeyStore 的 AES/GCM/NoPadding 加密后落 SharedPreferences，离机不可解",
+        "语音情绪引擎三路可切：TTS 侧 system / deepseek / qwen 三条路线各带独立计费口径（qwen 默认 qwen-audio-3.0-tts-plus），ASR 侧限死 16-bit PCM WAV 与 Ogg Opus、7 档采样率、体积 ≤8 MiB、时长 ≤120 秒；emotion.js 用 6 个中文标签（温柔/开心/认真/安慰/俏皮/中性）做规则推断",
+        "长上下文靠本地索引而非堆 token：core/memory.js 建中文二元组 + 拉丁词的倒排索引并带 idf/覆盖度打分，core/context.js 三层上下文（最近 12 轮原文 + 按真实日期检索 top6 + 滚动摘要）预算 32000 tokens，超限时先砍最老整轮再减回忆条数",
+        "自建安全红队工具链：node tools/test-security.mjs --layer=all 约 60–90 秒跑完静态 + 真 Blink + Android 真机三层，产出 artifacts/security/report.json；36 条 XSS payload（img onerror / script / svg onload / iframe javascript: / data: / Unicode 混淆）在真 Blink + 真 markdown.js 下 0 执行、0 危险元素、0 行内事件属性、0 不安全 href",
+        "红队不是走过场：除 XSS 外逐条实测 8 类攻击面，其中「正式包常开 WebView 远程调试 + APK debuggable 导致一条 window.DSHttp.getSecret 就能读出明文 API Key」被判为高危，「run-as 可整目录拷走 IndexedDB 对话正文」同样高危——报告直接写明加固前置条件而不是粉饰"
+      ],
+      "techStack": [
+        "Android 原生壳 (Java)",
+        "WebView",
+        "ES Module / IndexedDB",
+        "Android Keystore",
+        "DeepSeek API",
+        "TTS / ASR",
+        "Node.js 开发服务器"
+      ],
+      "screenshot": "",
+      "link": "",
+      "status": "shipped"
+    },
+    {
+      "id": "proj-034",
+      "title": "Dify 私有化部署与多节点 Agent 集群审计工位（16 判据守门）",
+      "category": "AI Agent / 平台工程",
+      "public": true,
+      "description": "把 Dify 1.19 私有化跑进本机与服务器：本地 compose 起 15 个容器并自建 ocproxy 打通模型供应商；agent 集群从「一堆单节点 chatflow」重构为单应用多节点并行扇出；审计集群以 A1~A4 四域 16 条判据评审电商数据平台任务并回写主系统。",
+      "highlights": [
+        "本地私有化：Dify 1.19.0 官方 compose 起 15 个容器全部 Up（api / postgres / redis / sandbox / local_sandbox 均 healthy，init_permissions 一次性退出码 0），镜像占用约 11 GB；宿主机 8080 → 容器 nginx 80，difyctl 官方 CLI 1.19.0 接管全生命周期操作",
+        "自建 ocproxy 补齐模型供应商缺口：官方端点不满足接入要求，于是用 node:22-alpine 起 49 行代理把 /v1/* 转发到上游并补 x-opencode-session 头、SSE 流式不缓冲，容器内 8080、宿主机 8799；模型走 openai_api_compatible 接 deepseek-v4.1-flash，Base URL 必须是容器网络地址 http://ocproxy:8080/v1",
+        "集群形态重构是第一版设计的教训：初版把每个 agent 做成独立 chatflow（各 1 个 LLM 节点）、编排甩给外部 Node 脚本，导致 Dify 里看到的全是空壳、边界与模型归属都不在应用内；改为单应用多节点——start 并行扇出 4 个 LLM 节点（各带独立 model 与仅属于自己那部分判据），template-transform 节点汇总，answer 输出须写 {{#tpl.output#}}",
+        "闸门按节点切 YAML 校验并互不串味：node 块以 `    - data:` 起、id 在块尾，切错整体错位，因此额外校验「本节点提示词里不许出现别人判据」；difyctl 写入 %APPDATA%\\difyctl\\login.yml.lock 在受限沙箱报 EPERM，改指 DIFY_CONFIG_DIR 到可写目录即可",
+        "部署期三个协议坑逐个实测：workflow 的 HTTP Request 节点打 host.docker.internal 被 SSRF 防护拒 422（LLM 节点不受影响，表现为「LLM 有 token、HTTP 节点 retry 两次后 failed」），加 SSRF_PROXY_ALLOW_PRIVATE_IPS 放行网段后无需重建镜像；dsl import 的 http 节点 body.data 只能一个 item；删应用走 console API 必须带 Cookie 与 X-CSRF-Token，curl -b 文件方式会 401",
+        "审计工位落到服务器端守门：systemd ecdata-audit 托管 465 行 audit_worker.py、监听 127.0.0.1:8790、由 Caddy 暴露 /audit/*，经反向隧道回调本机 Dify 跑 A1 结构 / A2 数据 / A3 安全 / A4 交付共 16 条判据；实测 E1 一次审出 16/16 判据、2 条 FAIL、耗时 31s、耗 21971 tokens，主系统任务随即判 blocked，隧道断了直接 fail-closed"
+      ],
+      "techStack": [
+        "Dify 1.19",
+        "Docker Compose",
+        "difyctl",
+        "ocproxy / Node.js",
+        "systemd",
+        "DeepSeek API",
+        "Python"
+      ],
+      "screenshot": "",
+      "link": "",
+      "status": "shipped"
+    },
+    {
+      "id": "proj-035",
+      "title": "对话驱动小说引擎：34 条闸门把写作质量做成可回归的 CI",
+      "category": "AI 内容 / 质量保障",
+      "public": true,
+      "description": "不做「让模型写好」这种无法验收的要求，而是把小说质量拆成 34 条声明式闸门（编号 G0–G22），写成可执行的判据与阈值，在四档体裁下自动判红；配套 pytest 反例集与可导出的配音表，让写作质量第一次变成能跑测试、能回归的工程问题。",
+      "highlights": [
+        "闸门是声明式的，不是散落在提示词里的要求：gates.py 里 34 条闸门各带独立标签（G0 空稿 / G1 对话占比 / G2 每场必须有台词 / G3 时间锚点与地点 / G4 服装落字 / G7 旁白禁评价 / G15 台词均长 ≤16 / G16 编年块年份单调 / G20 情绪须有起点终点 / G22 台词留白率 ≥8% 等），validate() 一次跑完返回结构化 Issue 列表",
+        "同一套判据按体裁分四档阈值：PROFILES 里 dialogue / ensemble / chronicle / action 四档只改阈值不改判据（对话占比区间、旁白长度上限、动作节拍数逐档不同），新增体裁不需要复制一份闸门代码",
+        "测试用反例而非顺例：tests/test_dialogue_novel.py 11 条、test_dialogue_novel_profiles.py 4 条、test_dialogue_emotion.py 6 条共 21 条 pytest，每种闸门都配了能判红的反例——闸门永远绿等于没有闸门",
+        "实跑产出与量化验收：《第七个证人》5 章 6526 字，闸门通过 5/5、剩余错误 0；对话占比 44.3%、台词 234 块均长 12.3 字、旁白 96 块均长 37.9 字；空转台词压到 5.1%，带否定或转折的台词 22.6%；情绪线抽出 10 段（如「硬撑→松动」「程序→越界」），用字丰富度 TTR 0.126",
+        "交付链一次跑通并输出可直接给 TTS 的中间件：cli build 产出人读的全书.md，cli voice 产出配音表.json（实测 312 条，含 voice / text / kind / chapter 四个字段，台词一句一条、旁白一段一条）；配套评估.md 给出人物声音画像（每角色句数、均长、问句率、常见开头）",
+        "盲区自己写清楚而不是装作没有：G4 只比对有限词表、G6 只在旁白里找视线词、G22 可被大量省略号喂饱且不含字数校验、抓不到跨年时间线矛盾（如 1998 年的铁盒里装着 2015 年的收费单）——这些写进「已知不覆盖」清单，作为下一轮迭代的入口"
+      ],
+      "techStack": [
+        "Python",
+        "pytest",
+        "声明式闸门引擎",
+        "结构化叙事解析",
+        "CLI 工具链"
+      ],
+      "screenshot": "",
+      "link": "",
+      "status": "shipped"
     }
   ],
   "contact": {
-    "api": "https://resume-site-3240dhrv.edgeone.cool/api/contact?eo_token=69457e4329fb57871a734d832f32d9f6&eo_time=1795223689",
-    "mirrorUrl": "https://resume-site-3240dhrv.edgeone.cool?eo_token=69457e4329fb57871a734d832f32d9f6&eo_time=1795223689",
+    "api": "https://resume-site-3240dhrv.edgeone.cool/api/contact?eo_token=43e614b30853d76ec091408382e9e9d9&eo_time=1795231155",
+    "mirrorUrl": "https://resume-site-3240dhrv.edgeone.cool?eo_token=43e614b30853d76ec091408382e9e9d9&eo_time=1795231155",
     "email": "1069007377@qq.com",
     "note": "api 指向 EdgeOne Pages 的 Edge Function（密钥在服务端环境变量，不落前端）；eo_token 由定时任务自动刷新"
   },

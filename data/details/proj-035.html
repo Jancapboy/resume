@@ -1,0 +1,317 @@
+<!-- 对话驱动小说引擎 - 独立内容页 -->
+<div class="detail-content-block">
+  <h2 class="detail-subtitle">📏 把「写得好」拆成能判红的 34 条闸门</h2>
+  <p class="detail-lead">让模型写小说，「写得好」是没法验收的。这个项目的做法是<strong>拒绝模糊要求</strong>：把质量拆成 34 条可执行的判据（编号 G0–G22），每条有明确阈值，validate() 一次跑完返回结构化问题列表 —— 质量第一次变成能跑测试、能回归的工程问题。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">📊 引擎规模</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>文件</th>
+            <th>行数</th>
+            <th>职责</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>gates.py</td>
+            <td>412</td>
+            <td>34 条闸门判据 + 四档 profile 阈值</td>
+          </tr>
+          <tr>
+            <td>model.py</td>
+            <td>280</td>
+            <td>Chapter / Scene / Block 数据模型与解析渲染</td>
+          </tr>
+          <tr>
+            <td>writer.py</td>
+            <td>106</td>
+            <td>正文组装</td>
+          </tr>
+          <tr>
+            <td>cli.py</td>
+            <td>102</td>
+            <td>check / build / voice 三条命令</td>
+          </tr>
+          <tr class="bench-total">
+            <td>核心合计</td>
+            <td class="best">915 行</td>
+            <td>对外只暴露 parse / validate / render / render_voice_script 四件事</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>接口窄是刻意的：</strong>对外只暴露四个函数，内部怎么演进都不会影响调用方，也让「校验」与「生成」彻底分离。</p>
+  </div>
+
+  <!-- 闸门 -->
+  <h2 class="detail-subtitle">🚦 闸门怎么设计：判据、标签与四档阈值</h2>
+  <p class="detail-lead">闸门分三层信息：<strong>编号</strong>（G0–G22）用于定位，<strong>标签</strong>（如 <code>G16-chron-year</code>）用于报告，<strong>阈值</strong>按体裁档位取值。34 条判据里有的一档一检，有的按档位换阈值 —— 但判据本身只有一份。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">🚧 判据分布（节选）</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>闸门</th>
+            <th>判据</th>
+            <th>意图</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>G0 / G13</td>
+            <td>正文为空 / 字数下限 1100</td>
+            <td>挡住空稿与半截稿</td>
+          </tr>
+          <tr>
+            <td>G1 / G1b</td>
+            <td>对话字数占比 / 台词块占比（按档）</td>
+            <td>保证「用对话推剧情」而非叙述独白</td>
+          </tr>
+          <tr>
+            <td>G2 / G3</td>
+            <td>每场至少一句台词 / 有 time_anchor 与 location 且首段旁白落地点名</td>
+            <td>防止场景漂在空中</td>
+          </tr>
+          <tr>
+            <td>G4 / G4b</td>
+            <td>每个在场角色的服装落进旁白 / 属性细节也要落字（warn）</td>
+            <td>把设定表变成正文里的具体字</td>
+          </tr>
+          <tr>
+            <td>G5 / G6</td>
+            <td>旁白带后果的动作词 ≥3 / 全章有距离词与视线词</td>
+            <td>避免「静止说明」式行文</td>
+          </tr>
+          <tr>
+            <td>G7</td>
+            <td>旁白不许评价（心里想 / 不禁 / 显然 / 五味杂陈…）</td>
+            <td>禁止替读者下结论</td>
+          </tr>
+          <tr>
+            <td>G8 / G9</td>
+            <td>连续旁白数 / 单段旁白长度（按档）</td>
+            <td>控制旁白与台词的节奏配比</td>
+          </tr>
+          <tr>
+            <td>G11 / G12</td>
+            <td>章尾有问句或悬停 / 说话人必须在名单内</td>
+            <td>章尾有钩子，角色不越界</td>
+          </tr>
+          <tr>
+            <td>G15</td>
+            <td>台词均长 ≤16</td>
+            <td>防为凑字数拉长句子</td>
+          </tr>
+          <tr>
+            <td>G16</td>
+            <td>编年块必须带年份且年份单调（倒叙要标【倒叙】）</td>
+            <td>挡住时间线错乱</td>
+          </tr>
+          <tr>
+            <td>G17 / G18</td>
+            <td>群像换人说话要交代是谁 / 动作节拍数（施动者 + 动作 + 物理结果）</td>
+            <td>多人物与动作场面可核查</td>
+          </tr>
+          <tr>
+            <td>G19 / G20 / G21</td>
+            <td>每场须有 emotion 声明 / 情绪须写明起点→终点且不能整章全平 / 旁白至少两种身体信号且分在两段以上</td>
+            <td>情绪不能只在文档里存在</td>
+          </tr>
+          <tr class="bench-total">
+            <td>G22</td>
+            <td class="best">台词留白率（……／——）≥8%</td>
+            <td>所有人说话都完整，说明没一件事说不出口</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>G21 的写法很关键：</strong>旁白不许写「她很难过」，只能让身体漏出来 —— 至少两种信号、分在两段以上。这条把「情绪描写」从形容词换成了可检测的物理信号。</p>
+  </div>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">四档</div>
+      <h3 class="arch-card-title">档位只改阈值</h3>
+      <p class="arch-card-desc">PROFILES 里 dialogue / ensemble / chronicle / action 四档，每档给不同的对话占比区间、旁白长度上限与动作节拍数，<strong>判据本身完全相同</strong>。</p>
+      <ul class="card-highlights">
+        <li>新增体裁不需要复制一份闸门代码</li>
+        <li>判据与阈值分离，改阈值不影响判据语义</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">情绪</div>
+      <h3 class="arch-card-title">情绪三条件必须同时成立</h3>
+      <p class="arch-card-desc">每条情绪线要同时满足：有起点与终点（G20）、有可观察的出口（G21）、台词自己也带（G22）。legacy 模式把 G19/G22 降级为 warn，但<strong>不豁免、不静默</strong>。</p>
+      <ul class="card-highlights">
+        <li>整章情绪全平直接判红</li>
+        <li>历史稿过渡开关明确留痕，新稿禁用</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">输出</div>
+      <h3 class="arch-card-title">结构化 Issue 列表</h3>
+      <p class="arch-card-desc">validate() 返回的每个 Issue 都带闸门标签、级别（error / warn）与具体消息，不是一句「不合格」。</p>
+      <ul class="card-highlights">
+        <li>标签可直接定位到对应判据</li>
+        <li>warn 与 error 分级，不把建议当错误</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 测试 -->
+  <h2 class="detail-subtitle">🧪 测试用反例：闸门永远绿等于没有闸门</h2>
+  <p class="detail-lead">如果只用「好稿子」当测试样本，闸门永远绿，测不出任何东西。所以测试集<strong>全部是能判红的反例</strong> —— 每种闸门都要有一条能把它打红。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">🧷 pytest 用例分布</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>测试文件</th>
+            <th>用例数</th>
+            <th>覆盖重点</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>test_dialogue_novel.py</td>
+            <td>11</td>
+            <td>各判据的判红反例</td>
+          </tr>
+          <tr>
+            <td>test_dialogue_novel_profiles.py</td>
+            <td>4</td>
+            <td>四档 profile 的阈值切换</td>
+          </tr>
+          <tr>
+            <td>test_dialogue_emotion.py</td>
+            <td>6</td>
+            <td>情绪三条件与留白率</td>
+          </tr>
+          <tr class="bench-total">
+            <td>合计</td>
+            <td class="best">21 条</td>
+            <td>每种闸门都有能判红的反例</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>闸门实现与判据规范分离：</strong>判据清单写在 <code>docs/对话体小说-格式与闸门.md</code> 的表格里，代码与文档一一对应，改判据时两处一起改。</p>
+  </div>
+
+  <!-- 实跑产出 -->
+  <h2 class="detail-subtitle">📕 实跑产出：全部指标可复算</h2>
+  <p class="detail-lead">《第七个证人》是这个引擎的第一个完整实跑样本 —— 5 章全部过闸，产出的每一项指标都能从产物里复算出来。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">📊 实跑验收数据</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>指标</th>
+            <th>实测值</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>规模</td>
+            <td>5 章 / 6526 字</td>
+          </tr>
+          <tr>
+            <td>闸门</td>
+            <td class="best">通过 5/5，剩余错误 0</td>
+          </tr>
+          <tr>
+            <td>对话占比</td>
+            <td class="best">44.3%（台词 234 块，均长 12.3 字，问句率 6%）</td>
+          </tr>
+          <tr>
+            <td>旁白</td>
+            <td>96 块，均长 37.9 字，最长 107 字</td>
+          </tr>
+          <tr>
+            <td>空转台词</td>
+            <td>5.1%（嗯 / 是 / 好这类）</td>
+          </tr>
+          <tr>
+            <td>带否定或转折的台词</td>
+            <td>22.6% —— 越接近一半，说明越在博弈而不是通报</td>
+          </tr>
+          <tr>
+            <td>情绪层</td>
+            <td class="best">台词留白率 11.5%，旁白情绪出口 19 段</td>
+          </tr>
+          <tr>
+            <td>情绪线</td>
+            <td>10 段（如「硬撑→松动」「程序→越界」「戒备→松口」）</td>
+          </tr>
+          <tr class="bench-total">
+            <td>用字丰富度</td>
+            <td class="best">TTR 0.126，旁白抽象词 0.0/千字，量词与数字 20.9/千字</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>「带否定/转折的台词 22.6%」是个好指标：</strong>比例越高说明人物在博弈而不是在通报情况 —— 这是判断「对话有没有戏」的量化替代。</p>
+  </div>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">交付</div>
+      <h3 class="arch-card-title">两条命令两件产物</h3>
+      <p class="arch-card-desc"><code>cli build</code> 产出人读的全书.md（多场之间用 ◇ 分隔）；<code>cli voice</code> 产出配音表.json，台词一句一条、旁白一段一条，直接可喂 TTS。</p>
+      <ul class="card-highlights">
+        <li>配音表实测 312 条</li>
+        <li>每条带 voice / text / kind / chapter 四个字段</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">评估</div>
+      <h3 class="arch-card-title">人物声音画像</h3>
+      <p class="arch-card-desc">评估报告给出每个角色的句数、均长、问句率与常见开头，例如纪云舒 104 句均长 9.4 字问句率 6%，陆守成 25 句均长 18.3 字问句率 0%。</p>
+      <ul class="card-highlights">
+        <li>还给出旁白与台词的高频三字组指纹</li>
+        <li>模板化用词（如「了一下」出现 20 次）能被看见</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">盲区</div>
+      <h3 class="arch-card-title">已知不覆盖写进文档</h3>
+      <p class="arch-card-desc">判据体系的边界自己写清楚：G4 只比对有限词表、G6 只在旁白里找视线词、G22 可被大量省略号喂饱且不含字数校验、抓不到跨年时间线矛盾（如 1998 年的铁盒里装着 2015 年的收费单）。</p>
+      <ul class="card-highlights">
+        <li>盲区进入「已知不覆盖」清单，作为迭代入口</li>
+        <li>不假装覆盖了做不到的事</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 沉淀 -->
+  <div class="arch-tips">
+    <h3 class="bench-title">📌 三条可迁移的结论</h3>
+    <div class="arch-tips-grid">
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 1</span>
+        <p><strong>把主观要求拆成可判红的判据</strong><br><span class="arch-tip-note">模糊要求无法验收，编号判据可以</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 2</span>
+        <p><strong>测试必须用反例</strong><br><span class="arch-tip-note">只用好样本，闸门永远绿</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 3</span>
+        <p><strong>判据与阈值分离</strong><br><span class="arch-tip-note">加体裁只改阈值，不复制判据</span></p>
+      </div>
+    </div>
+  </div>
+</div>

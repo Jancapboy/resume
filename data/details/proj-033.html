@@ -1,0 +1,339 @@
+<!-- Attention（鲸迹）AI 陪伴 App - 独立内容页 -->
+<div class="detail-content-block">
+  <h2 class="detail-subtitle">📱 两层架构：原生壳负责「能力」，Web 内核负责「体验」</h2>
+  <p class="detail-lead">这个 App 的核心判断是<strong>不要在原生侧写业务</strong>：原生壳只承担网络桥、加密存储、文件分享、桌面挂件这四件 Web 做不到的事；界面、状态、搜索全部留给零依赖的 Web 内核。这样一份对话逻辑能同时跑在 Android、iOS 与浏览器三处。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">📊 代码规模与产物体积</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>组成部分</th>
+            <th>规模</th>
+            <th>承担职责</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>原生壳（Java）</td>
+            <td>14 个文件 / 2512 行</td>
+            <td>网络桥、加密存储、文件、分享、挂件</td>
+          </tr>
+          <tr>
+            <td>Web 内核（JS）</td>
+            <td>39 个模块 / 15402 行</td>
+            <td>界面、状态机、本地索引、语音情绪</td>
+          </tr>
+          <tr>
+            <td>APK 产物</td>
+            <td>7052777 字节</td>
+            <td>dist/android/whaletrail.apk</td>
+          </tr>
+          <tr class="bench-total">
+            <td>包名</td>
+            <td class="best">com.whaletrail.app</td>
+            <td>冷启动实测 5.6s</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>不自研原生 UI 框架：</strong>Android 侧不用 Gradle，直接 <code>tools/build-android.mjs</code> 构建，绕开了工具链版本漂移这一类无关但极其耗时的问题。</p>
+  </div>
+
+  <!-- 桥接层 -->
+  <h2 class="detail-subtitle">🔌 桥接层：窄接口 + 硬件级密钥保护</h2>
+  <p class="detail-lead">Web 与原生之间的桥是整个架构的攻击面，因此接口刻意做窄，敏感数据一律不经过 Web 侧明文。</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">桥接口</div>
+      <h3 class="arch-card-title">17 个受控入口</h3>
+      <p class="arch-card-desc"><code>Bridge.java</code> 用 17 个 <code>@JavascriptInterface</code> 方法承载网络请求、文件保存、语音、挂件等能力，接口清单显式可查，而不是开一个万能 invoke。</p>
+      <ul class="card-highlights">
+        <li>网络请求与中止分离（request / abort）</li>
+        <li>密钥读写与普通配置分开成两个入口</li>
+        <li>挂件数据、悬浮窗状态各自独立</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">密钥保护</div>
+      <h3 class="arch-card-title">KeyStore + AES/GCM</h3>
+      <p class="arch-card-desc"><code>Crypto.java</code> 用 <code>AndroidKeyStore</code> 里的 AES 密钥做 <code>AES/GCM/NoPadding</code> 加密，密文落 SharedPreferences。密钥本身不出硬件，密文离机不可解。</p>
+      <ul class="card-highlights">
+        <li>密钥材料由 Keystore 生成，不进 App 存储</li>
+        <li>GCM 带认证标签，密文被篡改会直接失败</li>
+        <li>浏览器版退化为 localStorage，边界显式标注</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">悬浮窗</div>
+      <h3 class="arch-card-title">636 行的独立服务</h3>
+      <p class="arch-card-desc"><code>OverlayService.java</code> 单独成进程承载悬浮聊天窗，含左右吸边布局与收起策略，是原生侧最复杂的一块，因此独立成文件便于单独回归。</p>
+      <ul class="card-highlights">
+        <li>聊天窗与主界面共享同一份会话状态</li>
+        <li>自动收起避免长期遮挡他人屏幕</li>
+        <li>失败时降级到通知而非崩溃</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 语音情绪 -->
+  <h2 class="detail-subtitle">🎙️ 语音与情绪：三路 TTS + 受限 ASR + 规则情绪</h2>
+  <p class="detail-lead">语音这块最容易做成「调用一个 API」。这里的做法是<strong>三条 TTS 路线各有独立计费口径</strong>、ASR 明确设限、情绪用规则而非模型 —— 每一层的边界都能在代码里指出。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">🔧 三条 TTS 路线与 ASR 硬限制</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>路线 / 约束</th>
+            <th>实现要点</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>TTS · system</td>
+            <td>系统 TTS，免费、离线、不支持情绪参数</td>
+          </tr>
+          <tr>
+            <td>TTS · deepseek</td>
+            <td>官方 stella / tide 两个音色，无情绪参数</td>
+          </tr>
+          <tr>
+            <td>TTS · qwen</td>
+            <td>qwen-audio-3.0-tts-plus，endpoint 可配，支持情绪指令</td>
+          </tr>
+          <tr>
+            <td>计费</td>
+            <td>按各路线独立单价（元/万字符）记，HUD 每轮显示本轮花费</td>
+          </tr>
+          <tr>
+            <td>ASR 格式</td>
+            <td>仅 16-bit PCM WAV（8000/16000/22050/24000/32000/44100/48000 Hz）或 Ogg Opus</td>
+          </tr>
+          <tr class="bench-total">
+            <td>ASR 上限</td>
+            <td class="best">体积 ≤8 MiB，时长 ≤120 秒，超限分别报 too_large / too_long</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>上限写死在代码里：</strong><code>maxBytes: 8 * 1024 * 1024</code> 与 <code>maxDurationMs: 120000</code> 是硬常量，录音满 120 秒自动停并提示分段，而不是等服务端拒绝后才报错。</p>
+  </div>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">情绪</div>
+      <h3 class="arch-card-title">6 标签规则推断</h3>
+      <p class="arch-card-desc"><code>emotion.js</code> 用 6 个中文标签（温柔 / 开心 / 认真 / 安慰 / 俏皮 / 中性）做规则推断，输出包含 warmth、energy、pace 与 evidence，结论可回溯到命中的词。</p>
+      <ul class="card-highlights">
+        <li>标签白名单外的取值统一回落为中性</li>
+        <li>返回体带 evidence，不给黑箱结论</li>
+        <li>与 TTS 情绪参数解耦，缺参数不影响发声</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">上下文</div>
+      <h3 class="arch-card-title">三层上下文而非堆 token</h3>
+      <p class="arch-card-desc"><code>context.js</code> 组三层：system 放身份与按日期检索到的往事、最近 12 轮原文、更早轮次的滚动摘要或首句降级。预算默认 32000 tokens，超限时先砍最老整轮再减回忆条数。</p>
+      <ul class="card-highlights">
+        <li>meta 回传 truncated / droppedTurns / tokensEstimate，可审计</li>
+        <li>回忆只注入 system，不混进 user 消息</li>
+        <li>断点续写不注入回忆，避免打断语义</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">检索</div>
+      <h3 class="arch-card-title">本地倒排索引</h3>
+      <p class="arch-card-desc"><code>memory.js</code> 为每条消息打真实日期标记，跨会话建中文二元组 + 拉丁词的倒排索引并带 idf 与覆盖度打分，<code>recall()</code> 返回带日期、标题、片段与分数的结果。</p>
+      <ul class="card-highlights">
+        <li>数据不出手机，不依赖外部服务</li>
+        <li>按分数降序、日期不串桶</li>
+        <li>长历史也能定位到具体那天的对话</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 安全 -->
+  <h2 class="detail-subtitle">🔐 安全红队：把结论写进可复跑的报告</h2>
+  <p class="detail-lead">安全不是写一句「已加固」。这里做的是一套<strong>可复跑的红队工具链</strong>：<code>node tools/test-security.mjs --layer=all</code> 约 60–90 秒跑完静态 + 真 Blink + Android 真机三层，产出结构化 JSON 报告与截图。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">🧪 XSS 渲染攻击实测结果</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>检测项</th>
+            <th>结果</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>攻击载荷</td>
+            <td>36 条（img onerror / script / svg onload / iframe javascript: / data: / Unicode 混淆 / 闭合标签逃逸）</td>
+          </tr>
+          <tr>
+            <td>渲染环境</td>
+            <td>真 Blink + 真实 markdown.js（不是 jsdom 近似）</td>
+          </tr>
+          <tr>
+            <td>脚本执行</td>
+            <td class="best">0 次（window.__fired 全程 false）</td>
+          </tr>
+          <tr>
+            <td>危险元素 / 行内事件属性 / 不安全 href</td>
+            <td class="best">各 0 个</td>
+          </tr>
+          <tr class="bench-total">
+            <td>落到真实聊天页</td>
+            <td class="best">同样 0 执行，恶意内容全部降级为文字</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>关键设计：</strong>代码块里的 <code>&lt;img&gt;</code> 变成 <code>&lt;code&gt;</code> 文本、表格里的变成 <code>&lt;td&gt;</code> 文本、<code>[click](javascript:...)</code> 整段按纯文本显示而不是生成 <code>&lt;a&gt;</code> —— 不是靠黑名单拦截，而是从渲染路径上就不产生危险节点。</p>
+  </div>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">高危 1</div>
+      <h3 class="arch-card-title">可调试包 + 远程调试</h3>
+      <p class="arch-card-desc">正式包常开 WebView 远程调试、且 APK 标记为 debuggable —— 真机一条 <code>window.DSHttp.getSecret({name:"deepseek_api_key"})</code> 就能读出明文密钥。门槛极低，判为高危。</p>
+      <ul class="card-highlights">
+        <li>结论：必须关闭 release 包的 isInspectable</li>
+        <li>debuggable 标记不得进入发布产物</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">高危 2</div>
+      <h3 class="arch-card-title">run-as 可整目录拷走</h3>
+      <p class="arch-card-desc">拿到 adb 的人可用 <code>run-as</code> 整目录拷走 <code>app_webview/</code>（IndexedDB 里的对话正文）与 <code>shared_prefs/</code>（密钥密文，离机不可解）。</p>
+      <ul class="card-highlights">
+        <li>对话正文属明文数据，需单独加密</li>
+        <li>密钥密文因走 Keystore 而不可解</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">中危 / 低危</div>
+      <h3 class="arch-card-title">桥接口未做白名单</h3>
+      <p class="arch-card-desc">getSecret / setSecret 对任意名字开放、request 可向任意 URL 带任意 header 外发（明文 http 被系统策略拦下，https 不受限）；iOS 侧 <code>isInspectable</code> 无条件开、Keychain 全量快照以 <code>forMainFrameOnly: false</code> 注入每个 frame。</p>
+      <ul class="card-highlights">
+        <li>需按名字白名单化密钥读写</li>
+        <li>Android openExternal 需补 scheme 白名单</li>
+        <li>开发服务器 /__proxy 是开放代理，仅本机 dev 暴露</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">✅ 其余 8 类攻击面逐条实测均被防住</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>攻击面</th>
+            <th>实测结论</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>深链注入 / SSRF</td>
+            <td class="best">已防住</td>
+          </tr>
+          <tr>
+            <td>TTS endpoint SSRF</td>
+            <td class="best">已防住</td>
+          </tr>
+          <tr>
+            <td>密钥落盘</td>
+            <td class="best">已防住（Keystore + AES/GCM）</td>
+          </tr>
+          <tr>
+            <td>本地存储与导出</td>
+            <td class="best">已防住</td>
+          </tr>
+          <tr>
+            <td>提示词注入外发</td>
+            <td class="best">已防住</td>
+          </tr>
+          <tr>
+            <td>桥参数校验</td>
+            <td class="best">已防住</td>
+          </tr>
+          <tr>
+            <td>路径穿越</td>
+            <td class="best">已防住</td>
+          </tr>
+          <tr class="bench-total">
+            <td>路由注入</td>
+            <td class="best">已防住</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 报告里同时保留「已防住」与「有高危」两类结论 —— 只写前者会掩盖真实风险，写后者才是可执行的加固清单。</p>
+  </div>
+
+  <!-- 细节 -->
+  <h2 class="detail-subtitle">🧾 其它可验证的细节</h2>
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">导入</div>
+      <h3 class="arch-card-title">深链导入真分享</h3>
+      <p class="arch-card-desc">从 DeepSeek 分享链接导入，解析出标题 / 条数 / 引用数 / 首条内容后先预览再落库，支持系统分享与深链两种入口。</p>
+      <ul class="card-highlights">
+        <li>Android 14 模拟器 1080×1920 实测：导入 8 条消息 / 52 条引用</li>
+        <li>可搜索、可续聊、可导出 .md / .json</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">断点</div>
+      <h3 class="arch-card-title">断点续写与退避重试</h3>
+      <p class="arch-card-desc">流式中断时已生成文本立即落库并把消息置为 paused，顶部显示「已中断 · 已生成的内容已保留」，可从断点续写或整条重生成。</p>
+      <ul class="card-highlights">
+        <li>续写走官方 beta prefix completion，模型从已写文本无缝续</li>
+        <li>网络 / 429 / 5xx 自动退避 0.8s / 1.8s / 4s（±20% 抖动），最多 3 次</li>
+        <li>App 重启后 recover() 扫描 pending，10 分钟内的请求可继续</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">计费</div>
+      <h3 class="arch-card-title">花费可对账</h3>
+      <p class="arch-card-desc">HUD 每轮显示输入（区分缓存命中）、输出（单列思考 tokens）与本轮花费，按官方峰谷价 + 缓存命中价计价，默认 $1 = ¥7.2 且可在设置里改。</p>
+      <ul class="card-highlights">
+        <li>实测 ↑2.21k ↓1.35k ¥0.0165 与手算一致</li>
+        <li>峰值为谷值 ×2（UTC 周一至周五 01:00–04:00、06:00–10:00）</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 沉淀 -->
+  <div class="arch-tips">
+    <h3 class="bench-title">📌 三条可迁移的结论</h3>
+    <div class="arch-tips-grid">
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 1</span>
+        <p><strong>原生侧只写 Web 做不到的事</strong><br><span class="arch-tip-note">业务逻辑留 Web 内核，一份代码跑三端</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 2</span>
+        <p><strong>安全结论必须可复跑</strong><br><span class="arch-tip-note">一条命令 + 结构化报告，比「已加固」有用</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 3</span>
+        <p><strong>长上下文靠检索而非堆 token</strong><br><span class="arch-tip-note">本地倒排索引 + 分层预算，数据不出设备</span></p>
+      </div>
+    </div>
+  </div>
+</div>

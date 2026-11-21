@@ -1,0 +1,296 @@
+<!-- Dify 私有化部署与多节点 Agent 集群审计工位 - 独立内容页 -->
+<div class="detail-content-block">
+  <h2 class="detail-subtitle">🏗️ 先把 Dify 跑起来，再谈 Agent 编排</h2>
+  <p class="detail-lead">这个项目分两段：先把 Dify 1.19 在本机<strong>私有化跑通</strong>并自建代理补齐模型供应商缺口；再把 agent 集群从「一堆单节点 chatflow」重构为<strong>单应用多节点并行扇出</strong>，最后把审计集群部署到服务器给电商数据平台当评审守门人。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">📊 本地私有化部署实测</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>项</th>
+            <th>实测值</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>版本</td>
+            <td>Dify 1.19.0（官方 compose，取自 tag 1.19.0）</td>
+          </tr>
+          <tr>
+            <td>容器</td>
+            <td class="best">15 个全部 Up，api / postgres / redis / sandbox / local_sandbox 均 healthy</td>
+          </tr>
+          <tr>
+            <td>镜像占用</td>
+            <td>约 11 GB（dify-api 3.8GB、plugin-daemon 2.5GB、agent-backend 1.35GB、web 0.9GB）</td>
+          </tr>
+          <tr>
+            <td>端口</td>
+            <td>宿主机 8080 → 容器 nginx 80（.env 里 EXPOSE_NGINX_PORT=8080）</td>
+          </tr>
+          <tr>
+            <td>初始化</td>
+            <td class="best">init_permissions 一次性容器退出码 0</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>compose 组合要显式声明：</strong><code>COMPOSE_PROFILES=weaviate,postgresql,collaboration</code>，密钥在 <code>docker/.env</code> 里随机生成，<code>OPENAPI_ENABLED</code> 与 <code>ENABLE_OAUTH_BEARER</code> 必须开 —— 后两个是 1.18+ 才有、difyctl 登录所依赖的。</p>
+  </div>
+
+  <!-- ocproxy -->
+  <h2 class="detail-subtitle">🔌 自建 ocproxy：49 行补齐模型供应商缺口</h2>
+  <p class="detail-lead">官方接入方式不满足实际需求，于是自己起了一个代理。这不是「造轮子」，而是<strong>只有 49 行却精确解决了三个具体问题</strong>。</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">代理</div>
+      <h3 class="arch-card-title">路径改写 + 补头</h3>
+      <p class="arch-card-desc"><code>docker/ocproxy/server.js</code>（node:22-alpine）把 <code>/v1/*</code> 原样转发到上游 <code>/zen/go/v1/*</code>，并补上 <code>x-opencode-session</code> 头（值取 <code>OC_SESSION</code>，默认 <code>dify-local-01</code>）。</p>
+      <ul class="card-highlights">
+        <li>SSE 流式不缓冲，避免被代理攒成整段才吐</li>
+        <li>容器内 8080、宿主机 8799（EXPOSE_OCPROXY_PORT）</li>
+        <li>写在 override 文件里，compose 自动合并，up -d 就会一起起</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">模型</div>
+      <h3 class="arch-card-title">openai_api_compatible</h3>
+      <p class="arch-card-desc">模型供应商用 openai_api_compatible 接 <code>deepseek-v4.1-flash</code>，Base URL 填 <code>http://ocproxy:8080/v1</code>。</p>
+      <ul class="card-highlights">
+        <li>必须填容器网络地址，不能填 localhost</li>
+        <li>凭据只存 Dify 数据库加密，本机临时凭据已清理</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">免费额度</div>
+      <h3 class="arch-card-title">订阅额度的真实边界</h3>
+      <p class="arch-card-desc">实测踩出免费模型的两种失败形态：<code>*-free</code> 返回 429 <code>FreeUsageLimitError</code>（Retry-After 约 18 小时），非 Go 的付费模型返回 402 <code>Insufficient balance</code>。</p>
+      <ul class="card-highlights">
+        <li>根因：Go 订阅只覆盖 Go provider 的请求</li>
+        <li>因此只用 /zen/go/v1 + Go 覆盖的模型</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 集群重构 -->
+  <h2 class="detail-subtitle">🔀 集群形态重构：第一版为什么是错的</h2>
+  <p class="detail-lead">初版把每个 agent 做成<strong>独立 chatflow</strong>（各 1 个 LLM 节点），编排逻辑甩给外部 Node 脚本。问题很直观：Dify 里看到的全是空壳，<strong>边界和模型归属都不在应用内</strong>，改一个判据要动两个地方。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">🏛️ 两种形态对比</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>维度</th>
+            <th>初版：一堆单节点 chatflow</th>
+            <th>终版：单应用多节点</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>应用内可见性</td>
+            <td>每个应用只有 1 个 LLM 节点，是空壳</td>
+            <td class="best">start → 4 个 LLM 节点 → 汇总 → answer</td>
+          </tr>
+          <tr>
+            <td>模型归属</td>
+            <td>在外部脚本里，界面上看不到</td>
+            <td class="best">每个节点自带独立 model</td>
+          </tr>
+          <tr>
+            <td>判据边界</td>
+            <td>混在外部配置，易串味</td>
+            <td class="best">节点提示词只含自己那部分判据</td>
+          </tr>
+          <tr>
+            <td>编排位置</td>
+            <td>外部 Node 脚本，跨系统</td>
+            <td class="best">全在 Dify 应用内，一个地方看全</td>
+          </tr>
+          <tr class="bench-total">
+            <td>并行度</td>
+            <td class="best">start 并行扇出到 4 个 LLM 节点</td>
+            <td>汇总走 template-transform 节点</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>回答节点的一个坑：</strong>template-transform 的输出变量名是 <code>output</code>，answer 里必须写 <code>{{#tpl.output#}}</code>；写成 text 会把字符串原样打印出来。</p>
+  </div>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">闸门</div>
+      <h3 class="arch-card-title">按节点切 YAML 并校验不串味</h3>
+      <p class="arch-card-desc">DSL 的 node 块以 <code>    - data:</code> 起、<code>id</code> 在块尾，切错位置会整体错位。除了结构校验，还额外加了一条语义校验：<strong>本节点提示词里不许出现别人的判据</strong>。</p>
+      <ul class="card-highlights">
+        <li>结构错位在导入前就被挡住</li>
+        <li>语义串味在生成时就报错，不留到运行期</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">导入</div>
+      <h3 class="arch-card-title">dsl import 的更新语义</h3>
+      <p class="arch-card-desc">带 <code>app_id + draft_hash</code> 才是更新，否则会重复建应用。这条不看文档基本踩不出来。</p>
+      <ul class="card-highlights">
+        <li>更新与新建是两种不同语义，参数决定行为</li>
+        <li>误用会得到一堆重复应用</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">删除</div>
+      <h3 class="arch-card-title">console API 的鉴权组合</h3>
+      <p class="arch-card-desc">删应用用 <code>DELETE /console/api/apps/{id}</code>，必须带 <code>Cookie: access_token=..; csrf_token=..</code> 加 <code>X-CSRF-Token</code> 头。用 <code>curl -b</code> 读 cookie 文件的方式会 401。</p>
+      <ul class="card-highlights">
+        <li>Cookie 与 CSRF 头缺一不可</li>
+        <li>cookie 文件方式与 Cookie 头方式不等价</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 三个协议坑 -->
+  <h2 class="detail-subtitle">🚧 部署期三个协议坑，逐个实测定位</h2>
+  <p class="detail-lead">这三处的共同点是：报错信息完全不指向真实原因，只能靠读协议与读代码定位。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">🧩 现象 → 根因 → 修复</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>现象</th>
+            <th>根因</th>
+            <th>修复</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>LLM 节点有 token，但 HTTP 节点 retry 两次后 failed</td>
+            <td>HTTP Request 节点打 host.docker.internal 被 SSRF 防护拒 422（LLM 节点不受影响，所以看起来像「模型能调、接口不能调」）</td>
+            <td>docker/.env 加 SSRF_PROXY_ALLOW_PRIVATE_IPS=&lt;compose 网段&gt;,192.168.0.0/16,127.0.0.1，再 up -d api worker plugin_daemon</td>
+          </tr>
+          <tr>
+            <td>difyctl 写 login.yml.lock 报 EPERM</td>
+            <td>受限沙箱里 %APPDATA% 不可写</td>
+            <td>DIFY_CONFIG_DIR 指到可写目录并复制 tokens.yml / login.yml</td>
+          </tr>
+          <tr>
+            <td>dsl import 的 http 节点报 invalid body data</td>
+            <td>body.data 只能有一个 item</td>
+            <td>拆成单 item</td>
+          </tr>
+          <tr class="bench-total">
+            <td>改完 .env 要不要重建镜像？</td>
+            <td>配置走环境变量注入，不在镜像里</td>
+            <td class="best">不需要重建镜像，重启对应容器即可</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>SSRF 那条最容易误判：</strong>因为 LLM 节点完全正常，只有一小部分节点失败，很容易被当成「模型不听话」或「接口地址写错」，实际是防护把私网地址拦了。</p>
+  </div>
+
+  <!-- 审计工位 -->
+  <h2 class="detail-subtitle">🛡️ 审计工位落到服务器：16 条判据当守门人</h2>
+  <p class="detail-lead">集群建好之后把它接到电商数据平台 ecdata 上，作为评审守门人。形态是<strong>服务器端常驻服务 + 反向隧道回调本机 Dify</strong>，隧道断了直接 fail-closed。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">🔗 完整链路</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>环节</th>
+            <th>实现</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>入口</td>
+            <td>https://115.159.190.72/audit/（health / pending / ledger 三个接口）</td>
+          </tr>
+          <tr>
+            <td>服务</td>
+            <td>systemd ecdata-audit，代码 /opt/ecdata/audit/audit_worker.py（465 行），监听 127.0.0.1:8790，由 Caddy 暴露 /audit/*</td>
+          </tr>
+          <tr>
+            <td>链路</td>
+            <td>Meridian 任务 review → 拉 ecdata 契约 / 健康 / 表结构 → 经反向隧道 18080 调本机 8080 的 Dify → 16 条判据 → 写回 Meridian（done / blocked）+ ecdata /agent/report + ledger</td>
+          </tr>
+          <tr>
+            <td>判据</td>
+            <td class="best">A1 结构 / A2 数据 / A3 安全 / A4 交付，四域共 16 条</td>
+          </tr>
+          <tr>
+            <td>隧道</td>
+            <td>本机双击启动审计隧道.cmd（python tunnel.py），断了直接 fail-closed</td>
+          </tr>
+          <tr class="bench-total">
+            <td>实测（E1）</td>
+            <td class="best">16/16 判据完整，2 条 FAIL（R1-03 / R1-04），31s，耗 21971 tokens，Meridian 变 blocked</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>「材料里没有代码，所以 A3 多为 unknown」是对的：</strong>没有证据的判据写 unknown 并说明缺什么，而不是让模型猜一个结论 —— 这比假装审过了要安全。</p>
+  </div>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">首审</div>
+      <h3 class="arch-card-title">12/16 与 16/16 的差别</h3>
+      <p class="arch-card-desc">E1 首次审计时材料缺 token，只有 12/16 判据有回、其余为 unknown，任务停在 review；补齐材料后复审拿到完整 16/16 并出现 2 条 FAIL。</p>
+      <ul class="card-highlights">
+        <li>缺材料时停在 review 而不是硬判</li>
+        <li>复审才给出可执行的 FAIL 结论</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">结果</div>
+      <h3 class="arch-card-title">双写回 + 留痕</h3>
+      <p class="arch-card-desc">审计结论同时写回两个系统：Meridian 侧把任务标成 done 或 blocked 让排程继续或卡住；ecdata 侧落 <code>/agent/report</code> 与 ledger 供后续追溯。</p>
+      <ul class="card-highlights">
+        <li>blocked 会真的挡住任务，不只是留个记录</li>
+        <li>ledger 记状态、失败原因与计费状态</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">韧性</div>
+      <h3 class="arch-card-title">失败要向安全侧倒</h3>
+      <p class="arch-card-desc">反向隧道由本机手动启动，进程被杀或网络中断都会导致服务不可用。因此隧道断开时服务直接 fail-closed —— 宁可停审也不放行。</p>
+      <ul class="card-highlights">
+        <li>审不了 ≠ 审过了</li>
+        <li>不可用状态显式表达，不与「通过」混淆</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 沉淀 -->
+  <div class="arch-tips">
+    <h3 class="bench-title">📌 三条可迁移的结论</h3>
+    <div class="arch-tips-grid">
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 1</span>
+        <p><strong>平台内的编排才能被平台内的用户看懂</strong><br><span class="arch-tip-note">外部脚本编排 = 界面上的空壳</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 2</span>
+        <p><strong>部分节点失败要先怀疑防护而非模型</strong><br><span class="arch-tip-note">SSRF 拦私网，LLM 节点不受影响</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 3</span>
+        <p><strong>守门人不可用时必须 fail-closed</strong><br><span class="arch-tip-note">审不了不等于审过了</span></p>
+      </div>
+    </div>
+  </div>
+</div>

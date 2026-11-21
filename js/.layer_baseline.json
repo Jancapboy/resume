@@ -1,0 +1,795 @@
+{
+ "proj-001": [
+  [
+   "数据层",
+   "",
+   [
+    "MySQL",
+    "MGR",
+    "ProxySQL"
+   ]
+  ],
+  [
+   "基础设施",
+   "l3",
+   [
+    "Linux"
+   ]
+  ]
+ ],
+ "proj-002": [
+  [
+   "服务层",
+   "l2",
+   [
+    "FDE",
+    "Shell",
+    "Python"
+   ]
+  ],
+  [
+   "数据层",
+   "",
+   [
+    "OceanBase"
+   ]
+  ],
+  [
+   "基础设施",
+   "l3",
+   [
+    "Linux"
+   ]
+  ]
+ ],
+ "proj-003": [
+  [
+   "服务层",
+   "l2",
+   [
+    "Python",
+    "MediaCrew",
+    "Selenium"
+   ]
+  ],
+  [
+   "数据层",
+   "",
+   [
+    "MySQL",
+    "Redis"
+   ]
+  ]
+ ],
+ "proj-004": [
+  [
+   "接入层",
+   "",
+   [
+    "Vue.js",
+    "Node.js"
+   ]
+  ],
+  [
+   "数据层",
+   "",
+   [
+    "MySQL"
+   ]
+  ],
+  [
+   "基础设施",
+   "l3",
+   [
+    "Docker"
+   ]
+  ]
+ ],
+ "proj-005": [
+  [
+   "接入层",
+   "",
+   [
+    "React"
+   ]
+  ],
+  [
+   "服务层",
+   "l2",
+   [
+    "Spring Boot"
+   ]
+  ],
+  [
+   "数据层",
+   "",
+   [
+    "MySQL",
+    "Redis"
+   ]
+  ]
+ ],
+ "proj-006": [
+  [
+   "接入层",
+   "",
+   [
+    "企业微信 API"
+   ]
+  ],
+  [
+   "服务层",
+   "l2",
+   [
+    "OpenClaw",
+    "Python"
+   ]
+  ],
+  [
+   "基础设施",
+   "l3",
+   [
+    "Nginx",
+    "Linux"
+   ]
+  ]
+ ],
+ "proj-007": [
+  [
+   "接入层",
+   "",
+   [
+    "WebSocket",
+    "抖音 API",
+    "B站 API"
+   ]
+  ],
+  [
+   "服务层",
+   "l2",
+   [
+    "Python",
+    "LLM"
+   ]
+  ],
+  [
+   "AI / 模型",
+   "l2",
+   [
+    "LLM"
+   ]
+  ]
+ ],
+ "proj-008": [
+  [
+   "服务层",
+   "l2",
+   [
+    "Python",
+    "LLM",
+    "TTS",
+    "数字人"
+   ]
+  ],
+  [
+   "基础设施",
+   "l3",
+   [
+    "FFmpeg"
+   ]
+  ],
+  [
+   "AI / 模型",
+   "l2",
+   [
+    "LLM",
+    "TTS",
+    "数字人"
+   ]
+  ]
+ ],
+ "proj-009": [
+  [
+   "接入层",
+   "",
+   [
+    "Three.js",
+    "Blender API"
+   ]
+  ],
+  [
+   "服务层",
+   "l2",
+   [
+    "Python"
+   ]
+  ],
+  [
+   "AI / 模型",
+   "l2",
+   [
+    "Hunyuan3D-2.0"
+   ]
+  ]
+ ],
+ "proj-010": [
+  [
+   "接入层",
+   "",
+   [
+    "JavaScript",
+    "REST API"
+   ]
+  ],
+  [
+   "服务层",
+   "l2",
+   [
+    "node-RED"
+   ]
+  ],
+  [
+   "数据层",
+   "",
+   [
+    "SQL Server"
+   ]
+  ],
+  [
+   "其它组件",
+   "l3",
+   [
+    "SSRS"
+   ]
+  ]
+ ],
+ "proj-011": [
+  [
+   "服务层",
+   "l2",
+   [
+    "LangChain",
+    "LangGraph",
+    "Python",
+    "LCEL",
+    "DAG"
+   ]
+  ],
+  [
+   "AI / 模型",
+   "l2",
+   [
+    "LangChain",
+    "LangGraph"
+   ]
+  ],
+  [
+   "其它组件",
+   "l3",
+   [
+    "MemorySaver"
+   ]
+  ]
+ ],
+ "proj-012": [
+  [
+   "服务层",
+   "l2",
+   [
+    "数字人"
+   ]
+  ],
+  [
+   "基础设施",
+   "l3",
+   [
+    "FFmpeg"
+   ]
+  ],
+  [
+   "AI / 模型",
+   "l2",
+   [
+    "ComfyUI",
+    "MiniMax-H3",
+    "Hunyuan3D",
+    "LoRA",
+    "数字人"
+   ]
+  ]
+ ],
+ "proj-013": [
+  [
+   "服务层",
+   "l2",
+   [
+    "Python"
+   ]
+  ],
+  [
+   "数据层",
+   "",
+   [
+    "RSS",
+    "知识图谱"
+   ]
+  ],
+  [
+   "基础设施",
+   "l3",
+   [
+    "Docker",
+    "WSL2",
+    "mihomo"
+   ]
+  ],
+  [
+   "AI / 模型",
+   "l2",
+   [
+    "知识图谱"
+   ]
+  ]
+ ],
+ "proj-014": [
+  [
+   "服务层",
+   "l2",
+   [
+    "LangGraph",
+    "LangChain",
+    "Python",
+    "DAG"
+   ]
+  ],
+  [
+   "AI / 模型",
+   "l2",
+   [
+    "LangGraph",
+    "LangChain"
+   ]
+  ],
+  [
+   "其它组件",
+   "l3",
+   [
+    "StateGraph"
+   ]
+  ]
+ ],
+ "proj-015": [
+  [
+   "服务层",
+   "l2",
+   [
+    "Python",
+    "一致性控制",
+    "自动化流水线"
+   ]
+  ],
+  [
+   "基础设施",
+   "l3",
+   [
+    "GPU 集群",
+    "FFmpeg"
+   ]
+  ],
+  [
+   "AI / 模型",
+   "l2",
+   [
+    "AI 漫剧"
+   ]
+  ]
+ ],
+ "proj-016": [
+  [
+   "接入层",
+   "",
+   [
+    "JavaScript ES2023",
+    "CORS",
+    "企业微信 Webhook"
+   ]
+  ],
+  [
+   "基础设施",
+   "l3",
+   [
+    "EdgeOne Pages",
+    "Edge Functions",
+    "Server酱"
+   ]
+  ]
+ ],
+ "proj-017": [
+  [
+   "接入层",
+   "",
+   [
+    "CDN / Range"
+   ]
+  ],
+  [
+   "服务层",
+   "l2",
+   [
+    "Python",
+    "GitHub CLI"
+   ]
+  ],
+  [
+   "基础设施",
+   "l3",
+   [
+    "GitHub Pages",
+    "EdgeOne Pages",
+    "CloudStudio"
+   ]
+  ]
+ ],
+ "proj-018": [
+  [
+   "接入层",
+   "",
+   [
+    "CSS Flex",
+    "Chrome DevTools Protocol",
+    "JavaScript",
+    "localStorage",
+    "Edge Headless",
+    "移动端适配"
+   ]
+  ],
+  [
+   "AI / 模型",
+   "l2",
+   [
+    "localStorage"
+   ]
+  ]
+ ],
+ "proj-019": [
+  [
+   "服务层",
+   "l2",
+   [
+    "OR-Tools CP-SAT",
+    "Cassowary",
+    "CRDT",
+    "OpLog 事件溯源",
+    "aiohttp"
+   ]
+  ],
+  [
+   "基础设施",
+   "l3",
+   [
+    "Caddy",
+    "systemd"
+   ]
+  ],
+  [
+   "其它组件",
+   "l3",
+   [
+    "DTCG / style-dictionary"
+   ]
+  ]
+ ],
+ "proj-020": [
+  [
+   "接入层",
+   "",
+   [
+    "React 18",
+    "Vite",
+    "Zustand",
+    "TypeScript"
+   ]
+  ],
+  [
+   "服务层",
+   "l2",
+   [
+    "mulberry32 PRNG",
+    "Playwright"
+   ]
+  ]
+ ],
+ "proj-021": [
+  [
+   "接入层",
+   "",
+   [
+    "CDN / 边缘节点"
+   ]
+  ],
+  [
+   "服务层",
+   "l2",
+   [
+    "globalping",
+    "check-host",
+    "curl",
+    "Python"
+   ]
+  ],
+  [
+   "基础设施",
+   "l3",
+   [
+    "GitHub Pages"
+   ]
+  ]
+ ],
+ "proj-022": [
+  [
+   "接入层",
+   "",
+   [
+    "RunningHub API",
+    "CSS 玻璃拟态",
+    "CSS backdrop-filter"
+   ]
+  ],
+  [
+   "基础设施",
+   "l3",
+   [
+    "FFmpeg"
+   ]
+  ],
+  [
+   "AI / 模型",
+   "l2",
+   [
+    "MJ 图像生成",
+    "MiniMax-H3 视频生成"
+   ]
+  ]
+ ],
+ "proj-023": [
+  [
+   "接入层",
+   "",
+   [
+    "WebGL2",
+    "GSAP 3.13",
+    "ScrollTrigger",
+    "SplitText",
+    "Lenis",
+    "GitHub API",
+    "Chrome DevTools Protocol"
+   ]
+  ],
+  [
+   "其它组件",
+   "l3",
+   [
+    "GLSL"
+   ]
+  ]
+ ],
+ "proj-024": [
+  [
+   "接入层",
+   "",
+   [
+    "Chrome DevTools Protocol",
+    "Performance API",
+    "IntersectionObserver",
+    "CDN 自托管",
+    "GSAP 3.13",
+    "移动端适配"
+   ]
+  ]
+ ],
+ "proj-025": [
+  [
+   "接入层",
+   "",
+   [
+    "FastAPI + WebSocket",
+    "ECharts 数字孪生面板"
+   ]
+  ],
+  [
+   "服务层",
+   "l2",
+   [
+    "Python",
+    "ROS2 / rclpy",
+    "HAL 硬件抽象层",
+    "行为树 Behavior Tree",
+    "A* 栅格路径规划",
+    "任务队列与批次优化"
+   ]
+  ],
+  [
+   "AI / 模型",
+   "l2",
+   [
+    "YOLOv8 + RKNN 推理"
+   ]
+  ]
+ ],
+ "proj-026": [
+  [
+   "接入层",
+   "",
+   [
+    "DataMatrix / 二维码视觉解码",
+    "RFID 读码备选"
+   ]
+  ],
+  [
+   "服务层",
+   "l2",
+   [
+    "Python",
+    "契约层 SlotTag",
+    "行为树校验闸门",
+    "故障分类与根因提示",
+    "相机 FOV 几何推导"
+   ]
+  ]
+ ],
+ "proj-027": [
+  [
+   "接入层",
+   "",
+   [
+    "SSE 事件推送",
+    "CLI + HTTP API"
+   ]
+  ],
+  [
+   "服务层",
+   "l2",
+   [
+    "Go 1.27",
+    "四态门禁决策引擎",
+    "审计哈希链 SHA-256"
+   ]
+  ],
+  [
+   "数据层",
+   "",
+   [
+    "SQLite (modernc.org/sqlite)"
+   ]
+  ],
+  [
+   "AI / 模型",
+   "l2",
+   [
+    "Agent 工作流编排"
+   ]
+  ]
+ ],
+ "proj-028": [
+  [
+   "接入层",
+   "",
+   [
+    "three.js / WebGL",
+    "UnrealBloom 后期",
+    "CDP 交互验证"
+   ]
+  ],
+  [
+   "服务层",
+   "l2",
+   [
+    "Go 1.27",
+    "STL 二进制解析",
+    "float32 位模式顶点焊接",
+    "QEM 网格简化"
+   ]
+  ],
+  [
+   "基础设施",
+   "l3",
+   [
+    "资产门禁"
+   ]
+  ]
+ ],
+ "proj-029": [
+  [
+   "服务层",
+   "l2",
+   [
+    "OR-Tools CP-SAT",
+    "OpLog 事件溯源",
+    "固定区间约束 fixed_intervals",
+    "字典序三阶段求解",
+    "Python aiohttp"
+   ]
+  ],
+  [
+   "基础设施",
+   "l3",
+   [
+    "Caddy 反向代理",
+    "systemd"
+   ]
+  ]
+ ],
+ "proj-030": [
+  [
+   "接入层",
+   "",
+   [
+    "Wechaty",
+    "wechat4u puppet",
+    "Node.js sidecar"
+   ]
+  ],
+  [
+   "服务层",
+   "l2",
+   [
+    "OpenClaw 渠道插件",
+    "Python",
+    "插件源码能力比对"
+   ]
+  ],
+  [
+   "AI / 模型",
+   "l2",
+   [
+    "LightAgent"
+   ]
+  ]
+ ],
+ "proj-031": [
+  [
+   "接入层",
+   "",
+   [
+    "Three.js 0.170.0",
+    "WebGL",
+    "Node.js",
+    "Edge Headless CDP"
+   ]
+  ],
+  [
+   "其它组件",
+   "l3",
+   [
+    "ES Module / unpkg",
+    "本地 HTTP Server"
+   ]
+  ]
+ ],
+ "proj-032": [
+  [
+   "服务层",
+   "l2",
+   [
+    "Python"
+   ]
+  ],
+  [
+   "基础设施",
+   "l3",
+   [
+    "EdgeOne Pages"
+   ]
+  ],
+  [
+   "其它组件",
+   "l3",
+   [
+    "eo_token 鉴权时序",
+    "HttpOnly Cookie 预热",
+    "内联兜底注入",
+    "一致性自检工具"
+   ]
+  ]
+ ]
+}
