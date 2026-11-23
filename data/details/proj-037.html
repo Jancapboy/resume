@@ -1,0 +1,223 @@
+<!-- 影核 CINECORE 云端漫剧工作台 - 独立内容页 -->
+<div class="detail-content-block">
+  <h2 class="detail-subtitle">☁️ 把 100 集漫剧搬上云端，然后修掉「打开就卡白」</h2>
+  <p class="detail-lead">这个项目有两面：一面是<strong>规模</strong> —— 100 集分集大纲、100 集剧本、2405 段全部就位，EP01 已产出 189.2 秒成片；另一面是<strong>把一个「打开就卡白」的界面的根因逐层挖出来</strong>，最后发现真因既不在服务端，也不在浏览器，而在一次要吞下 33.8 MB 的 JSON 解析。</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">规模</div>
+      <h3 class="arch-card-title">两个项目、3400+ 段全部就位</h3>
+      <p class="arch-card-desc">《我加载了恋爱游戏-h7l8》100 集大纲 + 100 集剧本 + 2405 段（每集 12~35 段）；《家庭幻想-w2rt》100 集 2132 段（每集 6~32 段）。两套都是完整可投产的规模，不是 demo。</p>
+      <ul class="card-highlights">
+        <li>EP01_v1.mp4 实测 24 段全齐、189.2 秒、1312×736</li>
+        <li>24fps / 4540 帧 / h264+aac / 104.9 MB</li>
+        <li>EP2 共 31 段已提交，按 4080 实测 6~10 分钟/段</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">根因 1</div>
+      <h3 class="arch-card-title">卡白不是服务端的问题</h3>
+      <p class="arch-card-desc">工作台报「加载失败」时，服务端其实全通：<code>/api/state</code> 200 用时 1 秒、<code>/api/project</code> 返回 33.8 MB 用时 1.06 秒。真因是浏览器一次吞下 33.8 MB 项目 JSON 直接卡住。</p>
+      <ul class="card-highlights">
+        <li>先验证服务端，再怀疑客户端 —— 顺序反了会白查很久</li>
+        <li>解法不是压缩数据，是加「先只拉项目列表、点进去再拉全量」的轻量接口</li>
+        <li>本地副本 project.json 实测 65,137,170 字节（约 65 MB）</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">根因 2</div>
+      <h3 class="arch-card-title">素材页卡死：同步阻塞的量级</h3>
+      <p class="arch-card-desc"><code>loadProject</code> 每次 <code>applyParameterInheritance(2132 段)</code> 实测 1.7~1.9 秒，而 board 请求一次会触发 3~4 次 —— 单次 6.3 秒全同步阻塞，事件循环彻底卡死。</p>
+      <ul class="card-highlights">
+        <li>按 (mtime,size) 缓存继承后的 JSON 文本</li>
+        <li>board 预热门 + 前端分批渲染 + content-visibility</li>
+        <li>修 /thumb 500：补 get cachedAssetThumb getter、key 统一正斜杠、预生成缩略图</li>
+        <li>资产路径从远端绝对路径改到 app/data</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">闭环</div>
+      <h3 class="arch-card-title">过夜无人值守出资产</h3>
+      <p class="arch-card-desc">整条过夜链路做成可无人值守：生成名册 → 等 board 出板 → 循环出图 → 写完成标记 → 看护进程兜底，日志全量落盘。</p>
+      <ul class="card-highlights">
+        <li>cap.planAll 生成资产名册</li>
+        <li>tools/asset_runner.py 循环 POST /batch {only: pending}</li>
+        <li>tools/asset_keeper.py 每 5 分钟看护</li>
+        <li>ep_chain.py 串行跑完提示词→绑关键帧→逐段出片，支持断点续跑</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 量化表 -->
+  <h2 class="detail-subtitle">📊 生产规模与算力账</h2>
+  <p class="detail-lead">所有数字来自本地实测与云机实测，不含估算。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">📐 两个项目的规模对照</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>项目</th>
+            <th>集数</th>
+            <th>段落数</th>
+            <th>每集段落</th>
+            <th>成片实测</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>我加载了恋爱游戏-h7l8</td>
+            <td class="best">100</td>
+            <td class="best">2405</td>
+            <td>12~35</td>
+            <td>EP01 189.2 秒 / 1312×736</td>
+          </tr>
+          <tr>
+            <td>家庭幻想-w2rt</td>
+            <td class="best">100</td>
+            <td class="best">2132</td>
+            <td>6~32</td>
+            <td>项目 JSON 65,137,170 字节</td>
+          </tr>
+          <tr class="bench-total">
+            <td>EP01_v1.mp4 验收</td>
+            <td colspan="2">24 段全齐</td>
+            <td>24fps / 4540 帧</td>
+            <td class="best">h264+aac / 104.9 MB</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>规格是实测出来的，不是设计出来的：</strong>画幅 1312×736 就是按 EP01 实跑出来的结果 —— 定 16:9 容易，但 ComfyUI 节点的宽高比对齐后落到哪个具体数值，只能实跑一次才知道。</p>
+  </div>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">💰 出图与算力成本</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>环节</th>
+            <th>实测</th>
+            <th>说明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>本机出图 1024²</td>
+            <td class="best">32 秒/张</td>
+            <td>Qwen-Image 2.1 int8，权重走只读挂载</td>
+          </tr>
+          <tr>
+            <td>本机出图 4.2MP</td>
+            <td class="best">60 秒/张</td>
+            <td>同一模型，面积上去时间翻倍</td>
+          </tr>
+          <tr>
+            <td>云端算力</td>
+            <td>¥5.04/时</td>
+            <td>2×RTX 4080 SUPER 32G（¥3.36/时）+ 单卡 westd（¥1.68/时）同时在跑</td>
+          </tr>
+          <tr>
+            <td>出图档位自动降级</td>
+            <td>5090 → 2048×1152</td>
+            <td>4080S → 1536×864，按显卡自动选档</td>
+          </tr>
+          <tr class="bench-total">
+            <td>镜像体积</td>
+            <td colspan="2">app 344 / deploy_v=1082，镜像自带 image2.1 与 H3 工作流，不需再下模型</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>应用镜像不能用 API 部署：</strong><code>app-image-*</code> 走 API 一律失败（<code>实例镜像已被删除</code> / <code>镜像不存在</code>），必须走网页点「部署」。这条在动手前省下了整整一轮排障。</p>
+  </div>
+
+  <!-- 踩坑 -->
+  <h2 class="detail-subtitle">🪨 三个会重复踩的坑</h2>
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">坑 1</div>
+      <h3 class="arch-card-title">stopAt 只认项目里的配置</h3>
+      <p class="arch-card-desc">请求体里传的 <code>stopAt</code> 会被忽略 —— 只认项目里的 <code>automation.options.stopAt</code>；传 <code>{}</code> 反而把它重置回默认的 assets，结果卡在资产步骤。</p>
+      <ul class="card-highlights">
+        <li>预览返回的 options 是它算出来的有效值，不代表你传的</li>
+        <li>判断真实工作量要看 chain.counts（assetsMissing / promptsPending / videosPending）</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">坑 2</div>
+      <h3 class="arch-card-title">assets 步骤会「假装崩了」</h3>
+      <p class="arch-card-desc">assets 步骤要同步算 sha1，会阻塞单线程事件循环 —— 执行期间 <code>/api/state</code> 直接返回 000。这属正常现象，不要误判成服务崩了再去重启。</p>
+      <ul class="card-highlights">
+        <li>000 是阻塞的副作用，不是崩溃</li>
+        <li>预判这一点能省掉一次无意义的重启与重跑</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">坑 3</div>
+      <h3 class="arch-card-title">小内存机器会被静默杀掉</h3>
+      <p class="arch-card-desc">217 个 B 级内存的机器（<code>memory.max</code> 只有 2 GB）跑 60 MB 级项目会被静默杀掉，没有任何报错。本机这台是 124 GB，所以没事。</p>
+      <ul class="card-highlights">
+        <li>开机器先看 memory.max，不是只看显存</li>
+        <li>「没报错但就是没了」优先怀疑 cgroup 内存上限</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">预设偏离</div>
+      <h3 class="arch-card-title">3 处预设必须人工纠正</h3>
+      <p class="arch-card-desc">工作流预设与项目实际需求不一致的地方，不改就得靠人肉兜底。这三处是实测跑出来的，不是猜的。</p>
+      <ul class="card-highlights">
+        <li>段 cast 为空 → 关键帧全绑同一张图，须从 assetPlan 反推 cast/scene</li>
+        <li>关键帧挑到服装变体（教室出现泳裤）→ 须优先本体定妆卡</li>
+        <li>workflow=fl2va 但出口只有首帧 → 须统一改 i2v + 手动指定首帧</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 沉淀 -->
+  <h2 class="detail-subtitle">📌 可迁移的结论</h2>
+  <div class="arch-tips">
+    <h3 class="bench-title">🧠 四条可迁移的工程结论</h3>
+    <div class="arch-tips-grid">
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 1</span>
+        <p><strong>先证明服务端是好的，再怀疑客户端</strong><br><span class="arch-tip-note">否则会在错误的方向上查很久</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 2</span>
+        <p><strong>大对象的解法是分片，不是压缩</strong><br><span class="arch-tip-note">33.8 MB 一次吞下必卡，先拉列表再拉全量</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 3</span>
+        <p><strong>同步阻塞要量化到毫秒才定位得到</strong><br><span class="arch-tip-note">1.7 秒 × 3~4 次 = 6.3 秒，才是卡死的量级</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 4</span>
+        <p><strong>无人值守链路要配看护进程</strong><br><span class="arch-tip-note">出图 + 完成标记 + 每 5 分钟看护，缺一不可</span></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 技术栈 -->
+  <div class="arch-tips" style="margin-top:24px">
+    <h3 class="bench-title">🧰 技术栈</h3>
+    <div class="arch-tips-grid">
+      <div class="arch-tip">
+        <span class="tech-badge">Node.js</span>
+        <span class="tech-badge">Qwen-Image 2.1 int8</span>
+        <span class="tech-badge">MiniMax H3</span>
+        <span class="tech-badge">AutoDL 云机</span>
+        <span class="tech-badge">FFmpeg</span>
+        <span class="tech-badge">content-visibility</span>
+      </div>
+    </div>
+  </div>
+</div>

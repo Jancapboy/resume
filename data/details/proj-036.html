@@ -1,0 +1,223 @@
+<!-- SpiralWorld 多智能体探索系统 - 独立内容页 -->
+<div class="detail-content-block">
+  <h2 class="detail-subtitle">🧭 当「拟合不出来」是机制问题，不是模型问题</h2>
+  <p class="detail-lead">给一群 LLM 智能体一批只有三维位置时序、没有物理先验的螺旋轨迹，问它们「这团螺旋是观测视角带来的，还是运动本身内禀的」。真正的难点不在于让模型算得更准，而在于<strong>承认这两类机制在谐波基下运动学简并</strong> —— 拟合得再准也分不开，必须换坐标系去取判别信息。</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">症结</div>
+      <h3 class="arch-card-title">谐波基下的运动学简并</h3>
+      <p class="arch-card-desc">rel（相对运动）与 embed（三维嵌入）两种机制，在谐波基下的运动学表现完全一样。只用拟合的判别器分不开它们，留出准确率甚至低于随机基线。</p>
+      <ul class="card-highlights">
+        <li>仅拟合的策略 A 留出准确率 0.167，低于随机基线 0.333</li>
+        <li>确定性基线（k-means + 最近质心 + 特征选择）也只有 0.433</li>
+        <li>结论：问题出在特征空间没有判别信息，不在模型容量</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">解法</div>
+      <h3 class="arch-card-title">判决性干预：换参考系</h3>
+      <p class="arch-card-desc">定义 Δ = CV 残差（单椭圆，默认参考系）− CV 残差（单椭圆，中心参考系）。相对运动换系后复杂度塌缩，内禀运动换任何系都保留 —— 符号直接反向判别。</p>
+      <ul class="card-highlights">
+        <li>rel 族 Δ=+0.5657±0.6482，embed 族 Δ=−0.2168±0.4117</li>
+        <li>plain 族 Δ=+0.0004±0.0126，作为对照证明不是噪声</li>
+        <li>干预进入特征表成为 d_* 列，留出准确率 0.167 → 0.458</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">硬指标</div>
+      <h3 class="arch-card-title">判决性干预带来的增益</h3>
+      <p class="detail-lead">留出集上两种策略的准确率对比，是这个项目最核心的一张表 —— 它把「换个坐标系看」这件工程动作的收益量化成了可验收的数字。</p>
+      <ul class="card-highlights">
+        <li>策略 A：仅用默认参考系拟合 → 0.167</li>
+        <li>策略 B：拟合 + 参考系干预 → <strong>0.458</strong>（随机基线 0.333）</li>
+        <li>判决性干预带来的增益：<strong>+0.292</strong></li>
+        <li>Student 自发反演出与真值对应的三族机制（多谐波族→rel、三维进动族→embed、平面椭圆族→plain）</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">可信度</div>
+      <h3 class="arch-card-title">实验完整性审计 10 项</h3>
+      <p class="arch-card-desc">自建 <code>scripts/audit_integrity.py</code> 做实验完整性审计 —— 因为「实验结果好看」和「实验结果可信」是两件事。</p>
+      <ul class="card-highlights">
+        <li>场景 id 用 sha1 不透明化，主域与 P4 域均不泄漏族名</li>
+        <li>公开观测摘要不含真值字段，truth 与 public_dict 分离</li>
+        <li>训练集与留出集 id 交集 0 个；判别代码独立进程可执行</li>
+        <li>13 个原语全部通用，不含族名或机制名命名的函数</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 指标表 -->
+  <h2 class="detail-subtitle">📊 机制反演的量化结果</h2>
+  <p class="detail-lead">下面每一行都来自本地实跑脚本的原始输出，不是估算。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">📐 判决性干预的判别力</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>轨迹族</th>
+            <th>换参考系后 Δ</th>
+            <th>判别含义</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>rel_spiral</td>
+            <td class="best">+0.5657 ± 0.6482（n=12）</td>
+            <td>相对运动，换系后复杂度塌缩</td>
+          </tr>
+          <tr>
+            <td>embed_spiral</td>
+            <td>−0.2168 ± 0.4117（n=12）</td>
+            <td>内禀三维，换任何系都保留</td>
+          </tr>
+          <tr>
+            <td>plain_ellipse</td>
+            <td>+0.0004 ± 0.0126（n=12）</td>
+            <td>对照组，确认 Δ 不是噪声</td>
+          </tr>
+          <tr class="bench-total">
+            <td>留出准确率</td>
+            <td>0.167 → <strong class="best">0.458</strong></td>
+            <td>判决性干预带来增益 +0.292</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>为什么 Δ 的正负就能判别：</strong>rel 是「看起来在绕圈」的相对运动，换到中心天体参考系后这段绕圈消失，单椭圆模型突然变得够用（残差上升）；embed 是运动本身内禀的三维进动，换任何参考系它都还在（残差不塌）。两个方向相反的信号，等于给判别器一把不用调参的尺子。</p>
+  </div>
+
+  <!-- 负面结果 -->
+  <h2 class="detail-subtitle">🧪 负面结果与自评指标 bug</h2>
+  <p class="detail-lead">这个项目最有价值的部分不是那个 +0.292，而是<strong>把不成立的东西如实写下来</strong>。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">📋 四级验收的真实结论</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>验收项</th>
+            <th>实测</th>
+            <th>结论</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>L1 判别代码可执行且显著高于随机基线</td>
+            <td>0.433~0.700（4 次运行，均值 ≈0.59）vs 随机 0.333</td>
+            <td class="best">✅ 达成（但方差大）</td>
+          </tr>
+          <tr>
+            <td>L4 迁移到新域所需轮次显著少于从头基线</td>
+            <td>experienced 均值 0.395 vs naive 0.506，方向 1:1:1</td>
+            <td>❌ <strong>不成立</strong>（且实验不敏感）</td>
+          </tr>
+          <tr>
+            <td>自评指标是否可信</td>
+            <td>发现 4 个「自评指标不可信」类 bug</td>
+            <td class="best">✅ 修复后可信</td>
+          </tr>
+          <tr class="bench-total">
+            <td>结论写作口径</td>
+            <td colspan="2">单次最高值 0.700 不当作稳态水平，诚实区间写 0.433~0.700</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>最致命的一个 bug：</strong>自检闸门<strong>从未真正测过区分度</strong> —— <code>run_p12</code> 一直没传 <code>label_fn</code>，truth 全为 None，于是 <code>inv.get(p) == t</code> 变成 <code>None == None</code>，准确率虚假地算成 <strong>1.000</strong>。没有这个 bug，项目会拿着一份「满分」报告去汇报。教训写进代码注释：<strong>自评指标必须用独立于被评对象的信号来算</strong>。</p>
+  </div>
+
+  <!-- 踩坑 -->
+  <h2 class="detail-subtitle">🪨 踩过的坑与工程约束</h2>
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">信号处理</div>
+      <h3 class="arch-card-title">FFT 在随机不均匀采样下混叠</h3>
+      <p class="arch-card-desc">真频率根本不出现在谱峰里 —— 谱顶 1.4279 是伪峰，真频率是 6.919。频率搜索必须用密集网格直接最小二乘扫描，不能靠谱峰播种。</p>
+      <ul class="card-highlights">
+        <li>谱峰法在随机采样下直接失效</li>
+        <li>改为密集网格最小二乘扫描</li>
+        <li>同类教训：模型竞争必须加复杂度惩罚，否则最灵活的模型永远赢</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">评测设计</div>
+      <h3 class="arch-card-title">区分样本内残差与外推残差</h3>
+      <p class="arch-card-desc">外推残差对基频精度极度敏感，会把「机制判别」变成「谁频率估得准」的竞赛 —— 机制问题和数值精度问题必须分开算。</p>
+      <ul class="card-highlights">
+        <li>外推残差：换参考系后频率估计误差主导结果</li>
+        <li>干预 delta 直接塞进特征空间反而降准确率（0.667→0.400）</li>
+        <li>干预的价值在于「用它选判据」，而不是「多算特征」</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">工程一致性</div>
+      <h3 class="arch-card-title">沙箱与评测环境必须完全一致</h3>
+      <p class="arch-card-desc">否则会出现「自检报 36 个失败、评测却可执行」的矛盾。做法是抽 <code>build_sandbox_env()</code> 共享同一套环境。</p>
+      <ul class="card-highlights">
+        <li>场景 id 泄漏族名：Student 直接读到类别名</li>
+        <li>改为不透明 sha1 id，并加自动审计脚本</li>
+        <li>推理模型长输出被截断 → max_tokens 提到 8000 + reasoning_content 兜底 + 紧凑重试</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">闭环</div>
+      <h3 class="arch-card-title">假设淘汰闭环与自我证伪</h3>
+      <p class="arch-card-desc">机制反演必须自带推翻自己的机制 —— 否则智能体只是在为自己的第一直觉找证据。</p>
+      <ul class="card-highlights">
+        <li>12 个样本中 9 个在干预后最优机制被自己的实验推翻或修正</li>
+        <li>假设淘汰此前 17 次运行恒为 0，加入闭环后 2/2 运行各有 1 次真实淘汰</li>
+        <li>淘汰条件：净得分为负、差距 ≥ 2.0、有反证</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 沉淀 -->
+  <h2 class="detail-subtitle">📌 可迁移的结论</h2>
+  <div class="arch-tips">
+    <h3 class="bench-title">🧠 四条可迁移的研究工程结论</h3>
+    <div class="arch-tips-grid">
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 1</span>
+        <p><strong>判不出来时，先怀疑特征空间</strong><br><span class="arch-tip-note">不是模型不够强，是信息不在特征里</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 2</span>
+        <p><strong>自评指标必须用独立信号</strong><br><span class="arch-tip-note">用被评对象自己的标签算准确率 = 必然满分</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 3</span>
+        <p><strong>负面结果要按区间写</strong><br><span class="arch-tip-note">单次最高值不能当稳态水平</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 4</span>
+        <p><strong>让实验能推翻自己</strong><br><span class="arch-tip-note">证伪与淘汰闭环是可信度的基础设施</span></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 技术栈 -->
+  <div class="arch-tips" style="margin-top:24px">
+    <h3 class="bench-title">🧰 技术栈</h3>
+    <div class="arch-tips-grid">
+      <div class="arch-tip">
+        <span class="tech-badge">Python 3.13</span>
+        <span class="tech-badge">NumPy / SciPy</span>
+        <span class="tech-badge">Matplotlib</span>
+        <span class="tech-badge">LLM 多智能体</span>
+        <span class="tech-badge">多端点故障转移</span>
+        <span class="tech-badge">留出集评测</span>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,280 @@
+<!-- 3D 校园恋爱互动叙事 Web 游戏 - 独立内容页 -->
+<div class="detail-content-block">
+  <h2 class="detail-subtitle">🎮 231 段视频压成 23 段，还要让 7 个场景都是真几何</h2>
+  <p class="detail-lead">按任务书 v1.2 交付的校园恋爱互动叙事游戏，难点不在「做一个游戏」，而在<strong>把资产量砍掉一个数量级还不掉质量</strong>：整个游戏只需 23 段视频而非 231 段，7 个场景全部是真几何而非背景板，而且每一条链路都有真浏览器点击验收兜着。</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">剧本</div>
+      <h3 class="arch-card-title">231 节点全部是 YAML 真源</h3>
+      <p class="arch-card-desc">story/ 下 common 12 + c1 70 + c2 72 + c3 77 = 231 个节点，写成 YAML 作为唯一真源，由 <code>build.mjs</code> 的 <code>syncStory()</code> 同步到游戏数据目录 —— 不手写、不复制、不漂移。</p>
+      <ul class="card-highlights">
+        <li>任务书 §3.3 要求 ≥150 节点，实际 231，超出 81%</li>
+        <li>49 个节点带非空 choices，共 98 条选项</li>
+        <li>12 个分支阈值节点 + 6 个结局（每条线好/普通两档）</li>
+        <li>7 个场景全覆盖，构建守卫：file_id 重复即构建失败</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">关键决策</div>
+      <h3 class="arch-card-title">视频互动剧路线</h3>
+      <p class="arch-card-desc">整个游戏只需 <strong>23 段视频</strong>而非 231 段 —— 循环片按 (场景 × 出场角色组合) 去重，同一组合的所有台词共用一段待机循环片，角色表情改用头像框的 42 张半身差分切换。</p>
+      <ul class="card-highlights">
+        <li>3 角色 × 2 套服装 × 7 表情 = 42 张半身差分</li>
+        <li>另有 6 张按天选服装的全身立绘</li>
+        <li>角色说话走视频轨，旁白/主角收起立绘显示场景替身</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">场景</div>
+      <h3 class="arch-card-title">7/7 真实几何</h3>
+      <p class="arch-card-desc">S1 教室 / S2 走廊 / S3 操场 / S4 天台 / S5 图书馆 / S6 美食街 / S7 山水景区全部是程序化几何，全部零贴图零外部请求 —— 断网也能跑，且不踩任何 CDN 依赖。</p>
+      <ul class="card-highlights">
+        <li>实测 3,116~9,124 tris、30~51 draw calls</li>
+        <li>每场含交互点 + 光照预设 + 相机预设，dispose() 后 children=0</li>
+        <li>S6 蒸汽与 S7 水面波纹由 update(t) 驱动</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">验收</div>
+      <h3 class="arch-card-title">22 项真浏览器点击验收</h3>
+      <p class="arch-card-desc">用 Edge headless + CDP 做<strong>真点击</strong>（不是接口探测）跑通全链路，报告里 pass=true、errors 与 consoleErrors 均为空数组。</p>
+      <ul class="card-highlights">
+        <li>进入游戏 → 逐句推进 → 出选项 → 分支 → 存读档</li>
+        <li>7 个场景逐个真加载（切场景无异常）</li>
+        <li>立绘真实渲染 naturalWidth 抽检 + 头像框面部图已解码</li>
+        <li>视频轨真在播（key 与文件名一致）+ 3D 兜底轨可接管</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 量化表 -->
+  <h2 class="detail-subtitle">📊 交付规模与资产分级</h2>
+  <p class="detail-lead">下面的字节数都是文件系统实测值，不是设计目标。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">📐 剧本规模实测（逐份解析 YAML 核对）</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>剧本线</th>
+            <th>节点数</th>
+            <th>选择点</th>
+            <th>选项数</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>common（序章）</td>
+            <td>12</td>
+            <td>1</td>
+            <td>2</td>
+          </tr>
+          <tr>
+            <td>c1_line（沈听雨）</td>
+            <td>70</td>
+            <td>16</td>
+            <td>32</td>
+          </tr>
+          <tr>
+            <td>c2_line（岳楚岚）</td>
+            <td>72</td>
+            <td>16</td>
+            <td>32</td>
+          </tr>
+          <tr>
+            <td>c3_line（田小满）</td>
+            <td>77</td>
+            <td>16</td>
+            <td>32</td>
+          </tr>
+          <tr class="bench-total">
+            <td>合计</td>
+            <td class="best">231</td>
+            <td class="best">49</td>
+            <td class="best">98</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>三条线的手感统一是刻意设计的：</strong>全选最优 +80、分歧点① D3 <code>gte 30</code>、分歧点② D4 <code>gte 60</code>，且<strong>错 2 次仍可达好结局</strong> —— 各 65536 条路径穷举模拟无死路。这条是实测出来的，不是设计文档里写的。</p>
+  </div>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">💾 3D 资产：原始档 + 交付档双轨</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>角色 GLB</th>
+            <th>原始档（离线参考）</th>
+            <th>交付档（进游戏）</th>
+            <th>压缩比</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>c1_school</td>
+            <td>80,838,992 字节</td>
+            <td class="best">15,485,844 字节</td>
+            <td>≈ 19%</td>
+          </tr>
+          <tr>
+            <td>c2_sport</td>
+            <td>79,149,304 字节</td>
+            <td class="best">14,986,596 字节</td>
+            <td>≈ 19%</td>
+          </tr>
+          <tr>
+            <td>c3_school</td>
+            <td>80,514,292 字节</td>
+            <td class="best">15,493,312 字节</td>
+            <td>≈ 19%</td>
+          </tr>
+          <tr class="bench-total">
+            <td>构建包 builds/M1_20261012</td>
+            <td colspan="2">347 文件 / 146 MB</td>
+            <td class="best">其中视频 49 MB</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>原始档必须留着：</strong>交付档是 t2 档（约 40 万面 / 2048²·2048²·1024 贴图 / 单文件约 14.7 MB），而 150 万面 + 4096² 的原始档留在 <code>assets/models/</code> 作离线参考档 —— <code>tools/glb_lod.py</code> 能复算任意档位，所以以后要改质量档不必重新生成。</p>
+  </div>
+
+  <!-- 踩坑 -->
+  <h2 class="detail-subtitle">🪨 场景 Agent 三轮自查修掉的 8 个真 bug</h2>
+  <p class="detail-lead">这些不是「已知限制」，是修完了才敢交付的 —— 每一个都曾让画面直接坏掉。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">🐛 场景几何自查记录</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>场景</th>
+            <th>症状</th>
+            <th>根因</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>S3 操场</td>
+            <td>跑道整个不可见</td>
+            <td>椭圆环索引绕序</td>
+          </tr>
+          <tr>
+            <td>S2 走廊</td>
+            <td>角色站位被埋进墙里</td>
+            <td>净宽取值没算角色占位</td>
+          </tr>
+          <tr>
+            <td>S5 图书馆</td>
+            <td>桌子挡住角色胸线</td>
+            <td>家具与角色高度层未分离</td>
+          </tr>
+          <tr>
+            <td>S7 山水景区</td>
+            <td>屋顶穿帮</td>
+            <td>几何自相交</td>
+          </tr>
+          <tr class="bench-total">
+            <td>三轮合计</td>
+            <td colspan="2">8 个真 bug 全部由场景 Agent 自查发现并修复</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>这类 bug 靠人眼看截图是看不出来的：</strong>跑道不可见、角色被埋、屋顶穿帮 —— 只有把 tris / draw call / 交互点数量这些量化指标一起盯，才能在截图还「看着挺像」的时候把它们揪出来。</p>
+  </div>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">花钱的部分</div>
+      <h3 class="arch-card-title">59/59 张，实花 ¥15.47</h3>
+      <p class="arch-card-desc">美术预算 ¥18.60，实际花了 ¥15.47 —— 逐张记账在 <code>docs/art_ledger_run.md</code>，执行器 <code>tools/art_run.py</code> 带中断对账，确保零重复烧钱。</p>
+      <ul class="card-highlights">
+        <li>59 张 = 36 立绘表情 + 3 定妆图 + 7 场景概念图 + 13 UI/主视觉</li>
+        <li>批次 0 风格闸门图先出，经目视验收通过才放行 M1 批次</li>
+        <li>混元3D 侧 c1_school / c2_sport / c3_school 三个角色全部提交成功</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">零 CDN</div>
+      <h3 class="arch-card-title">断网也能跑的工程约束</h3>
+      <p class="arch-card-desc">整个工程不引入任何外部字体与外部资源 —— 三方库只放本地 vendor/，新增 loader 必须取与本地 three 同 REVISION 的文件并进 importmap。</p>
+      <ul class="card-highlights">
+        <li>角色 GLB 按「角色_服装」命名，经 build.mjs syncModels() 同步后才可加载</li>
+        <li>载入后按 characters.json 的 height 字段缩放</li>
+        <li>多尺寸布局验收脚本 layout_qa.mjs 单独跑</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">TapTap 支线</div>
+      <h3 class="arch-card-title">同一套美术的抽卡卡面工程</h3>
+      <p class="arch-card-desc">同源另出一条 TapTap/UrhoX 纯 Lua 5.4 + NanoVG 工程线：九张心理议题卡，统一 1312×1760 规格，卡面生成走 RunningHub 应用并串行记账。</p>
+      <ul class="card-highlights">
+        <li>9 张卡强制 diag:false / noCure:true / help:true</li>
+        <li>卡背固定：现象 / 常见误区 / 3 条可做动作 / 求助出口</li>
+        <li>tools/card_gen.mjs 串行记账写 card_ledger.json，成功回填 art.image</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">遗留</div>
+      <h3 class="arch-card-title">写清楚还欠着什么</h3>
+      <p class="arch-card-desc">交付不是终点，剩余项自己列出来：</p>
+      <ul class="card-highlights">
+        <li>打包成安卓 App（里程碑 M3）未做</li>
+        <li>iPhone Safari 声音未在真机验证</li>
+        <li>3D 模型不会眨眼/对嘴型（GLB 无 blend shape，需 Blender 补 morph target）</li>
+        <li>3 个组合跨「平日/出游日」服装与头像框对不上，需再出 3 段</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 沉淀 -->
+  <h2 class="detail-subtitle">📌 可迁移的结论</h2>
+  <div class="arch-tips">
+    <h3 class="bench-title">🧠 四条可迁移的工程结论</h3>
+    <div class="arch-tips-grid">
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 1</span>
+        <p><strong>按组合去重，而不是按镜头去重</strong><br><span class="arch-tip-note">231 段压到 23 段的钥匙</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 2</span>
+        <p><strong>剧本必须是唯一真源</strong><br><span class="arch-tip-note">YAML 接线 + 构建守卫防漂移</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 3</span>
+        <p><strong>验收要真点击，不能是接口探测</strong><br><span class="arch-tip-note">CDP 真点击跑通才算数</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 4</span>
+        <p><strong>原始档与交付档并存</strong><br><span class="arch-tip-note">LOD 可复算，质量档随时能改</span></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 技术栈 -->
+  <div class="arch-tips" style="margin-top:24px">
+    <h3 class="bench-title">🧰 技术栈</h3>
+    <div class="arch-tips-grid">
+      <div class="arch-tip">
+        <span class="tech-badge">Three.js</span>
+        <span class="tech-badge">原生 ES Module</span>
+        <span class="tech-badge">YAML 剧本 Schema</span>
+        <span class="tech-badge">Edge Headless CDP</span>
+        <span class="tech-badge">混元3D</span>
+        <span class="tech-badge">NanoVG / Lua 5.4</span>
+      </div>
+    </div>
+  </div>
+</div>
