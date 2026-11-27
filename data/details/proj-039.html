@@ -1,0 +1,244 @@
+<!-- opsctl 跨平台运维体检 CLI - 独立内容页 -->
+<div class="detail-content-block">
+  <h2 class="detail-subtitle">🩺 把运维巡检做成一个能直接挂进 CI 的命令</h2>
+  <p class="detail-lead">运维巡检工具最常见的失败方式不是「检查得不准」，而是<strong>检查结果没法被脚本消费</strong> —— 要么只能人眼看表格，要么退出码永远是 0。这个工具的目标很窄：<strong>指标全部当场真采集，结论全部编码进退出码</strong>，让 <code>opsctl check</code> 能直接当 CI 的一步。</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">采集</div>
+      <h3 class="arch-card-title">只用 Node 内置能力</h3>
+      <p class="arch-card-desc">采集层不引任何第三方 HTTP 库，<code>os</code> / <code>fs</code> / <code>net</code> / <code>tls</code> / <code>fetch</code> 就够了；运行时依赖只有 <code>commander ^12.1.0</code> 与 <code>chalk ^5.3.0</code> 两个。TypeScript 5.6 开 <code>strict</code> 与 <code>noUncheckedIndexedAccess</code> —— 采集层大量处理 undefined，让类型系统兜住。</p>
+      <ul class="card-highlights">
+        <li>8 个 TS 源文件共 1286 行：cli 233 / runner 226 / system 213 / render 162 / network 143 / types 132 / config 89 / rules 71</li>
+        <li>构建为 tsc → dist/，再用 postbuild 注入 shebang 与 Unix 可执行位</li>
+        <li>配置与阈值全部外置 JSON，含 cpu / memory / disk 的 warn/crit 与 sampleMs</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">退出码</div>
+      <h3 class="arch-card-title">四档语义，实跑复现</h3>
+      <p class="arch-card-desc">退出码是这个工具的对外契约：<code>0 = PASS / 1 = WARN / 2 = FAIL / 3 = ERROR</code>。四个分支不是写在文档里的定义，而是本轮逐个实跑验证过的行为。</p>
+      <ul class="card-highlights">
+        <li>全部指标正常 → 退出码 0（用放宽容量的配置实跑确认）</li>
+        <li>触发 WARN 阈值 → 退出码 1（用随仓库的低阈值样例实跑确认）</li>
+        <li>任一项 FAIL → 退出码 2；配置文件不存在 → 退出码 3</li>
+        <li>watch 模式末轮状态同样作为退出码，便于脚本串联</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">检查项</div>
+      <h3 class="arch-card-title">12 项，全部当场真采集</h3>
+      <p class="arch-card-desc">CPU 使用率 / 内存 / 4 个磁盘分区 / 系统运行时长 / 2 个 HTTP 端点 / 2 个 TCP 端口 / TLS 证书剩余天数 —— 每项都带自己的阈值与 detail 字段，失败时给出可读原因而不是一个布尔值。</p>
+      <ul class="card-highlights">
+        <li>报告 JSON 含 hostname、platform、durationMs 与逐项 id / name / group / status / value / detail / threshold / message</li>
+        <li>summary 字段给出 total / pass / warn / fail / skip 计数，便于脚本直接判断</li>
+        <li>失败项会额外给出根因，例如「不可连接」而非笼统的「检查失败」</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">平台差异</div>
+      <h3 class="arch-card-title">Windows 上那些不成立的直觉</h3>
+      <p class="arch-card-desc">跨平台工具的真正难点不在写代码，而在<strong>某些 API 在某个平台上静默返回错误值</strong>。这几处都是实测发现后才换的实现。</p>
+      <ul class="card-highlights">
+        <li>CPU 使用率不能用 os.loadavg() —— Windows 上恒为 0，改用两次 os.cpus() 累计时间差</li>
+        <li>Windows 磁盘容量走 Get-CimInstance Win32_LogicalDisk，POSIX 侧用 df -k</li>
+        <li>TLS 证书实测腾讯云域名剩余 40 天、到期 2027-01-06、签发机构 DigiCert</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 量化表 -->
+  <h2 class="detail-subtitle">📊 四个退出码分支的实测记录</h2>
+  <p class="detail-lead">下表每一行都是实际运行 <code>opsctl check</code> 后读回的真实退出码，不是设计文档里的约定。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">🧪 退出码语义与触发条件</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>退出码</th>
+            <th>语义</th>
+            <th>实测触发方式</th>
+            <th>本轮验证结果</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="best">0</td>
+            <td>PASS</td>
+            <td>全部指标低于 warn 阈值</td>
+            <td>✓ 实跑确认</td>
+          </tr>
+          <tr>
+            <td class="best">1</td>
+            <td>WARN</td>
+            <td>任一项落在 warn 与 crit 之间</td>
+            <td>✓ 实跑确认</td>
+          </tr>
+          <tr>
+            <td class="best">2</td>
+            <td>FAIL</td>
+            <td>任一项超过 crit 阈值或探测失败</td>
+            <td>✓ 实跑确认</td>
+          </tr>
+          <tr>
+            <td class="best">3</td>
+            <td>ERROR</td>
+            <td>配置文件不存在等运行期错误</td>
+            <td>✓ 实跑确认</td>
+          </tr>
+          <tr class="bench-total">
+            <td colspan="3">watch 模式</td>
+            <td>末轮状态作为退出码</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>为什么 ERROR 要单独占一档：</strong>「检查不通过」和「根本没检查成」是两件事 —— 配置写错导致什么都没跑，如果也返回 2，CI 里就会出现「体检失败」的假象，让人去查根本不存在的问题。</p>
+  </div>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">🖥️ 12 项检查与各自的阈值口径</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>类别</th>
+            <th>检查项</th>
+            <th>阈值口径</th>
+            <th>失败时的可读原因</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="3">system</td>
+            <td>CPU 使用率</td>
+            <td>≥ 70% 告警 / ≥ 90% 严重</td>
+            <td>输出物理核心数与 CPU 型号</td>
+          </tr>
+          <tr>
+            <td>内存使用率</td>
+            <td>≥ 80% 告警 / ≥ 92% 严重</td>
+            <td>已用 / 总量（GB）</td>
+          </tr>
+          <tr>
+            <td>磁盘使用率（逐分区）</td>
+            <td>≥ 80% 告警 / ≥ 92% 严重</td>
+            <td>可用 / 总计</td>
+          </tr>
+          <tr>
+            <td rowspan="3">net</td>
+            <td>HTTP 端点 × 2</td>
+            <td>期望状态码落在 200 区间内</td>
+            <td>fetch failed / 超时</td>
+          </tr>
+          <tr>
+            <td>TCP 端口 × 2</td>
+            <td>端口应处于监听状态</td>
+            <td>ECONNREFUSED + host:port</td>
+          </tr>
+          <tr>
+            <td>TLS 证书</td>
+            <td>≤ 21 天告警 / ≤ 7 天严重</td>
+            <td>剩余天数 + 到期日 + 签发机构</td>
+          </tr>
+          <tr class="bench-total">
+            <td colspan="2">system.uptime</td>
+            <td>仅供参考</td>
+            <td>运行时长</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>阈值必须可配置：</strong>同一台开发机和一台 64 核构建机，内存告警线不可能一样。所有阈值外置为 JSON，<code>init</code> 命令能生成一份带默认值的模板。</p>
+  </div>
+
+  <!-- 踩坑 -->
+  <h2 class="detail-subtitle">🪨 真正踩过的坑</h2>
+  <p class="detail-lead">这些不是「注意事项」，是写错之后会静默给出错误结论的地方。</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">静默错误</div>
+      <h3 class="arch-card-title">os.loadavg() 在 Windows 上恒为 0</h3>
+      <p class="arch-card-desc">这是最典型的「不报错但结果是错的」：<code>os.loadavg()</code> 在 Windows 上返回 <code>[0, 0, 0]</code>，如果直接拿它当 CPU 使用率，工具会永远报 0% —— 一个看起来健康的假象。</p>
+      <ul class="card-highlights">
+        <li>改用两次 os.cpus() 累计时间差计算真实占用</li>
+        <li>采样窗口可配置（sampleMs），默认 500ms</li>
+        <li>detail 字段同时输出核心数与 CPU 型号，便于核对</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">平台分支</div>
+      <h3 class="arch-card-title">磁盘容量不能跨平台</h3>
+      <p class="arch-card-desc">Windows 没有 <code>df</code>，POSIX 下 <code>Get-CimInstance</code> 也不存在。两个平台各写各的采集路径，但共用同一套判定与渲染逻辑。</p>
+      <ul class="card-highlights">
+        <li>Windows：Get-CimInstance Win32_LogicalDisk</li>
+        <li>POSIX：df -k</li>
+        <li>判定与阈值与平台无关，只换采集实现</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">终端</div>
+      <h3 class="arch-card-title">中文混排的表格对齐</h3>
+      <p class="arch-card-desc">终端里一个汉字占两列，但 JS 的 <code>String.length</code> 算它是一列。直接用 <code>padEnd</code> 会让含中文的表格整体错位。</p>
+      <ul class="card-highlights">
+        <li>自己实现 displayWidth：中文按 2 宽计算</li>
+        <li>自己实现 stripAnsi：剥掉颜色转义后再算宽度</li>
+        <li>watch 模式有 TTY 就原地刷新（\u001B[2J\u001B[H），非 TTY 降级为追加</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">可用性</div>
+      <h3 class="arch-card-title">一条命令覆盖四种使用场景</h3>
+      <p class="arch-card-desc">同一个采集内核，四种消费方式：人看表格、脚本读 JSON、CI 读退出码、watch 持续盯盘。</p>
+      <ul class="card-highlights">
+        <li><code>check</code> 单次体检 / <code>watch</code> 持续刷新</li>
+        <li><code>doctor</code> 自检运行环境 / <code>init</code> 生成模板配置</li>
+        <li><code>--json</code> 机器可读输出 / <code>--save</code> 落盘报告</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 沉淀 -->
+  <h2 class="detail-subtitle">📌 可迁移的结论</h2>
+  <div class="arch-tips">
+    <h3 class="bench-title">🧠 三条可迁移的工程结论</h3>
+    <div class="arch-tips-grid">
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 1</span>
+        <p><strong>对外契约优先选退出码</strong><br><span class="arch-tip-note">机器消费成本最低的信号</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 2</span>
+        <p><strong>静默错误比崩溃危险</strong><br><span class="arch-tip-note">loadavg 恒为 0 会给出假健康</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 3</span>
+        <p><strong>失败要给出可读根因</strong><br><span class="arch-tip-note">ECONNREFUSED 比「失败」有用得多</span></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 技术栈 -->
+  <div class="arch-tips" style="margin-top:24px">
+    <h3 class="bench-title">🧰 技术栈</h3>
+    <div class="arch-tips-grid">
+      <div class="arch-tip">
+        <span class="tech-badge">TypeScript 5.6</span>
+        <span class="tech-badge">Node.js 22</span>
+        <span class="tech-badge">commander</span>
+        <span class="tech-badge">chalk 5</span>
+        <span class="tech-badge">CI 退出码语义</span>
+        <span class="tech-badge">运维指标阈值采集</span>
+      </div>
+    </div>
+  </div>
+</div>

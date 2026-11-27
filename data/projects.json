@@ -3,7 +3,7 @@
     "name": "全栈工程师",
     "title": "高级后端开发 / 数据库 & 自动化专家",
     "location": "中国",
-    "summary": "多年全栈开发经验，深耕数据库高可用架构、数据自动化抓取、AI 应用开发及企业级运维。2026 年主攻 AI 视频与 AI 漫剧全流程生成、LangGraph 多智能体工作流，并以 Vibe Coding 方式主导从需求到上线的完整交付闭环。擅长 MySQL 集群、OceanBase、Python 爬虫、企业微信集成及 AI 视频 / 3D 内容生成。近期主攻 EdgeOne 边缘函数与 Serverless 表单网关、GitHub Pages + EdgeOne 双通道全球交付与访问令牌自动化，以及移动端自适应与离线兜底渲染工程。近期主攻约束求解与多端协同工程（CP-SAT 联合排程、CRDT 冲突分层、事件溯源运行时）、可复现的回合制战棋 Web 应用（React 18 + 种子化 PRNG + 30 项引擎自测），以及基于全球探针的站点可达性实测与网络延迟基线体系。近期主攻前端设计与性能工程（原生 WebGL2 手写液态玻璃折射层、GSAP 四件套动效编排、真实数据驱动的终端档案与 GitHub 仪表盘）、移动端首屏加载性能与滚动可见性根因修复（load 事件 21483ms → 828ms、IntersectionObserver 阈值语义纠偏），以及基于 RunningHub 云端应用编排的 AI 素材流水线与琉璃玻璃拟态设计系统。近期主攻工业机器人软件层工程（纯 Python 内核与 ROS2 解耦、契约层锁定类型语义、Protocol 抽象统一真机与仿真、调度内核与数字孪生面板闭环），以 49 项单元测试与 11/11 端到端取放的成功率作为交付验收口径。近期在物料防错与三维管线方向继续推进：把货架格口的位置、物料与时效编码进单条二维码标签，读码失败或三者任一不符即拒绝生成抓取计划（新增 16 个测试，单元测试总数 49 → 65 全绿）；并以 Go 自研门禁编排运行时（四态决策 PASS / BLOCK / CHALLENGE / ROUTE、三介入位置、审计哈希链、95 项测试）与 STL→three.js 几何压缩管线（397.7 万面压至 71.5 万面、189.6MB → 16.6MB）拓展工程纵深。近期把 Meridian 排程从「打开页面算一次」升级为服务端自动重排闭环（状态变更 → OpLog → CP-SAT 重算 → 写回广播 → 各端甘特图实时刷新），并以固定区间约束表达「已完成任务仍占资源」这类语义（18 任务 / 5 资源实测三阶段全 OPTIMAL，makespan=56，公网 HTTPS 实测 200）。同期完成个人微信群聊接入通道的源码级选型与实测：用自写脚本拉取插件源码逐项比对群聊能力，实测个人微信插件 v2.4.10 的 groupPolicy 默认 disabled 且会话写死 direct、企业微信插件 v2026.10.30 则为 open 且 chatId 命中 169 次，最终确立「LightAgent 承接微信群入口 + OpenClaw 承接执行」的分工架构，并把免费 puppet 的封号风险与专用小号 / 白名单群等对策一并写入方案。最新把工业仿真做到像素级物理可信：以 Three.js 0.170 单文件复现航母总装 14 件分段从定置堆场到高空过跨、激光对中的六阶段全自动物流链，并用 Edge CDP 无头探针跑通 11 项量化验收。同期把 AI 调度中枢做成可运行看板（派单队列 / AGV 与机器人调度 / 出库进度），实现舰岛对中 8.6mm 超差自动冻结、3 点液压微调后 2.1mm 闭环复测与 NCR 自愈；Demo 已本地化 three.js 依赖，可在简历站直接交互演示。最新把静态站交付保障延伸到令牌一致性治理：实测定位内联兜底块令牌散落成三个失效值、逆向出 EdgeOne 的 token 预热→HttpOnly cookie 鉴权链与「注入必须排在部署之后」的时序陷阱，补齐注入+自检+断言闭环并新增 10 处令牌来源比对工具，同源与跨源真实表单提交实测 200。最新把交付面从「浏览器里的静态站」推向两端：一是独立出 Attention（鲸迹）AI 陪伴 App——Android 自研原生壳承担网络桥、加密存储与挂件，内核是零第三方依赖的 ES Module + IndexedDB Web 应用，并配一套自建安全红队工具链（36 条 XSS payload 在真 Blink 下 0 执行，同时实测挖出 debuggable 包与 WebView 远程调试可读出明文 API Key 的高危面）；二是把 Dify 1.19 私有化跑进本机与服务器，agent 集群从一堆单节点 chatflow 重构为单应用多节点并行扇出（4 个 LLM 节点各带独立 model 与专属判据），审计集群以 A1~A4 四域 16 条判据守门，实测 E1 一次审出 16/16 判据、2 条 FAIL、31s、21971 tokens，任务随即判 blocked；三是把「写得好」这种没法验收的要求拆成 34 条声明式闸门（G0–G22），四档体裁只改阈值不改判据，21 条 pytest 全部配反例，让小说质量第一次变成能跑测试、能回归的工程问题。近期把实验方法本身做成可证伪的工程：SpiralWorld 承认螺旋轨迹的相对运动与三维嵌入在谐波基下运动学简并、拟合再准也分不开，改用「换参考系后复杂度是否塌缩」这一判决性干预做特征，留出集准确率从随机基线 0.333 提到 0.458，跨域迁移给出负面结果（L4 不成立）也照实写进报告；实验完整性审计 10 项全过，并修掉「自检闸门从未真正测过区分度、把准确率虚假算成 1.000」这类自评指标不可信 bug。同期把 AI 漫剧生产搬到云端工作台：100 集剧本与 2405 段全部就位、EP01 出片 189.2 秒，并把「打开就卡白」的根因从 33.8 MB 项目 JSON 挖到 applyParameterInheritance(2132 段) 每次 1.7~1.9 秒的同步阻塞，修法是轻量列表接口 + 按 (mtime,size) 缓存 + content-visibility 分批渲染。另一头按任务书 v1.2 交付了 3D 校园恋爱互动叙事 Web 游戏：231 节点 YAML 剧本、49 个选择点、7 个场景真实几何、22 项真浏览器点击验收全绿，并把 231 段视频压到只需 23 段循环片。",
+    "summary": "多年全栈开发经验，深耕数据库高可用架构、数据自动化抓取、AI 应用开发及企业级运维。2026 年主攻 AI 视频与 AI 漫剧全流程生成、LangGraph 多智能体工作流，并以 Vibe Coding 方式主导从需求到上线的完整交付闭环。擅长 MySQL 集群、OceanBase、Python 爬虫、企业微信集成及 AI 视频 / 3D 内容生成。近期主攻 EdgeOne 边缘函数与 Serverless 表单网关、GitHub Pages + EdgeOne 双通道全球交付与访问令牌自动化，以及移动端自适应与离线兜底渲染工程。近期主攻约束求解与多端协同工程（CP-SAT 联合排程、CRDT 冲突分层、事件溯源运行时）、可复现的回合制战棋 Web 应用（React 18 + 种子化 PRNG + 30 项引擎自测），以及基于全球探针的站点可达性实测与网络延迟基线体系。近期主攻前端设计与性能工程（原生 WebGL2 手写液态玻璃折射层、GSAP 四件套动效编排、真实数据驱动的终端档案与 GitHub 仪表盘）、移动端首屏加载性能与滚动可见性根因修复（load 事件 21483ms → 828ms、IntersectionObserver 阈值语义纠偏），以及基于 RunningHub 云端应用编排的 AI 素材流水线与琉璃玻璃拟态设计系统。近期主攻工业机器人软件层工程（纯 Python 内核与 ROS2 解耦、契约层锁定类型语义、Protocol 抽象统一真机与仿真、调度内核与数字孪生面板闭环），以 49 项单元测试与 11/11 端到端取放的成功率作为交付验收口径。近期在物料防错与三维管线方向继续推进：把货架格口的位置、物料与时效编码进单条二维码标签，读码失败或三者任一不符即拒绝生成抓取计划（新增 16 个测试，单元测试总数 49 → 65 全绿）；并以 Go 自研门禁编排运行时（四态决策 PASS / BLOCK / CHALLENGE / ROUTE、三介入位置、审计哈希链、95 项测试）与 STL→three.js 几何压缩管线（397.7 万面压至 71.5 万面、189.6MB → 16.6MB）拓展工程纵深。近期把 Meridian 排程从「打开页面算一次」升级为服务端自动重排闭环（状态变更 → OpLog → CP-SAT 重算 → 写回广播 → 各端甘特图实时刷新），并以固定区间约束表达「已完成任务仍占资源」这类语义（18 任务 / 5 资源实测三阶段全 OPTIMAL，makespan=56，公网 HTTPS 实测 200）。同期完成个人微信群聊接入通道的源码级选型与实测：用自写脚本拉取插件源码逐项比对群聊能力，实测个人微信插件 v2.4.10 的 groupPolicy 默认 disabled 且会话写死 direct、企业微信插件 v2026.10.30 则为 open 且 chatId 命中 169 次，最终确立「LightAgent 承接微信群入口 + OpenClaw 承接执行」的分工架构，并把免费 puppet 的封号风险与专用小号 / 白名单群等对策一并写入方案。最新把工业仿真做到像素级物理可信：以 Three.js 0.170 单文件复现航母总装 14 件分段从定置堆场到高空过跨、激光对中的六阶段全自动物流链，并用 Edge CDP 无头探针跑通 11 项量化验收。同期把 AI 调度中枢做成可运行看板（派单队列 / AGV 与机器人调度 / 出库进度），实现舰岛对中 8.6mm 超差自动冻结、3 点液压微调后 2.1mm 闭环复测与 NCR 自愈；Demo 已本地化 three.js 依赖，可在简历站直接交互演示。最新把静态站交付保障延伸到令牌一致性治理：实测定位内联兜底块令牌散落成三个失效值、逆向出 EdgeOne 的 token 预热→HttpOnly cookie 鉴权链与「注入必须排在部署之后」的时序陷阱，补齐注入+自检+断言闭环并新增 10 处令牌来源比对工具，同源与跨源真实表单提交实测 200。最新把交付面从「浏览器里的静态站」推向两端：一是独立出 Attention（鲸迹）AI 陪伴 App——Android 自研原生壳承担网络桥、加密存储与挂件，内核是零第三方依赖的 ES Module + IndexedDB Web 应用，并配一套自建安全红队工具链（36 条 XSS payload 在真 Blink 下 0 执行，同时实测挖出 debuggable 包与 WebView 远程调试可读出明文 API Key 的高危面）；二是把 Dify 1.19 私有化跑进本机与服务器，agent 集群从一堆单节点 chatflow 重构为单应用多节点并行扇出（4 个 LLM 节点各带独立 model 与专属判据），审计集群以 A1~A4 四域 16 条判据守门，实测 E1 一次审出 16/16 判据、2 条 FAIL、31s、21971 tokens，任务随即判 blocked；三是把「写得好」这种没法验收的要求拆成 34 条声明式闸门（G0–G22），四档体裁只改阈值不改判据，21 条 pytest 全部配反例，让小说质量第一次变成能跑测试、能回归的工程问题。近期把实验方法本身做成可证伪的工程：SpiralWorld 承认螺旋轨迹的相对运动与三维嵌入在谐波基下运动学简并、拟合再准也分不开，改用「换参考系后复杂度是否塌缩」这一判决性干预做特征，留出集准确率从随机基线 0.333 提到 0.458，跨域迁移给出负面结果（L4 不成立）也照实写进报告；实验完整性审计 10 项全过，并修掉「自检闸门从未真正测过区分度、把准确率虚假算成 1.000」这类自评指标不可信 bug。同期把 AI 漫剧生产搬到云端工作台：100 集剧本与 2405 段全部就位、EP01 出片 189.2 秒，并把「打开就卡白」的根因从 33.8 MB 项目 JSON 挖到 applyParameterInheritance(2132 段) 每次 1.7~1.9 秒的同步阻塞，修法是轻量列表接口 + 按 (mtime,size) 缓存 + content-visibility 分批渲染。另一头按任务书 v1.2 交付了 3D 校园恋爱互动叙事 Web 游戏：231 节点 YAML 剧本、49 个选择点、7 个场景真实几何、22 项真浏览器点击验收全绿，并把 231 段视频压到只需 23 段循环片。近期把「运维巡检」做成了能直接挂进 CI 的命令行工具 opsctl：指标全部当场真采集不用假数据，退出码按 0=PASS / 1=WARN / 2=FAIL / 3=ERROR 四档语义输出，四个分支逐个实跑复现；Windows 上 os.loadavg() 恒为 0 这类平台差异是实测出来后才换的采集路径。另一头做了一款摄像头视觉控制的终端 Roguelike glyphquest，难点不在游戏本身，而在让游戏内核对「输入从哪来」完全无感知 —— core/ 层零 import 任何 io/ 的东西，键盘、摄像头、录像回放、脚本注入都只是同一种 InputSource 实现；视野算法三次选型才收敛（递归阴影投射与对称置换法先后失败，最终射线投射 + 肩部遮挡一次通过），手势分类也靠「食指伸展度」才把握拳与捏合分开。",
     "skills": [
       {
         "name": "MySQL MGR",
@@ -335,6 +335,38 @@
       },
       {
         "name": "美术生成台账与中断对账",
+        "category": "开发"
+      },
+      {
+        "name": "运维指标真实采集",
+        "category": "运维"
+      },
+      {
+        "name": "阈值判定与降级策略",
+        "category": "运维"
+      },
+      {
+        "name": "CI 退出码语义",
+        "category": "运维"
+      },
+      {
+        "name": "跨平台 CLI 工具链",
+        "category": "开发"
+      },
+      {
+        "name": "摄像头手势识别",
+        "category": "AI"
+      },
+      {
+        "name": "终端游戏内核",
+        "category": "开发"
+      },
+      {
+        "name": "输入设备解耦设计",
+        "category": "开发"
+      },
+      {
+        "name": "JSON Lines 进程协议",
         "category": "开发"
       }
     ]
@@ -1310,6 +1342,58 @@
         "Edge Headless CDP 验收",
         "混元3D (Hunyuan3D)",
         "NanoVG / Lua 5.4 (TapTap)"
+      ],
+      "screenshot": "",
+      "link": "",
+      "status": "shipped"
+    },
+    {
+      "id": "proj-039",
+      "title": "opsctl 跨平台运维体检 CLI（真实采集 + 阈值判定 + CI 退出码）",
+      "category": "交付工程 / 运维工具",
+      "public": true,
+      "description": "把运维巡检做成一个能直接挂进 CI 的命令行工具：真实采集系统与服务指标、按可配置阈值判定、以 0/1/2/3 四档退出码输出结论，指标全部当场实测不编造。",
+      "highlights": [
+        "采集层零第三方 HTTP 依赖：只用 Node 内置 os / fs / net / tls / fetch 拿数据，运行时依赖仅 commander ^12.1.0 与 chalk ^5.3.0 两个；源码 8 个 TS 文件共 1286 行（cli 233 / runner 226 / system 213 / render 162 / network 143 / types 132 / config 89 / rules 71），TypeScript 5.6 + strict + noUncheckedIndexedAccess 全开",
+        "退出码语义四档实测：0=PASS / 1=WARN / 2=FAIL / 3=ERROR，四个分支本轮全部实跑复现 —— 全 PASS 场景退出码 0、WARN 场景（低阈值配置）退出码 1、FAIL 场景退出码 2、配置文件不存在退出码 3；watch 模式末轮状态同样作为退出码，便于脚本串联",
+        "12 项检查全部当场真采集：CPU 使用率 / 内存 / 4 个磁盘分区 / 系统运行时长 / 2 个 HTTP 端点 / 2 个 TCP 端口 / TLS 证书剩余天数；实测报告 JSON 含 hostname、platform、durationMs 与逐项 id/name/group/status/value/detail/threshold/message，summary 字段给出 total/pass/warn/fail/skip 计数",
+        "平台差异是真踩出来的：CPU 使用率不能用 os.loadavg() —— Windows 上恒为 0，改用两次 os.cpus() 累计时间差；Windows 磁盘容量走 Get-CimInstance Win32_LogicalDisk，POSIX 侧用 df -k；TLS 证书实测腾讯云域名剩余 40 天、到期 2027-01-06、签发机构 DigiCert",
+        "watch 模式区分终端能力：有 TTY 时原地刷新（\\u001B[2J\\u001B[H），非 TTY 降级为追加输出；中文混排表格对齐自己实现 displayWidth（中文按 2 宽）与 stripAnsi，不依赖库",
+        "配置与告警阈值全部外置为 JSON（cpu/memory/disk 的 warn/crit、sampleMs、http/ports/tls 列表、outputDir），低阈值样例随仓库提供；doctor 自检环境、init 生成模板配置、--json 输出机器可读、--save 落盘报告，构建为 tsc + postbuild 注入 shebang 与 Unix 可执行位"
+      ],
+      "techStack": [
+        "TypeScript 5.6",
+        "Node.js 22",
+        "commander",
+        "chalk 5",
+        "CI 退出码语义",
+        "运维指标阈值采集"
+      ],
+      "screenshot": "",
+      "link": "",
+      "status": "shipped"
+    },
+    {
+      "id": "proj-040",
+      "title": "glyphquest 摄像头视觉控制的终端 Roguelike（输入设备与内核彻底解耦）",
+      "category": "游戏 / 视觉交互",
+      "public": true,
+      "description": "做一个能用手在摄像头前比划来操控的终端文字地牢游戏，核心是游戏内核对「输入从哪来」完全无感知：键盘、摄像头、录像回放、脚本注入都只是同一种 InputSource 实现。",
+      "highlights": [
+        "内核与输入设备物理解耦，不是口头约定：core/ 层零 import 任何 io/ 的东西（本轮用 grep 逐文件核验），输入统一归一化为 GameCommand 判别联合，四种 InputSource 实现（Keyboard / Vision / Replay / Scripted）各写各的，流水线为 摄像头 → Python(mediapipe) → JSON Lines → Node CLI 内核 → ANSI 画面",
+        "视野算法三次选型才收敛：递归阴影投射两次失败（斜率符号与递归传参写错，视野只有 1 格）、对称置换法再失败（象限坐标轴定义自相矛盾），最终改用射线投射 + 肩部遮挡检查一次通过 —— 实测空房间半径 8 得到 233 格完美对称圆形，柱子遮挡断言 0 格可见",
+        "手势分类顺序也是踩出来的：初版先判捏合把握拳误判（握拳时拇指也贴食指），改用整体伸展度又把捏合误判（其余三指弯曲拉低均值），最终用「食指伸展度」单独区分握拳与捏合并给捏合加 index_ext > 1.5 约束；四类手势（fist / open_palm / pinch / point）加竖拇指全部通过，指向四方向置信度 0.99~1.00",
+        "手势保持机制三重保险防止疯连击：连续 2 帧确认 + 0.35 秒冷却 + active_gesture 保持态；实测持续握拳 10 帧只触发 1 次、松手后重握才再次触发、冷却窗口内握拳被拦下、交替 open_palm/fist 8 帧同样只触发 1 次，低置信 0.40/0.50 一律拦截",
+        "规模与测试：TS 内核 2842 行（含 269 行测试）加 Python 视觉层 674 行（含 269 行测试），三套测试全绿 —— fov.test.ts 打印视野图并断言对称性与柱子遮挡、e2e.test.ts 用 mock 视觉层解析 11 条指令全通过且回合 0 → 8、位置 (46,20) → (45,22)，视觉体验测试实测 200 次随机移动全部产生位移、沿墙滑动 69 次、完全被挡 0 次",
+        "环境坑全部写进代码注释与 README：mediapipe 1.2.3 已移除 mp.solutions 只剩 Tasks API（需下载 7.8 MB hand_landmarker.task 模型）、Python 3.13 无 mediapipe wheel 故用 3.12 独立虚拟环境、该 USB 相机冷态第二帧即失败必须预热 2 秒、模型初始化耗 1~2 秒会挤掉预热窗口故须「模型就绪后二次预热」、默认 MSMF 后端报 -1072873822 必须走 DSHOW、mediapipe 日志走 C 层 stderr 需 os.dup2 到 devnull；另用 os.read(0, 1) 绕开管道下的 stdin 缓冲"
+      ],
+      "techStack": [
+        "TypeScript 5.6",
+        "Node.js CLI 内核",
+        "Python 3.12 + mediapipe",
+        "JSON Lines 视觉协议",
+        "mulberry32 确定性 RNG",
+        "Node 内置 test runner"
       ],
       "screenshot": "",
       "link": "",

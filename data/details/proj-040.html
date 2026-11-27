@@ -1,0 +1,279 @@
+<!-- glyphquest 摄像头视觉控制的终端 Roguelike - 独立内容页 -->
+<div class="detail-content-block">
+  <h2 class="detail-subtitle">🎮 让摄像头当手柄，但游戏内核一点都不知道</h2>
+  <p class="detail-lead">这个项目的难点不在「做一个文字地牢游戏」——那部分很直接。难点在<strong>让内核对「输入从哪来」完全无感知</strong>：键盘、摄像头、录像回放、脚本注入都只是同一种 <code>InputSource</code> 实现，换输入设备，内核一行不改。</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv1">架构</div>
+      <h3 class="arch-card-title">解耦是物理保证，不是口头约定</h3>
+      <p class="arch-card-desc"><code>core/</code> 层<strong>零 import 任何 <code>io/</code> 的东西</strong> —— 这一点用 grep 逐文件核验过，不是靠自觉维护。输入统一归一化为 <code>GameCommand</code> 判别联合，四种 <code>InputSource</code> 各写各的。</p>
+      <ul class="card-highlights">
+        <li>四种实现：Keyboard / Vision / Replay / Scripted</li>
+        <li>流水线：摄像头 → Python(mediapipe) → JSON Lines → Node CLI 内核 → ANSI 画面</li>
+        <li>回放与脚本注入天然可测 —— 自动化测试不需要摄像头</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">算法</div>
+      <h3 class="arch-card-title">视野算法三次选型才收敛</h3>
+      <p class="arch-card-desc">视野计算是纯几何问题，但两种「看起来更优雅」的方案先后失败：递归阴影投射的斜率符号与递归传参写错，对称置换法的象限坐标轴定义自相矛盾。两种方案的共同点是<strong>写错了很难看出来</strong> —— 视野只有 1 格，不报错，只是结果不对。</p>
+      <ul class="card-highlights">
+        <li>最终方案：射线投射 + 肩部遮挡检查，一次通过</li>
+        <li>实测空房间半径 8 得到 233 格完美对称圆形</li>
+        <li>柱子遮挡断言 0 格可见</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">算法</div>
+      <h3 class="arch-card-title">手势分类的顺序问题</h3>
+      <p class="arch-card-desc">同样是「顺序写错就全错」：初版先判捏合，结果握拳被误判（握拳时拇指也贴着食指）；改用整体伸展度优先，捏合又被误判（其余三指弯曲把平均值拉低了）。</p>
+      <ul class="card-highlights">
+        <li>最终解法：用「食指伸展度」单独区分握拳与捏合</li>
+        <li>捏合判定额外加 index_ext &gt; 1.5 约束</li>
+        <li>竖拇指必须排在握拳之前判定 —— 否则被握拳分支抢走</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">交互</div>
+      <h3 class="arch-card-title">三重保险防疯连击</h3>
+      <p class="arch-card-desc">摄像头每帧都识别到手，如果一识别到就执行命令，游戏会疯连击。所以手势必须「松开才能再次触发」。</p>
+      <ul class="card-highlights">
+        <li>连续 2 帧确认 + 0.35 秒冷却 + active_gesture 保持态</li>
+        <li>实测持续握拳 10 帧只触发 1 次</li>
+        <li>交替 open_palm / fist 8 帧同样只触发 1 次</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 量化表 -->
+  <h2 class="detail-subtitle">📊 手势识别与规模实测</h2>
+  <p class="detail-lead">下面的置信度与触发次数都是实跑读数，不是标称值。</p>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">✋ 四类手势 + 指向四方向</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>手势</th>
+            <th>判定依据</th>
+            <th>实测表现</th>
+            <th>踩过的坑</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>fist（握拳）</td>
+            <td>整体伸展度低 + 食指伸展度低</td>
+            <td>✓ 与其他手势互不混淆</td>
+            <td>最初被捏合分支抢走</td>
+          </tr>
+          <tr>
+            <td>pinch（捏合）</td>
+            <td>捏合比 + <strong>index_ext &gt; 1.5</strong></td>
+            <td>✓ 需伸食指才能触发</td>
+            <td>整体伸展度方案下被误判</td>
+          </tr>
+          <tr>
+            <td>open_palm（张开）</td>
+            <td>整体伸展度高</td>
+            <td>✓ 用药水</td>
+            <td>手没认清时最易误判为此</td>
+          </tr>
+          <tr>
+            <td>point（指向）</td>
+            <td>仅食指伸展</td>
+            <td>✓ 上下左右四向</td>
+            <td>需手掌参考轴算偏转角</td>
+          </tr>
+          <tr>
+            <td>thumbs_up（竖拇指）</td>
+            <td>拇指伸得远且朝上</td>
+            <td>✓ 下楼</td>
+            <td>必须排在握拳<strong>之前</strong>判定</td>
+          </tr>
+          <tr class="bench-total">
+            <td colspan="2">指向方向</td>
+            <td>up / down / left / right</td>
+            <td>置信度 0.99 ~ 1.00</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>置信度门槛是必须的：</strong>实测低置信张开（0.40）与低置信握拳（0.50）一律被拦截，只有高置信（0.75 / 0.80）才触发；竖拇指 0.50 即可触发 —— 不同手势的门槛不同，因为它们在画面里的特征强度不同。</p>
+  </div>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">🧪 三套测试的实测结果</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>测试套件</th>
+            <th>验证内容</th>
+            <th>实测结果</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>fov.test.ts</td>
+            <td>打印视野图 + 对称性断言 + 柱子遮挡断言 + 半径衰减</td>
+            <td>✓ 233 格对称，遮挡 0 格</td>
+          </tr>
+          <tr>
+            <td>e2e.test.ts</td>
+            <td>Node 内核 ← mock 视觉层：指令解析 / 回合与位置变化 / 视野重算 / 视觉状态同步</td>
+            <td>✓ 11 条指令全解析，回合 0 → 8</td>
+          </tr>
+          <tr>
+            <td>visualux.test.ts</td>
+            <td>200 次随机移动 / 沿墙滑动 / 100 次混合动作的反馈完整性</td>
+            <td>✓ 位移 200 次、滑动 69 次、误触发 0 次</td>
+          </tr>
+          <tr class="bench-total">
+            <td>test_gestures.py</td>
+            <td>手势分类 / 方向判定 / 保持状态机 / 置信度门槛 / 抖动抑制</td>
+            <td>✓ 全部通过</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>e2e 用 mock 视觉层而不是真摄像头：</strong>这样测试既不依赖硬件也不受光照影响 —— 视觉协议的契约（JSON Lines）才是被测对象，摄像头只是它的一个实现。</p>
+  </div>
+
+  <div class="bench-wrap">
+    <h3 class="bench-title">📐 工程规模</h3>
+    <div class="bench-table-scroll">
+      <table class="bench-table">
+        <thead>
+          <tr>
+            <th>部分</th>
+            <th>实现语言</th>
+            <th>代码行数</th>
+            <th>职责</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>游戏内核</td>
+            <td>TypeScript</td>
+            <td>2842 行</td>
+            <td>规则、视野、战斗、渲染调度（零 io/ 依赖）</td>
+          </tr>
+          <tr>
+            <td>内核测试</td>
+            <td>TypeScript</td>
+            <td>269 行</td>
+            <td>fov / e2e / visualux 三个套件</td>
+          </tr>
+          <tr>
+            <td>视觉层</td>
+            <td>Python 3.12</td>
+            <td>674 行</td>
+            <td>mediapipe 手部追踪 → 手势 → JSON Lines</td>
+          </tr>
+          <tr>
+            <td>视觉层测试</td>
+            <td>Python</td>
+            <td>269 行</td>
+            <td>手势分类与状态机</td>
+          </tr>
+          <tr class="bench-total">
+            <td>合计</td>
+            <td>TS + Python</td>
+            <td class="best">4054 行</td>
+            <td>其中 538 行为测试</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bench-note">💡 <strong>确定性是刻意设计的：</strong>随机数走 mulberry32 种子化 PRNG，<code>--seed</code> 可以完整复现一局 —— 否则视野与战斗的 bug 无法稳定复现，测试就失去了意义。</p>
+  </div>
+
+  <!-- 踩坑 -->
+  <h2 class="detail-subtitle">🪨 这台机器专属的环境坑</h2>
+  <p class="detail-lead">这些不是通用问题，而是「在 Windows + 这台机器 + 这个 USB 相机」的组合下才会遇到的坑 —— 全部写进了代码注释与 README。</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">依赖</div>
+      <h3 class="arch-card-title">mediapipe 1.2.3 移除了 mp.solutions</h3>
+      <p class="arch-card-desc">只剩 Tasks API，需要额外下载 <code>.task</code> 模型文件（实测 7819105 字节 ≈ 7.8 MB）。按旧版示例写会直接报模块不存在。</p>
+      <ul class="card-highlights">
+        <li>模型文件随仓库落盘，不依赖运行时下载</li>
+        <li>Python 3.13 没有 mediapipe wheel，必须用 3.12 独立虚拟环境</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv2">硬件</div>
+      <h3 class="arch-card-title">摄像头必须预热 2 秒</h3>
+      <p class="arch-card-desc">该 USB 相机（VID_4A54&amp;PID_5231）冷态下第二帧即失败。更隐蔽的是：模型初始化耗时 1~2 秒会挤掉预热窗口，所以必须做「模型就绪后二次预热」。</p>
+      <ul class="card-highlights">
+        <li>模型就绪后再预热一次，避免初始化期丢帧</li>
+        <li>连续失败 30 次自动重开摄像头，自愈不中断</li>
+        <li>默认 MSMF 后端报 -1072873822，必须切 DSHOW</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">日志</div>
+      <h3 class="arch-card-title">mediapipe 的日志走 C 层 stderr</h3>
+      <p class="arch-card-desc">Python 层的重定向拦不住它，日志会直接混进 stdout 破坏 JSON Lines 协议 —— 视觉层的输出是逐行 JSON，一旦被日志污染，Node 侧就解析不出来。</p>
+      <ul class="card-highlights">
+        <li>用 os.dup2 把 C 层 stderr 重定向到 devnull</li>
+        <li>stdout 只允许出现协议数据</li>
+      </ul>
+    </div>
+
+    <div class="arch-card">
+      <div class="arch-card-tag lv3">管道</div>
+      <h3 class="arch-card-title">管道下 stdin 有缓冲</h3>
+      <p class="arch-card-desc">键盘手势模拟器要在管道模式下实时响应，<code>sys.stdin.read(1)</code> 会等满缓冲区才返回，看起来就像「按键没反应」。</p>
+      <ul class="card-highlights">
+        <li>改用 os.read(0, 1) 绕开 Python 层缓冲</li>
+        <li>Windows TTY 下用 msvcrt.getwch()</li>
+        <li>Node 侧新增 forwardKey() 把按键转发给子进程</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 沉淀 -->
+  <h2 class="detail-subtitle">📌 可迁移的结论</h2>
+  <div class="arch-tips">
+    <h3 class="bench-title">🧠 三条可迁移的工程结论</h3>
+    <div class="arch-tips-grid">
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 1</span>
+        <p><strong>算法选型要看调试成本</strong><br><span class="arch-tip-note">复杂算法写错了很难看出来</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 2</span>
+        <p><strong>解耦要能机械验证</strong><br><span class="arch-tip-note">grep 断言比口头约定可靠</span></p>
+      </div>
+      <div class="arch-tip">
+        <span class="arch-tip-tag">原则 3</span>
+        <p><strong>测试替身要选对层级</strong><br><span class="arch-tip-note">mock 掉硬件，测的是协议</span></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 技术栈 -->
+  <div class="arch-tips" style="margin-top:24px">
+    <h3 class="bench-title">🧰 技术栈</h3>
+    <div class="arch-tips-grid">
+      <div class="arch-tip">
+        <span class="tech-badge">TypeScript 5.6</span>
+        <span class="tech-badge">Node.js CLI 内核</span>
+        <span class="tech-badge">Python 3.12 + mediapipe</span>
+        <span class="tech-badge">JSON Lines 视觉协议</span>
+        <span class="tech-badge">mulberry32 确定性 RNG</span>
+        <span class="tech-badge">Node 内置 test runner</span>
+      </div>
+    </div>
+  </div>
+</div>
